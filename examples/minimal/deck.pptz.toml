@@ -1,0 +1,31 @@
+title = "MoonBit PPTX Demo"
+size = [1280, 720]
+
+[theme.colors]
+background = "#10131A"
+surface = "#1C2230"
+text = "#F4F6FB"
+muted = "#A8B0C2"
+primary = "#3B82F6"
+accent = "#F59E0B"
+
+[theme.text_styles.title]
+font_size = 56
+font_family = "Liter, MiSans"
+color = "$text"
+line_height = 1.1
+
+[theme.text_styles.body]
+font_size = 24
+font_family = "Liter, MiSans"
+color = "$text"
+line_height = 1.45
+
+[[pages]]
+path = "pages/cover.page.toml"
+
+[[pages]]
+path = "pages/agenda.page.toml"
+
+[output]
+path = "dist/moonbit-pptz-demo.pptx"

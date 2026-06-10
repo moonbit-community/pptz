@@ -1,0 +1,16 @@
+name = "Milky2018/pptz"
+
+version = "0.1.0"
+
+readme = "README.md"
+
+license = "Apache-2.0"
+
+keywords = [ "pptx", "presentation", "toml", "wasm" ]
+
+description = "PowerPoint Zero: a portable MoonBit PPTX generator driven by TOML deck and page sources."
+
+import {
+  "bobzhang/toml@0.4.1",
+  "moonbit-community/miniio@0.2.0",
+}
