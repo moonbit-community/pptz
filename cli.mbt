@@ -16,14 +16,12 @@ pub fn usage() -> String {
     #|pptz - PowerPoint Zero, compile TOML presentation sources to PPTX
     #|
     #|Usage:
-    #|  pptz check <deck.pptz.toml>
-    #|  pptz build <deck.pptz.toml> --out <output.pptx>
-    #|  pptz format <deck.pptz.toml> --write
+    #|  pptz <project-dir> --out <output.pptx>
     #|  pptz --version
     #|
     #|The current implementation has the CLI contract and semantic AST. The
-    #|check/build/format commands are reserved and will be wired to TOML parsing,
-    #|validation, formatting, and PPTX writing in later slices.
+    #|compile path will be wired to project loading, validation, and PPTX writing
+    #|in later slices.
   )
 }
 
@@ -36,48 +34,24 @@ pub fn dispatch(args : ArrayView[String]) -> CliResponse {
   if args[0] == "--version" || args[0] == "version" {
     return CliResponse::{ exit_code: 0, stdout: version(), stderr: "" }
   }
-  if args[0] == "check" {
-    if argc != 2 {
-      return CliResponse::{
-        exit_code: 2,
-        stdout: "",
-        stderr: "usage: pptz check <deck.pptz.toml>",
-      }
-    }
-    return not_implemented("check", args[1])
-  }
-  if args[0] == "build" {
-    if argc != 4 || args[2] != "--out" {
-      return CliResponse::{
-        exit_code: 2,
-        stdout: "",
-        stderr: "usage: pptz build <deck.pptz.toml> --out <output.pptx>",
-      }
-    }
-    return not_implemented("build", args[1])
-  }
-  if args[0] == "format" {
-    if argc != 3 || args[2] != "--write" {
-      return CliResponse::{
-        exit_code: 2,
-        stdout: "",
-        stderr: "usage: pptz format <deck.pptz.toml> --write",
-      }
-    }
-    return not_implemented("format", args[1])
+  if argc == 3 && args[1] == "--out" {
+    return compile_not_implemented(args[0], args[2])
   }
   CliResponse::{
     exit_code: 2,
     stdout: "",
-    stderr: "unknown command: \{args[0]}\n\n\{usage()}",
+    stderr: "usage: pptz <project-dir> --out <output.pptx>",
   }
 }
 
 ///|
-fn not_implemented(command : String, deck : String) -> CliResponse {
+fn compile_not_implemented(
+  project_dir : String,
+  output : String,
+) -> CliResponse {
   CliResponse::{
     exit_code: 1,
     stdout: "",
-    stderr: "pptz \{command} is not implemented yet for \{deck}",
+    stderr: "pptz compile is not implemented yet for \{project_dir} -> \{output}",
   }
 }

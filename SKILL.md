@@ -1,6 +1,6 @@
 ---
 name: portable-pptz-skill
-description: Creates PPTX decks from TOML pptz/page sources using the portable MoonBit wasm tool `Milky2018/pptz`. Use when an agent needs to design slides, write `.pptz.toml` and `.page.toml` files, validate them with pptz, generate `.pptx`, and deliver both sources and output.
+description: Creates PPTX decks from TOML pptz/page sources using the portable MoonBit wasm tool `Milky2018/pptz`. Use when an agent needs to design slides, write a pptz project, compile it to `.pptx`, and deliver both sources and output.
 ---
 
 # Portable PPTX Skill
@@ -36,26 +36,19 @@ deck-topic/
    theme tokens instead of hard-coded styles where possible.
 5. Find or create required `images/` assets. Do not use low-quality,
    watermarked, license-unknown, or unreadable images.
-6. Run the format checker:
+6. Compile the project with `pptz`:
 
    ```bash
-   moon runwasm Milky2018/pptz check deck.pptz.toml
+   moon runwasm Milky2018/pptz deck-topic --out deck-topic/dist/deck.pptx
    ```
 
-7. Fix all errors. Inspect every warning and either fix it or record why it is
-   an intentional design choice.
-8. Generate the PPTX:
-
-   ```bash
-   moon runwasm Milky2018/pptz build deck.pptz.toml --out dist/deck.pptx
-   ```
-
-9. Deliver both the `pptz` source directory and the generated `.pptx`.
+7. Fix any `pptz` errors. Inspect every warning and either fix it or record why
+   it is an intentional design choice.
+8. Deliver both the `pptz` source directory and the generated `.pptx`.
 
 ## Quality Gate
 
-- The checker exits successfully.
-- PPTX generation exits successfully.
+- `pptz` exits successfully and writes the expected PPTX.
 - Every warning is intentional and documented in the handoff.
 - All page/image paths are relative to the deck directory.
 - Text fits within its bounds and does not overlap important imagery.
