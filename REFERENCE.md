@@ -41,6 +41,11 @@ generation. On failure, delete the temporary file where possible.
 If the final output file already exists, successful generation overwrites it.
 Place the temporary file in the final output file's parent directory, not in the
 deck directory or a global temporary directory.
+Temporary output filenames should be hidden files based on the final output
+basename, such as `.deck.pptx.tmp-1`. The suffix only needs to be unique within
+the current process. A failed invocation should delete the temporary file it
+created when possible. `pptz` is not responsible for cleaning up temporary files
+from earlier crashed invocations.
 
 CLI diagnostics are written to stderr with `miniio.stderr.write_text`, not
 `println`. Use one diagnostic per line in this fixed shape:
@@ -252,6 +257,21 @@ Build `pptz` in this order:
    shape elements, stretch image elements, and basic theme color/text-style
    resolution. It returns capability errors for schema-valid features that are
    still outside the implemented writer subset.
+
+Compiler Reliability status:
+
+- Implemented temp-first output so render failures do not replace an existing
+  PPTX at the final output path.
+- CLI contract coverage includes success, argument failures, and a
+  representative writer capability failure.
+- Unsupported schema-valid writer features remain capability errors; this slice
+  does not expand visual expressiveness.
+- Writer tests cover representative capability errors for unsupported features.
+- OpenXML package smoke checks are part of the writer test gate.
+- `examples/minimal` is the single maintained current-capabilities regression
+  example.
+- Warning-policy expansion remains outside this slice.
+- Agent-facing documentation is synchronized with the current writer scope.
 
 Do not add a `format` command. Formatting TOML is outside `pptz`; `pptz`
 converts a TOML deck file into a PPTX.

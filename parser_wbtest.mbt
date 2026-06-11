@@ -12,7 +12,7 @@ test "parse minimal deck toml" {
   }
   assert_eq(deck.size.width, 1280.0)
   assert_eq(deck.size.height, 720.0)
-  assert_eq(deck.pages.length(), 2)
+  assert_eq(deck.pages.length(), 4)
   assert_eq(deck.pages[0].path, "pages/cover.page.toml")
   match deck.theme {
     Some(theme) => {
@@ -190,6 +190,34 @@ test "parse minimal agenda page multiline text" {
       assert_eq(spec.path, "images/diagram.png")
     }
     _ => abort("expected image element")
+  }
+}
+
+///|
+test "parse minimal shapes page" {
+  let source = @miniio.read_text_file("examples/minimal/pages/shapes.page.toml") catch {
+    err => abort("read page failed: \{err}")
+  }
+  let page = parse_page_toml(source) catch {
+    err => abort("parse page failed: \{err}")
+  }
+  assert_eq(page.elements.length(), 6)
+  match page.elements[1] {
+    ShapeElement(base, spec) => {
+      assert_eq(base.id, "panel")
+      assert_eq(spec.shape, "rect")
+    }
+    _ => abort("expected shape element")
+  }
+  match page.elements[3] {
+    ShapeElement(base, spec) => {
+      assert_eq(base.id, "outline")
+      match spec.fill {
+        Some(NoFill) => ()
+        _ => abort("expected no fill")
+      }
+    }
+    _ => abort("expected outline element")
   }
 }
 

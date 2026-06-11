@@ -34,7 +34,9 @@ deck-topic/
 3. Write a `.pptz.toml` file with title, canvas size, theme tokens, shared text
    styles, image paths, and ordered page list.
 4. Write every `pages/*.page.toml` file. Keep coordinates explicit and reuse
-   theme tokens instead of hard-coded styles where possible.
+   theme tokens instead of hard-coded styles where possible. For decks that
+   must compile with the current writer, use only the supported feature set
+   below.
 5. Find or create required `images/` assets. Do not use low-quality,
    watermarked, license-unknown, or unreadable images.
 6. Compile the project with `pptz`:
@@ -56,6 +58,22 @@ deck-topic/
 - The common visual system works on cover, section, dense content, and closing
   slides.
 
+## Current Supported Feature Set
+
+Use these features for deliverable decks:
+
+- explicit deck size and ordered page files;
+- optional solid page backgrounds;
+- text elements with theme text styles and local overrides;
+- rectangle and ellipse shapes;
+- solid fills, no-fill shapes, and solid borders;
+- raster image elements with `fit = "stretch"`.
+
+Do not use these in deliverable decks until `pptz` implements them in the
+writer: gradient backgrounds or fills, image backgrounds, icon/table/chart
+elements, image `cover` or `contain`, alpha colors, `line_height`,
+`letter_spacing`, or shape names other than `rect` and `ellipse`.
+
 ## Important Notes
 
 - The reference `selene-engine` layout uses a similar directory organization,
@@ -63,4 +81,5 @@ deck-topic/
 - `pptz` and page sources must be parseable by `bobzhang/toml@0.4.1`.
 - File IO for the MoonBit tool should use `moonbit-community/miniio`.
 - See [REFERENCE.md](REFERENCE.md) for the source schema and CLI contract.
-- See [examples/minimal](examples/minimal) for a small TOML deck.
+- See [examples/minimal](examples/minimal) for the maintained TOML deck that
+  covers the currently supported writer features.

@@ -11,7 +11,7 @@ test "load minimal deck resolves ordered pages" {
     }
   }
   assert_eq(loaded.bundle.deck.size.width, 1280.0)
-  assert_eq(loaded.bundle.pages.length(), 2)
+  assert_eq(loaded.bundle.pages.length(), 4)
   assert_eq(loaded.bundle.pages[0].path, "pages/cover.page.toml")
   assert_true(
     loaded.bundle.pages[0].full_path.has_suffix(

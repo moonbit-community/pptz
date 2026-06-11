@@ -4,6 +4,7 @@ size = [1280, 720]
 [theme.colors]
 background = "#10131A"
 surface = "#1C2230"
+surface_alt = "#243044"
 text = "#F4F6FB"
 muted = "#A8B0C2"
 primary = "#3B82F6"
@@ -20,8 +21,19 @@ font_size = 24
 font_family = "Liter, MiSans"
 color = "$text"
 
+[theme.text_styles.caption]
+font_size = 16
+font_family = "Liter, MiSans"
+color = "$muted"
+
 [[pages]]
 path = "pages/cover.page.toml"
 
 [[pages]]
 path = "pages/agenda.page.toml"
+
+[[pages]]
+path = "pages/shapes.page.toml"
+
+[[pages]]
+path = "pages/media.page.toml"

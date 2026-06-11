@@ -1,0 +1,15 @@
+[background]
+type = "gradient"
+direction = 90
+stops = [
+  { at = 0.0, color = "#10131A" },
+  { at = 1.0, color = "#1C2230" },
+]
+
+[[elements]]
+id = "title"
+type = "text"
+bounds = [80, 80, 800, 80]
+
+[elements.content]
+text = "Unsupported gradient"

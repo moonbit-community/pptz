@@ -1,0 +1,86 @@
+page_type = "content"
+
+[background]
+type = "solid"
+color = "$background"
+
+[[elements]]
+id = "heading"
+type = "text"
+bounds = [80, 70, 900, 70]
+
+[elements.content]
+style = "$title"
+font_size = 44
+text = "Shapes and Borders"
+
+[[elements]]
+id = "panel"
+type = "shape"
+bounds = [90, 170, 500, 320]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$surface"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$primary"
+
+[[elements]]
+id = "circle"
+type = "shape"
+bounds = [710, 175, 260, 260]
+
+[elements.content]
+shape = "ellipse"
+
+[elements.content.fill]
+type = "solid"
+color = "$accent"
+
+[[elements]]
+id = "outline"
+type = "shape"
+bounds = [835, 300, 260, 260]
+
+[elements.content]
+shape = "ellipse"
+
+[elements.content.fill]
+type = "none"
+
+[elements.content.border]
+style = "solid"
+width = 3
+color = "$text"
+
+[[elements]]
+id = "body"
+type = "text"
+bounds = [130, 215, 420, 210]
+
+[elements.content]
+style = "$body"
+font_size = 22
+color = "$muted"
+text = """
+Current writer support:
+rectangles, ellipses, solid fills,
+no-fill shapes, and solid borders.
+"""
+
+[[elements]]
+id = "caption"
+type = "text"
+bounds = [760, 580, 360, 40]
+
+[elements.content]
+style = "$caption"
+italic = true
+align = ["center", "center"]
+text = "This slide has no unsupported features."

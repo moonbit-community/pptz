@@ -16,6 +16,11 @@ development.
 It converts an input TOML deck file into a PPTX file and should not encode
 agent workflow policy.
 
+## Compiler Reliability Slice
+
+A development stage for making `pptz`'s documented compile contract dependable
+before expanding the presentation features it can render.
+
 ## Deck definition
 
 A TOML file, at any path, that declares presentation metadata, theme tokens,
@@ -50,6 +55,28 @@ parsed page AST. Repeated page references remain repeated resolved pages.
 The PPTX path chosen by the CLI. It defaults to `output.pptx`; relative output
 paths are resolved from the current working directory, not from the deck file
 directory.
+
+## Atomic output
+
+The `pptz` guarantee that a failed compilation does not replace an existing
+PPTX at the output path with a partial or invalid file.
+
+## CLI contract
+
+The command-line behavior that agents depend on when invoking `pptz`, including
+argument shape, output path reporting, diagnostic streams, and failure
+categories.
+
+## Documentation synchronization
+
+The practice of keeping `pptz`'s Agent-facing documents aligned with the
+features and guarantees that the current implementation actually provides.
+
+## Current-capabilities example deck
+
+The repository's single maintained example deck that exercises the presentation
+features `pptz` can render today, used as a regression sample rather than as a
+full showcase.
 
 ## Deck-relative source path
 

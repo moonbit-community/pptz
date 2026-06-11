@@ -40,9 +40,24 @@ pub fn write_pptx_file(loaded : LoadedDeck, output_path : String) -> Unit raise 
   }
   ensure_parent_dir(output_path)
   let bytes = render_pptx(loaded)
-  @miniio.write_file(output_path, Bytes::from_array(bytes[:])) catch {
-    err => raise WriteError::Io("cannot write output '\{output_path}': \{err}")
+  let temp_path = output_temp_path(output_path)
+  @miniio.write_file(
+    temp_path,
+    Bytes::from_array(bytes[:]),
+    create_mode=CreateNew,
+  ) catch {
+    err =>
+      raise WriteError::Io(
+        "cannot write temporary output '\{temp_path}': \{err}",
+      )
   }
+  @miniio.copy_file(temp_path, output_path, create_mode=CreateOrTruncate) catch {
+    err => {
+      remove_temp_file(temp_path)
+      raise WriteError::Io("cannot write output '\{output_path}': \{err}")
+    }
+  }
+  remove_temp_file(temp_path)
 }
 
 ///|
@@ -405,6 +420,35 @@ fn ensure_parent_dir(output_path : String) -> Unit raise {
           "cannot create output directory '\{parent}': \{err}",
         )
     }
+  }
+}
+
+///|
+fn output_temp_path(output_path : String) -> String raise {
+  let path : @path.Path = output_path
+  let parent = path.dirname().to_string()
+  let base = path.basename().to_owned()
+  for index in 1..<=1000 {
+    let temp_name = ".\{base}.tmp-\{index}"
+    let temp_path = if parent == "" {
+      temp_name
+    } else {
+      let parent_path : @path.Path = parent
+      parent_path.join(temp_name).to_string()
+    }
+    if !(@miniio.exists(temp_path) catch { _ => false }) {
+      return temp_path
+    }
+  }
+  raise WriteError::Io(
+    "cannot allocate temporary output path for '\{output_path}'",
+  )
+}
+
+///|
+fn remove_temp_file(path : String) -> Unit {
+  @miniio.remove_file(path) catch {
+    _ => ()
   }
 }
 

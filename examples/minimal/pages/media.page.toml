@@ -1,0 +1,60 @@
+page_type = "content"
+
+[background]
+type = "solid"
+color = "$background"
+
+[[elements]]
+id = "heading"
+type = "text"
+bounds = [80, 70, 900, 70]
+
+[elements.content]
+style = "$title"
+font_size = 44
+text = "Stretch Images"
+
+[[elements]]
+id = "hero"
+type = "image"
+bounds = [90, 170, 520, 300]
+
+[elements.content]
+path = "images/hero.png"
+fit = "stretch"
+
+[[elements]]
+id = "diagram"
+type = "image"
+bounds = [670, 170, 520, 290]
+
+[elements.content]
+path = "images/diagram.png"
+fit = "stretch"
+
+[[elements]]
+id = "note_panel"
+type = "shape"
+bounds = [180, 520, 920, 80]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$surface_alt"
+
+[elements.content.border]
+style = "solid"
+width = 1
+color = "$primary"
+
+[[elements]]
+id = "note"
+type = "text"
+bounds = [220, 540, 840, 40]
+
+[elements.content]
+style = "$caption"
+align = ["center", "center"]
+text = "Raster images currently render with fit = stretch."
