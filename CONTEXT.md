@@ -13,18 +13,48 @@ PowerPoint Zero: the MoonBit-based presentation tool and document format used
 by this skill. Agents consume it through `moon runwasm Milky2018/pptz` after the
 package is published, or through the local top-level package during
 development.
-It converts a `pptz` project into a PPTX file and should not encode agent
-workflow policy.
+It converts an input TOML deck file into a PPTX file and should not encode
+agent workflow policy.
 
 ## Deck definition
 
-The top-level `.pptz.toml` file that declares presentation metadata, theme
-tokens, page order, and output settings.
+A TOML file, at any path, that declares presentation metadata, theme tokens,
+and page order. Theme tokens are optional. The `.pptz.toml` extension is
+recommended but not required.
 
 ## Deck bundle
 
-A deck definition together with its resolved page files and deck directory,
-used as the unit that can be checked or generated.
+A deck definition together with its resolved page files and the deck file's
+directory, produced by the loader after validation and ready for PPTX
+generation.
+
+## Loaded deck
+
+The successful loader result: a validated deck bundle plus any non-blocking
+warnings that the caller should surface before or after PPTX generation.
+
+## Loader diagnostic
+
+A structured loader finding with a stable code and human-readable message.
+Error diagnostics block PPTX generation; warning diagnostics do not.
+Diagnostics include path, element id, and field context when available, but do
+not include source locations.
+
+## Resolved page
+
+A page reference after the loader has associated it with the page file path and
+parsed page AST. Repeated page references remain repeated resolved pages.
+
+## Output path
+
+The PPTX path chosen by the CLI. It defaults to `output.pptx`; relative output
+paths are resolved from the current working directory, not from the deck file
+directory.
+
+## Deck-relative source path
+
+A path declared inside deck or page TOML and resolved relative to the deck
+definition's directory. Page and asset references share this path model.
 
 ## Page file
 
@@ -36,23 +66,3 @@ The page background is optional.
 
 The path used by a deck's page reference. Pages do not have a separate semantic
 id.
-
-## Checker
-
-The validation stage that inspects a `pptz` AST and reports whether it is ready
-for PPTX generation. It does not parse TOML, modify the AST, or write PPTX
-output.
-
-## Checker error
-
-A checker diagnostic that means PPTX generation must not continue.
-
-## Checker warning
-
-A checker diagnostic that means PPTX generation may continue, but the agent must
-inspect and explain the design choice or fix it.
-
-## Intentional warning
-
-A warning emitted by `pptz` that the agent has inspected and can justify as a
-deliberate design choice, rather than a format mistake or asset problem.

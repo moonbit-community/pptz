@@ -16,7 +16,7 @@ pub fn usage() -> String {
     #|pptz - PowerPoint Zero, compile TOML presentation sources to PPTX
     #|
     #|Usage:
-    #|  pptz <project-dir> --out <output.pptx>
+    #|  pptz <deck.toml> [--out <output.pptx>]
     #|  pptz --version
     #|
     #|The current implementation has the CLI contract and semantic AST. The
@@ -40,7 +40,7 @@ pub fn dispatch(args : ArrayView[String]) -> CliResponse {
   CliResponse::{
     exit_code: 2,
     stdout: "",
-    stderr: "usage: pptz <project-dir> --out <output.pptx>",
+    stderr: "usage: pptz <deck.toml> [--out <output.pptx>]",
   }
 }
 

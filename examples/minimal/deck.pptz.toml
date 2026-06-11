@@ -13,19 +13,15 @@ accent = "#F59E0B"
 font_size = 56
 font_family = "Liter, MiSans"
 color = "$text"
-line_height = 1.1
+bold = true
 
 [theme.text_styles.body]
 font_size = 24
 font_family = "Liter, MiSans"
 color = "$text"
-line_height = 1.45
 
 [[pages]]
 path = "pages/cover.page.toml"
 
 [[pages]]
 path = "pages/agenda.page.toml"
-
-[output]
-path = "dist/moonbit-pptz-demo.pptx"

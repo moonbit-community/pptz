@@ -1,9 +1,8 @@
 page_type = "content"
 
 [background]
-type = "image"
-path = "../images/background.svg"
-fit = "cover"
+type = "solid"
+color = "$background"
 
 [[elements]]
 id = "heading"
@@ -12,7 +11,7 @@ bounds = [80, 70, 900, 70]
 
 [elements.content]
 style = "$title"
-text = "<p>Agenda</p>"
+text = "Agenda"
 
 [[elements]]
 id = "items"
@@ -22,7 +21,7 @@ bounds = [110, 190, 900, 260]
 [elements.content]
 style = "$body"
 text = """
-<p>1. Theme and background</p>
-<p>2. Deck and page sources</p>
-<p>3. Format check and generation</p>
+1. Theme and background
+2. Deck and page sources
+3. Format check and generation
 """

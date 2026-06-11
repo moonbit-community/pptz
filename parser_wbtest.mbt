@@ -6,19 +6,27 @@ test "parse minimal deck toml" {
   let deck = parse_deck_toml(source) catch {
     err => abort("parse deck failed: \{err}")
   }
-  assert_eq(deck.title, "MoonBit PPTX Demo")
-  assert_eq(deck.size.width, 1280)
-  assert_eq(deck.size.height, 720)
+  match deck.title {
+    Some(title) => assert_eq(title, "MoonBit PPTX Demo")
+    None => abort("expected title")
+  }
+  assert_eq(deck.size.width, 1280.0)
+  assert_eq(deck.size.height, 720.0)
   assert_eq(deck.pages.length(), 2)
   assert_eq(deck.pages[0].path, "pages/cover.page.toml")
-  assert_eq(deck.theme.colors["text"], "#F4F6FB")
-  match deck.theme.text_styles["title"].font_size {
-    Some(size) => assert_eq(size, 56)
-    None => abort("expected title font size")
-  }
-  match deck.output {
-    Some(output) => assert_eq(output.path, "dist/moonbit-pptz-demo.pptx")
-    None => abort("expected output")
+  match deck.theme {
+    Some(theme) => {
+      assert_eq(theme.colors["text"], "#F4F6FB")
+      match theme.text_styles["title"].font_size {
+        Some(size) => assert_eq(size, 56.0)
+        None => abort("expected title font size")
+      }
+      match theme.text_styles["title"].bold {
+        Some(value) => assert_true(value)
+        None => abort("expected title bold")
+      }
+    }
+    None => abort("expected theme")
   }
 }
 
@@ -31,29 +39,61 @@ test "parse minimal cover page toml" {
     err => abort("parse page failed: \{err}")
   }
   match page.page_type {
-    Cover => ()
-    _ => abort("expected cover page")
+    Some(kind) => assert_eq(kind, "cover")
+    None => abort("expected page_type")
   }
   match page.background {
-    Some(ImageBackground(fill)) => {
-      assert_eq(fill.path, "../images/background.svg")
-      match fill.fit {
-        CoverFit => ()
-        _ => abort("expected cover fit")
-      }
-    }
-    _ => abort("expected image background")
+    Some(SolidBackground(color)) => assert_eq(color, "$background")
+    _ => abort("expected solid background")
   }
   assert_eq(page.elements.length(), 2)
   match page.elements[0] {
     TextElement(base, content) => {
       assert_eq(base.id, "title")
-      assert_eq(base.bounds.width, 1080)
+      assert_eq(base.bounds.width, 1080.0)
       assert_true(content.text.contains("MoonBit PPTX Demo"))
       match content.style {
         Some(style) => assert_eq(style, "$title")
         None => abort("expected title style")
       }
+    }
+    _ => abort("expected text element")
+  }
+}
+
+///|
+test "parse decimal geometry" {
+  let deck = parse_deck_toml(
+    (
+      #|size = [1280.5, 720.25]
+      #|pages = [{ path = "pages/cover.page.toml" }]
+    ),
+  ) catch {
+    err => abort("parse deck failed: \{err}")
+  }
+  assert_eq(deck.size.width, 1280.5)
+  assert_eq(deck.size.height, 720.25)
+  let page = parse_page_toml(
+    (
+      #|page_type = "content"
+      #|
+      #|[[elements]]
+      #|id = "title"
+      #|type = "text"
+      #|bounds = [10.5, 20.25, 300.75, 80.5]
+      #|
+      #|[elements.content]
+      #|text = "Hello"
+    ),
+  ) catch {
+    err => abort("parse page failed: \{err}")
+  }
+  match page.elements[0] {
+    TextElement(base, _) => {
+      assert_eq(base.bounds.x, 10.5)
+      assert_eq(base.bounds.y, 20.25)
+      assert_eq(base.bounds.width, 300.75)
+      assert_eq(base.bounds.height, 80.5)
     }
     _ => abort("expected text element")
   }
@@ -68,8 +108,8 @@ test "parse minimal agenda page multiline text" {
     err => abort("parse page failed: \{err}")
   }
   match page.page_type {
-    Content => ()
-    _ => abort("expected content page")
+    Some(kind) => assert_eq(kind, "content")
+    None => abort("expected page_type")
   }
   assert_eq(page.elements.length(), 2)
   match page.elements[1] {

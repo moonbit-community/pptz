@@ -17,20 +17,30 @@ pub fn parse_page_toml(source : String) -> Page raise {
 ///|
 fn parse_deck_table(table : Map[String, @toml.TomlValue]) -> Deck raise {
   Deck::{
-    title: required_string(table, "title"),
+    title: optional_string(table.get("title"), "title"),
     size: parse_size(required_array(table, "size"), "size"),
-    theme: parse_theme(required_table(table, "theme"), "theme"),
+    theme: parse_optional_theme(table.get("theme"), "theme"),
     pages: parse_page_refs(required_array(table, "pages"), "pages"),
-    output: parse_optional_output(table.get("output"), "output"),
   }
 }
 
 ///|
 fn parse_page_table(table : Map[String, @toml.TomlValue]) -> Page raise {
   Page::{
-    page_type: parse_page_type(required_string(table, "page_type")),
+    page_type: optional_string(table.get("page_type"), "page_type"),
     background: parse_optional_background(table.get("background"), "background"),
     elements: parse_elements(required_array(table, "elements"), "elements"),
+  }
+}
+
+///|
+fn parse_optional_theme(
+  value : @toml.TomlValue?,
+  path : String,
+) -> Theme? raise {
+  match value {
+    None => None
+    Some(value) => Some(parse_theme(expect_table(value, path), path))
   }
 }
 
@@ -77,7 +87,7 @@ fn parse_text_styles(
     let style_path = "\{path}.\{name}"
     let style_table = expect_table(value, style_path)
     result[name] = TextStyle::{
-      font_size: optional_int(
+      font_size: optional_double(
         style_table.get("font_size"),
         "\{style_path}.font_size",
       ),
@@ -86,11 +96,13 @@ fn parse_text_styles(
         "\{style_path}.font_family",
       ),
       color: optional_string(style_table.get("color"), "\{style_path}.color"),
+      bold: optional_bool(style_table.get("bold"), "\{style_path}.bold"),
+      italic: optional_bool(style_table.get("italic"), "\{style_path}.italic"),
       line_height: optional_double(
         style_table.get("line_height"),
         "\{style_path}.line_height",
       ),
-      letter_spacing: optional_int(
+      letter_spacing: optional_double(
         style_table.get("letter_spacing"),
         "\{style_path}.letter_spacing",
       ),
@@ -113,7 +125,7 @@ fn parse_table_styles(
         let style_path = "\{path}.\{name}"
         let style_table = expect_table(style_value, style_path)
         result[name] = TableStyle::{
-          font_size: optional_int(
+          font_size: optional_double(
             style_table.get("font_size"),
             "\{style_path}.font_size",
           ),
@@ -158,20 +170,6 @@ fn parse_page_refs(
     })
   }
   refs
-}
-
-///|
-fn parse_optional_output(
-  value : @toml.TomlValue?,
-  path : String,
-) -> Output? raise {
-  match value {
-    None => None
-    Some(value) => {
-      let table = expect_table(value, path)
-      Some(Output::{ path: required_string(table, "\{path}.path", key="path") })
-    }
-  }
 }
 
 ///|
@@ -297,12 +295,14 @@ fn parse_text_content(
     style: optional_string(table.get("style"), "\{path}.style"),
     align: parse_optional_align(table.get("align"), "\{path}.align"),
     wrap: optional_bool(table.get("wrap"), "\{path}.wrap"),
-    font_size: optional_int(table.get("font_size"), "\{path}.font_size"),
+    font_size: optional_double(table.get("font_size"), "\{path}.font_size"),
     font_family: optional_string(
       table.get("font_family"),
       "\{path}.font_family",
     ),
     color: optional_string(table.get("color"), "\{path}.color"),
+    bold: optional_bool(table.get("bold"), "\{path}.bold"),
+    italic: optional_bool(table.get("italic"), "\{path}.italic"),
   }
 }
 
@@ -392,17 +392,6 @@ fn parse_optional_border(
 }
 
 ///|
-fn parse_page_type(value : String) -> PageType {
-  match value {
-    "cover" => Cover
-    "content" => Content
-    "section" => Section
-    "closing" => Closing
-    other => CustomPageType(other)
-  }
-}
-
-///|
 fn parse_image_fit(value : String?) -> ImageFit {
   match value {
     None => CoverFit
@@ -417,8 +406,8 @@ fn parse_image_fit(value : String?) -> ImageFit {
 fn parse_size(values : Array[@toml.TomlValue], path : String) -> Size raise {
   guard values.length() == 2 else { fail("\{path}: expected [width, height]") }
   Size::{
-    width: expect_int(values[0], "\{path}[0]"),
-    height: expect_int(values[1], "\{path}[1]"),
+    width: expect_double(values[0], "\{path}[0]"),
+    height: expect_double(values[1], "\{path}[1]"),
   }
 }
 
@@ -428,10 +417,10 @@ fn parse_bounds(values : Array[@toml.TomlValue], path : String) -> Bounds raise 
     fail("\{path}: expected [x, y, width, height]")
   }
   Bounds::{
-    x: expect_int(values[0], "\{path}[0]"),
-    y: expect_int(values[1], "\{path}[1]"),
-    width: expect_int(values[2], "\{path}[2]"),
-    height: expect_int(values[3], "\{path}[3]"),
+    x: expect_double(values[0], "\{path}[0]"),
+    y: expect_double(values[1], "\{path}[1]"),
+    width: expect_double(values[2], "\{path}[2]"),
+    height: expect_double(values[3], "\{path}[3]"),
   }
 }
 
@@ -493,14 +482,6 @@ fn optional_string(value : @toml.TomlValue?, path : String) -> String? raise {
 }
 
 ///|
-fn optional_int(value : @toml.TomlValue?, path : String) -> Int? raise {
-  match value {
-    None => None
-    Some(value) => Some(expect_int(value, path))
-  }
-}
-
-///|
 fn optional_double(value : @toml.TomlValue?, path : String) -> Double? raise {
   match value {
     None => None
@@ -522,14 +503,6 @@ fn expect_string(value : @toml.TomlValue, path : String) -> String raise {
   match value {
     @toml.TomlString(text) => text
     _ => fail("\{path}: expected string")
-  }
-}
-
-///|
-fn expect_int(value : @toml.TomlValue, path : String) -> Int raise {
-  match value {
-    @toml.TomlInteger(number) => number.to_int()
-    _ => fail("\{path}: expected integer")
   }
 }
 

@@ -1,25 +1,19 @@
 ///|
 pub(all) struct Size {
-  width : Int
-  height : Int
+  width : Double
+  height : Double
 } derive(Eq, Debug)
 
 ///|
 pub(all) struct Deck {
-  title : String
+  title : String?
   size : Size
-  theme : Theme
+  theme : Theme?
   pages : Array[PageRef]
-  output : Output?
 } derive(Eq, Debug)
 
 ///|
 pub(all) struct PageRef {
-  path : String
-} derive(Eq, Debug)
-
-///|
-pub(all) struct Output {
   path : String
 } derive(Eq, Debug)
 
@@ -32,16 +26,18 @@ pub(all) struct Theme {
 
 ///|
 pub(all) struct TextStyle {
-  font_size : Int?
+  font_size : Double?
   font_family : String?
   color : String?
+  bold : Bool?
+  italic : Bool?
   line_height : Double?
-  letter_spacing : Int?
+  letter_spacing : Double?
 } derive(Eq, Debug)
 
 ///|
 pub(all) struct TableStyle {
-  font_size : Int?
+  font_size : Double?
   font_family : String?
   header_fill : String?
   header_color : String?
@@ -51,18 +47,9 @@ pub(all) struct TableStyle {
 
 ///|
 pub(all) struct Page {
-  page_type : PageType
+  page_type : String?
   background : Background?
   elements : Array[Element]
-} derive(Eq, Debug)
-
-///|
-pub(all) enum PageType {
-  Cover
-  Content
-  Section
-  Closing
-  CustomPageType(String)
 } derive(Eq, Debug)
 
 ///|
@@ -125,10 +112,10 @@ pub(all) struct ElementBase {
 
 ///|
 pub(all) struct Bounds {
-  x : Int
-  y : Int
-  width : Int
-  height : Int
+  x : Double
+  y : Double
+  width : Double
+  height : Double
 } derive(Eq, Debug)
 
 ///|
@@ -137,9 +124,11 @@ pub(all) struct TextContent {
   style : String?
   align : Align?
   wrap : Bool?
-  font_size : Int?
+  font_size : Double?
   font_family : String?
   color : String?
+  bold : Bool?
+  italic : Bool?
 } derive(Eq, Debug)
 
 ///|
