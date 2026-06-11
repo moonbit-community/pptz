@@ -16,7 +16,7 @@ text = "Agenda"
 [[elements]]
 id = "items"
 type = "text"
-bounds = [110, 190, 900, 260]
+bounds = [110, 190, 460, 260]
 
 [elements.content]
 style = "$body"
@@ -25,3 +25,12 @@ text = """
 2. Deck and page sources
 3. Format check and generation
 """
+
+[[elements]]
+id = "diagram"
+type = "image"
+bounds = [650, 180, 500, 278]
+
+[elements.content]
+path = "images/diagram.png"
+fit = "stretch"

@@ -23,3 +23,12 @@ bounds = [220, 345, 840, 60]
 style = "$body"
 align = ["center", "center"]
 text = "Portable slide generation with pptz"
+
+[[elements]]
+id = "hero"
+type = "image"
+bounds = [240, 475, 800, 170]
+
+[elements.content]
+path = "images/hero.png"
+fit = "stretch"

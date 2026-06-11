@@ -46,7 +46,7 @@ test "parse minimal cover page toml" {
     Some(SolidBackground(color)) => assert_eq(color, "$background")
     _ => abort("expected solid background")
   }
-  assert_eq(page.elements.length(), 2)
+  assert_eq(page.elements.length(), 3)
   match page.elements[0] {
     TextElement(base, content) => {
       assert_eq(base.id, "title")
@@ -58,6 +58,17 @@ test "parse minimal cover page toml" {
       }
     }
     _ => abort("expected text element")
+  }
+  match page.elements[2] {
+    ImageElement(base, spec) => {
+      assert_eq(base.id, "hero")
+      assert_eq(spec.path, "images/hero.png")
+      match spec.fit {
+        StretchFit => ()
+        _ => abort("expected stretch fit")
+      }
+    }
+    _ => abort("expected image element")
   }
 }
 
@@ -161,7 +172,7 @@ test "parse minimal agenda page multiline text" {
     Some(kind) => assert_eq(kind, "content")
     None => abort("expected page_type")
   }
-  assert_eq(page.elements.length(), 2)
+  assert_eq(page.elements.length(), 3)
   match page.elements[1] {
     TextElement(base, content) => {
       assert_eq(base.id, "items")
@@ -172,6 +183,13 @@ test "parse minimal agenda page multiline text" {
       }
     }
     _ => abort("expected text element")
+  }
+  match page.elements[2] {
+    ImageElement(base, spec) => {
+      assert_eq(base.id, "diagram")
+      assert_eq(spec.path, "images/diagram.png")
+    }
+    _ => abort("expected image element")
   }
 }
 
