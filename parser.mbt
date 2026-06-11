@@ -16,6 +16,7 @@ pub fn parse_page_toml(source : String) -> Page raise {
 
 ///|
 fn parse_deck_table(table : Map[String, @toml.TomlValue]) -> Deck raise {
+  reject_unknown_fields(table, "deck", ["title", "size", "theme", "pages"])
   Deck::{
     title: optional_string(table.get("title"), "title"),
     size: parse_size(required_array(table, "size"), "size"),
@@ -26,6 +27,7 @@ fn parse_deck_table(table : Map[String, @toml.TomlValue]) -> Deck raise {
 
 ///|
 fn parse_page_table(table : Map[String, @toml.TomlValue]) -> Page raise {
+  reject_unknown_fields(table, "page", ["page_type", "background", "elements"])
   Page::{
     page_type: optional_string(table.get("page_type"), "page_type"),
     background: parse_optional_background(table.get("background"), "background"),
@@ -49,6 +51,7 @@ fn parse_theme(
   table : Map[String, @toml.TomlValue],
   path : String,
 ) -> Theme raise {
+  reject_unknown_fields(table, path, ["colors", "text_styles", "table_styles"])
   Theme::{
     colors: parse_string_map(required_table(table, "colors"), "\{path}.colors"),
     text_styles: parse_text_styles(
@@ -86,6 +89,9 @@ fn parse_text_styles(
   for name, value in table {
     let style_path = "\{path}.\{name}"
     let style_table = expect_table(value, style_path)
+    reject_unknown_fields(style_table, style_path, [
+      "font_size", "font_family", "color", "bold", "italic", "line_height", "letter_spacing",
+    ])
     result[name] = TextStyle::{
       font_size: optional_double(
         style_table.get("font_size"),
@@ -124,6 +130,10 @@ fn parse_table_styles(
       for name, style_value in table {
         let style_path = "\{path}.\{name}"
         let style_table = expect_table(style_value, style_path)
+        reject_unknown_fields(style_table, style_path, [
+          "font_size", "font_family", "header_fill", "header_color", "body_color",
+          "border",
+        ])
         result[name] = TableStyle::{
           font_size: optional_double(
             style_table.get("font_size"),
@@ -165,6 +175,7 @@ fn parse_page_refs(
   for index, value in values {
     let item_path = "\{path}[\{index}]"
     let table = expect_table(value, item_path)
+    reject_unknown_fields(table, item_path, ["path"])
     refs.push(PageRef::{
       path: required_string(table, "\{item_path}.path", key="path"),
     })
@@ -189,14 +200,24 @@ fn parse_background_table(
   path : String,
 ) -> Background raise {
   match required_string(table, "\{path}.type", key="type") {
-    "solid" =>
+    "solid" => {
+      reject_unknown_fields(table, path, ["type", "color"])
       SolidBackground(required_string(table, "\{path}.color", key="color"))
-    "image" =>
+    }
+    "image" => {
+      reject_unknown_fields(table, path, ["type", "path", "fit"])
       ImageBackground(ImageFill::{
         path: required_string(table, "\{path}.path", key="path"),
-        fit: parse_image_fit(optional_string(table.get("fit"), "\{path}.fit")),
+        fit: parse_image_fit(
+          optional_string(table.get("fit"), "\{path}.fit"),
+          "\{path}.fit",
+        ),
       })
-    "gradient" => GradientBackground(parse_gradient(table, path))
+    }
+    "gradient" => {
+      reject_unknown_fields(table, path, ["type", "direction", "stops"])
+      GradientBackground(parse_gradient(table, path))
+    }
     kind => fail("\{path}.type: unsupported background type '\{kind}'")
   }
 }
@@ -206,16 +227,8 @@ fn parse_gradient(
   table : Map[String, @toml.TomlValue],
   path : String,
 ) -> Gradient raise {
-  let kind = match
-    optional_string(table.get("gradient_type"), "\{path}.gradient_type") {
-    None => LinearGradient
-    Some("linear") => LinearGradient
-    Some("radial") => RadialGradient
-    Some(value) => CustomGradient(value)
-  }
   Gradient::{
-    kind,
-    angle: optional_double(table.get("angle"), "\{path}.angle"),
+    direction: optional_double(table.get("direction"), "\{path}.direction"),
     stops: parse_gradient_stops(
       required_array(table, "\{path}.stops", key="stops"),
       "\{path}.stops",
@@ -232,8 +245,9 @@ fn parse_gradient_stops(
   for index, value in values {
     let item_path = "\{path}[\{index}]"
     let table = expect_table(value, item_path)
+    reject_unknown_fields(table, item_path, ["at", "color"])
     stops.push(GradientStop::{
-      position: required_double(table, "\{item_path}.position", key="position"),
+      at: required_double(table, "\{item_path}.at", key="at"),
       color: required_string(table, "\{item_path}.color", key="color"),
     })
   }
@@ -260,6 +274,20 @@ fn parse_element_table(
   table : Map[String, @toml.TomlValue],
   path : String,
 ) -> Element raise {
+  let kind = required_string(table, "\{path}.type", key="type")
+  match kind {
+    "text" =>
+      reject_unknown_fields(table, path, ["id", "type", "bounds", "content"])
+    "shape" =>
+      reject_unknown_fields(table, path, ["id", "type", "bounds", "content"])
+    "image" =>
+      reject_unknown_fields(table, path, ["id", "type", "bounds", "content"])
+    "icon" =>
+      reject_unknown_fields(table, path, ["id", "type", "bounds", "content"])
+    "table" => reject_unknown_fields(table, path, ["id", "type", "bounds"])
+    "chart" => reject_unknown_fields(table, path, ["id", "type", "bounds"])
+    _ => fail("\{path}.type: unsupported element type '\{kind}'")
+  }
   let base = ElementBase::{
     id: required_string(table, "\{path}.id", key="id"),
     bounds: parse_bounds(
@@ -267,7 +295,7 @@ fn parse_element_table(
       "\{path}.bounds",
     ),
   }
-  match required_string(table, "\{path}.type", key="type") {
+  match kind {
     "text" =>
       TextElement(
         base,
@@ -276,12 +304,33 @@ fn parse_element_table(
           "\{path}.content",
         ),
       )
-    "shape" => ShapeElement(base, parse_shape_spec(table, path))
-    "image" => ImageElement(base, parse_image_spec(table, path))
-    "icon" => IconElement(base, parse_icon_spec(table, path))
+    "shape" =>
+      ShapeElement(
+        base,
+        parse_shape_spec(
+          required_table(table, "\{path}.content", key="content"),
+          "\{path}.content",
+        ),
+      )
+    "image" =>
+      ImageElement(
+        base,
+        parse_image_spec(
+          required_table(table, "\{path}.content", key="content"),
+          "\{path}.content",
+        ),
+      )
+    "icon" =>
+      IconElement(
+        base,
+        parse_icon_spec(
+          required_table(table, "\{path}.content", key="content"),
+          "\{path}.content",
+        ),
+      )
     "table" => TableElement(base)
     "chart" => ChartElement(base)
-    kind => CustomElement(base, kind)
+    kind => fail("\{path}.type: unsupported element type '\{kind}'")
   }
 }
 
@@ -290,6 +339,10 @@ fn parse_text_content(
   table : Map[String, @toml.TomlValue],
   path : String,
 ) -> TextContent raise {
+  reject_unknown_fields(table, path, [
+    "text", "style", "align", "wrap", "font_size", "font_family", "color", "bold",
+    "italic",
+  ])
   TextContent::{
     text: required_string(table, "\{path}.text", key="text"),
     style: optional_string(table.get("style"), "\{path}.style"),
@@ -311,8 +364,9 @@ fn parse_shape_spec(
   table : Map[String, @toml.TomlValue],
   path : String,
 ) -> ShapeSpec raise {
+  reject_unknown_fields(table, path, ["shape", "fill", "border"])
   ShapeSpec::{
-    shape_name: required_string(table, "\{path}.shape_name", key="shape_name"),
+    shape: required_string(table, "\{path}.shape", key="shape"),
     fill: parse_optional_fill(table.get("fill"), "\{path}.fill"),
     border: parse_optional_border(table.get("border"), "\{path}.border"),
   }
@@ -323,9 +377,13 @@ fn parse_image_spec(
   table : Map[String, @toml.TomlValue],
   path : String,
 ) -> ImageSpec raise {
+  reject_unknown_fields(table, path, ["path", "fit"])
   ImageSpec::{
     path: required_string(table, "\{path}.path", key="path"),
-    fit: parse_image_fit(optional_string(table.get("fit"), "\{path}.fit")),
+    fit: parse_image_fit(
+      optional_string(table.get("fit"), "\{path}.fit"),
+      "\{path}.fit",
+    ),
   }
 }
 
@@ -334,6 +392,7 @@ fn parse_icon_spec(
   table : Map[String, @toml.TomlValue],
   path : String,
 ) -> IconSpec raise {
+  reject_unknown_fields(table, path, ["name", "fill"])
   IconSpec::{
     name: required_string(table, "\{path}.name", key="name"),
     fill: parse_optional_fill(table.get("fill"), "\{path}.fill"),
@@ -363,10 +422,18 @@ fn parse_optional_fill(value : @toml.TomlValue?, path : String) -> Fill? raise {
     Some(value) => {
       let table = expect_table(value, path)
       match required_string(table, "\{path}.type", key="type") {
-        "solid" =>
+        "solid" => {
+          reject_unknown_fields(table, path, ["type", "color"])
           Some(SolidFill(required_string(table, "\{path}.color", key="color")))
-        "gradient" => Some(GradientFill(parse_gradient(table, path)))
-        "none" => Some(NoFill)
+        }
+        "gradient" => {
+          reject_unknown_fields(table, path, ["type", "direction", "stops"])
+          Some(GradientFill(parse_gradient(table, path)))
+        }
+        "none" => {
+          reject_unknown_fields(table, path, ["type"])
+          Some(NoFill)
+        }
         kind => fail("\{path}.type: unsupported fill type '\{kind}'")
       }
     }
@@ -382,6 +449,7 @@ fn parse_optional_border(
     None => None
     Some(value) => {
       let table = expect_table(value, path)
+      reject_unknown_fields(table, path, ["style", "width", "color"])
       Some(Border::{
         style: required_string(table, "\{path}.style", key="style"),
         width: required_double(table, "\{path}.width", key="width"),
@@ -392,13 +460,13 @@ fn parse_optional_border(
 }
 
 ///|
-fn parse_image_fit(value : String?) -> ImageFit {
+fn parse_image_fit(value : String?, path : String) -> ImageFit raise {
   match value {
-    None => CoverFit
+    None => StretchFit
     Some("cover") => CoverFit
     Some("contain") => ContainFit
     Some("stretch") => StretchFit
-    Some(other) => CustomImageFit(other)
+    Some(other) => fail("\{path}: unsupported image fit '\{other}'")
   }
 }
 
@@ -524,4 +592,27 @@ fn expect_table(
     @toml.TomlTable(table) => table
     _ => fail("\{path}: expected table")
   }
+}
+
+///|
+fn reject_unknown_fields(
+  table : Map[String, @toml.TomlValue],
+  path : String,
+  allowed : Array[String],
+) -> Unit raise {
+  for key, _ in table {
+    if !field_allowed(key, allowed) {
+      fail("\{path}.\{key}: unknown field")
+    }
+  }
+}
+
+///|
+fn field_allowed(key : String, allowed : Array[String]) -> Bool {
+  for item in allowed {
+    if key == item {
+      return true
+    }
+  }
+  false
 }

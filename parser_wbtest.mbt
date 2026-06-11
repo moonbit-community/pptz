@@ -100,6 +100,56 @@ test "parse decimal geometry" {
 }
 
 ///|
+test "parser rejects unknown fields" {
+  let message = deck_parse_error(
+    (
+      #|size = [1280, 720]
+      #|pages = [{ path = "pages/cover.page.toml" }]
+      #|camelCase = true
+    ),
+  )
+  assert_true(message.contains("unknown field"))
+}
+
+///|
+test "parser rejects unknown element type" {
+  let message = page_parse_error(
+    (
+      #|[[elements]]
+      #|id = "mystery"
+      #|type = "video"
+      #|bounds = [0, 0, 100, 100]
+    ),
+  )
+  assert_true(message.contains("unsupported element type"))
+}
+
+///|
+test "image fit defaults to stretch" {
+  let page = parse_page_toml(
+    (
+      #|[[elements]]
+      #|id = "hero"
+      #|type = "image"
+      #|bounds = [0, 0, 640, 360]
+      #|
+      #|[elements.content]
+      #|path = "images/hero.png"
+    ),
+  ) catch {
+    err => abort("parse page failed: \{err}")
+  }
+  match page.elements[0] {
+    ImageElement(_, spec) =>
+      match spec.fit {
+        StretchFit => ()
+        _ => abort("expected stretch fit")
+      }
+    _ => abort("expected image element")
+  }
+}
+
+///|
 test "parse minimal agenda page multiline text" {
   let source = @miniio.read_text_file("examples/minimal/pages/agenda.page.toml") catch {
     err => abort("read page failed: \{err}")
@@ -123,4 +173,16 @@ test "parse minimal agenda page multiline text" {
     }
     _ => abort("expected text element")
   }
+}
+
+///|
+fn deck_parse_error(source : String) -> String {
+  ignore(parse_deck_toml(source) catch { err => return "\{err}" })
+  abort("expected parse failure")
+}
+
+///|
+fn page_parse_error(source : String) -> String {
+  ignore(parse_page_toml(source) catch { err => return "\{err}" })
+  abort("expected parse failure")
 }

@@ -151,7 +151,10 @@ pub(all) struct ResolvedPage {
 ```
 
 `ResolvedPage.path` preserves the original string from `PageRef.path`.
-`ResolvedPage.full_path` stores the resolved filesystem path.
+`ResolvedPage.full_path` stores the deck-directory-joined normalized path used
+for WASI-accessible file reads. It should not force the source path through a
+host absolute `Path::resolve()` call; portable `moon runwasm` executions may
+only have relative preopened paths available.
 
 `*.page.toml` files contain exactly one slide each. Pages should not redefine
 global theme tokens unless a slide intentionally deviates.
@@ -165,8 +168,8 @@ The `pages` array may reference the same page file more than once; each
 reference produces one slide.
 Repeated page files should be read and parsed once, then reused according to
 the reference order.
-Use the resolved normalized `full_path` as the cache key for repeated page file
-reads and parses. `ResolvedPage.path` still preserves the original
+Use the normalized `full_path` as the cache key for repeated page file reads
+and parses. `ResolvedPage.path` still preserves the original
 `PageRef.path` string for context and ordering.
 Path handling should use `moonbitlang/x/path` rather than custom string
 rewriting. Reject paths that the path package resolves outside the deck
@@ -382,7 +385,8 @@ text. Messages may change; codes should not. Initial code ranges:
 - `PZ032`: invalid color value.
 - `PZ040`: invalid or empty asset path.
 - `PZ100`: element bounds outside canvas.
-- `PZ101`: zero-size element bounds.
+- `PZ101`: invalid or zero-size element bounds. Negative width or height is an
+  error; zero width or height is a warning.
 - `PZ102`: empty or whitespace-only text content.
 
 Loader validation should collect all diagnostics it can collect before failing,
@@ -492,12 +496,47 @@ align = ["center", "center"]
 text = "Example Deck"
 ```
 
+Element tables use top-level `id`, `type`, and `bounds` for shared placement
+metadata. Type-specific fields live under `[elements.content]`.
+
 Allowed element types: `text`, `shape`, `image`, `icon`, `table`, `chart`.
 Allowed background types: `solid`, `gradient`, `image`.
 `icon`, `table`, `chart`, image backgrounds, and `gradient` backgrounds are
 allowed schema/AST concepts but are outside the MVP writer scope unless later
 implementation work explicitly adds them.
-MVP shape content supports only `rect` and `ellipse` shape subtypes.
+MVP shape content supports only `rect` and `ellipse` shape subtypes:
+
+```toml
+[[elements]]
+id = "panel"
+type = "shape"
+bounds = [80, 160, 420, 220]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$surface"
+```
+
+Image `fit` values are `stretch`, `cover`, or `contain`. Omitted `fit` defaults
+to `stretch`. The MVP writer maps raster image elements with `stretch` directly
+to `moon-pptx` picture bounds; `cover` and `contain` may fail as writer
+capability errors until implemented.
+MVP image element content uses a deck-relative raster image path:
+
+```toml
+[[elements]]
+id = "hero"
+type = "image"
+bounds = [640, 120, 520, 360]
+
+[elements.content]
+path = "images/hero.png"
+fit = "stretch"
+```
+
 MVP text alignment uses `align = [horizontal, vertical]` with values that map
 directly to `moon-pptx` text alignment and body anchor enums:
 

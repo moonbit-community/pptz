@@ -1,0 +1,7 @@
+[[elements]]
+id = "blank"
+type = "text"
+bounds = [-10, 0, 0, 20]
+
+[elements.content]
+text = "   "

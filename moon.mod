@@ -13,4 +13,5 @@ description = "PowerPoint Zero: a portable MoonBit PPTX generator driven by TOML
 import {
   "bobzhang/toml@0.4.1",
   "moonbit-community/miniio@0.2.0",
+  "moonbitlang/x@0.4.45",
 }

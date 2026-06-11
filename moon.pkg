@@ -1,6 +1,7 @@
 import {
   "bobzhang/toml",
   "moonbit-community/miniio",
+  "moonbitlang/x/path",
 }
 
 supported_targets = "wasm"

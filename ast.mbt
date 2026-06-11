@@ -70,26 +70,17 @@ pub(all) enum ImageFit {
   CoverFit
   ContainFit
   StretchFit
-  CustomImageFit(String)
 } derive(Eq, Debug)
 
 ///|
 pub(all) struct Gradient {
-  kind : GradientKind
-  angle : Double?
+  direction : Double?
   stops : Array[GradientStop]
 } derive(Eq, Debug)
 
 ///|
-pub(all) enum GradientKind {
-  LinearGradient
-  RadialGradient
-  CustomGradient(String)
-} derive(Eq, Debug)
-
-///|
 pub(all) struct GradientStop {
-  position : Double
+  at : Double
   color : String
 } derive(Eq, Debug)
 
@@ -101,7 +92,6 @@ pub(all) enum Element {
   IconElement(ElementBase, IconSpec)
   TableElement(ElementBase)
   ChartElement(ElementBase)
-  CustomElement(ElementBase, String)
 } derive(Eq, Debug)
 
 ///|
@@ -139,7 +129,7 @@ pub(all) struct Align {
 
 ///|
 pub(all) struct ShapeSpec {
-  shape_name : String
+  shape : String
   fill : Fill?
   border : Border?
 } derive(Eq, Debug)
