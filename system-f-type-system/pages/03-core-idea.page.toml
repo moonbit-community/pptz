@@ -1,0 +1,139 @@
+page_type = "content"
+
+[background]
+type = "solid"
+color = "$background"
+
+[[elements]]
+id = "heading"
+type = "text"
+bounds = [78, 56, 900, 58]
+
+[elements.content]
+style = "$heading"
+text = "核心想法：两层抽象"
+
+[[elements]]
+id = "term_box"
+type = "shape"
+bounds = [96, 172, 455, 340]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$green"
+
+[[elements]]
+id = "type_box"
+type = "shape"
+bounds = [730, 172, 455, 340]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$cyan"
+
+[[elements]]
+id = "term_title"
+type = "text"
+bounds = [130, 205, 360, 40]
+
+[elements.content]
+style = "$body"
+bold = true
+color = "$green"
+text = "项层：普通函数"
+
+[[elements]]
+id = "term_text"
+type = "text"
+bounds = [130, 270, 360, 150]
+
+[elements.content]
+style = "$code"
+font_size = 27
+text = """
+lambda x:T. t
+
+t u
+"""
+
+[[elements]]
+id = "term_note"
+type = "text"
+bounds = [130, 430, 360, 46]
+
+[elements.content]
+style = "$small"
+text = "抽象值，再把值作为参数传入。"
+
+[[elements]]
+id = "type_title"
+type = "text"
+bounds = [764, 205, 360, 40]
+
+[elements.content]
+style = "$body"
+bold = true
+color = "$cyan"
+text = "类型层：多态函数"
+
+[[elements]]
+id = "type_text"
+type = "text"
+bounds = [764, 270, 360, 150]
+
+[elements.content]
+style = "$code"
+font_size = 27
+text = """
+Lambda A. t
+
+t [T]
+"""
+
+[[elements]]
+id = "type_note"
+type = "text"
+bounds = [764, 430, 360, 46]
+
+[elements.content]
+style = "$small"
+text = "抽象类型，再把类型作为参数传入。"
+
+[[elements]]
+id = "bridge"
+type = "text"
+bounds = [578, 305, 125, 52]
+
+[elements.content]
+style = "$title"
+font_size = 38
+color = "$yellow"
+align = ["center", "center"]
+text = "+"
+
+[[elements]]
+id = "bottom"
+type = "text"
+bounds = [150, 580, 980, 50]
+
+[elements.content]
+style = "$body"
+font_size = 22
+align = ["center", "center"]
+text = "System F = 简单类型 lambda 演算 + 显式的类型抽象与类型应用。"

@@ -1,0 +1,71 @@
+title = "System F Type System"
+size = [1280, 720]
+
+[theme.colors]
+background = "#0F172A"
+panel = "#172033"
+panel_alt = "#1F2A44"
+ink = "#F8FAFC"
+muted = "#B6C2D9"
+cyan = "#38BDF8"
+green = "#34D399"
+yellow = "#FBBF24"
+red = "#FB7185"
+line = "#42526E"
+
+[theme.text_styles.title]
+font_size = 54
+font_family = "MiSans, Arial"
+color = "$ink"
+bold = true
+
+[theme.text_styles.heading]
+font_size = 34
+font_family = "MiSans, Arial"
+color = "$ink"
+bold = true
+
+[theme.text_styles.body]
+font_size = 24
+font_family = "MiSans, Arial"
+color = "$ink"
+
+[theme.text_styles.small]
+font_size = 18
+font_family = "MiSans, Arial"
+color = "$muted"
+
+[theme.text_styles.code]
+font_size = 24
+font_family = "Menlo, Consolas"
+color = "$ink"
+
+[[pages]]
+path = "pages/01-cover.page.toml"
+
+[[pages]]
+path = "pages/02-motivation.page.toml"
+
+[[pages]]
+path = "pages/03-core-idea.page.toml"
+
+[[pages]]
+path = "pages/04-syntax.page.toml"
+
+[[pages]]
+path = "pages/05-typing-rules.page.toml"
+
+[[pages]]
+path = "pages/06-examples.page.toml"
+
+[[pages]]
+path = "pages/07-metatheory.page.toml"
+
+[[pages]]
+path = "pages/08-parametricity.page.toml"
+
+[[pages]]
+path = "pages/09-encodings.page.toml"
+
+[[pages]]
+path = "pages/10-takeaways.page.toml"

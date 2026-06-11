@@ -1,0 +1,115 @@
+page_type = "content"
+
+[background]
+type = "solid"
+color = "$background"
+
+[[elements]]
+id = "heading"
+type = "text"
+bounds = [78, 56, 900, 58]
+
+[elements.content]
+style = "$heading"
+text = "语法：类型与项"
+
+[[elements]]
+id = "types_panel"
+type = "shape"
+bounds = [80, 150, 520, 420]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$cyan"
+
+[[elements]]
+id = "terms_panel"
+type = "shape"
+bounds = [680, 150, 520, 420]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$green"
+
+[[elements]]
+id = "types_title"
+type = "text"
+bounds = [115, 182, 420, 38]
+
+[elements.content]
+style = "$body"
+bold = true
+color = "$cyan"
+text = "Types"
+
+[[elements]]
+id = "types_code"
+type = "text"
+bounds = [115, 240, 430, 250]
+
+[elements.content]
+style = "$code"
+font_size = 25
+text = """
+T ::= A
+    | T -> T
+    | forall A. T
+
+A 是类型变量
+forall A. T 是全称类型
+"""
+
+[[elements]]
+id = "terms_title"
+type = "text"
+bounds = [715, 182, 420, 38]
+
+[elements.content]
+style = "$body"
+bold = true
+color = "$green"
+text = "Terms"
+
+[[elements]]
+id = "terms_code"
+type = "text"
+bounds = [715, 240, 430, 265]
+
+[elements.content]
+style = "$code"
+font_size = 25
+text = """
+t ::= x
+    | lambda x:T. t
+    | t t
+    | Lambda A. t
+    | t [T]
+
+类型参数是显式出现的。
+"""
+
+[[elements]]
+id = "caption"
+type = "text"
+bounds = [118, 605, 1040, 38]
+
+[elements.content]
+style = "$small"
+align = ["center", "center"]
+text = "有些教材写大写 Lambda 为类型抽象；这里用 ASCII 记法便于阅读。"

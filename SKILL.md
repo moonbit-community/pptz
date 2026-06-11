@@ -1,5 +1,5 @@
 ---
-name: portable-pptz-skill
+name: portable-pptx-skill
 description: Creates PPTX decks from TOML pptz/page sources using the portable MoonBit wasm tool `Milky2018/pptz`. Use when an agent needs to design slides, write pptz TOML sources, compile them to `.pptx`, and deliver both sources and output.
 ---
 

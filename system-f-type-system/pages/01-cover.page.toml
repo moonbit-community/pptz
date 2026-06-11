@@ -1,0 +1,88 @@
+page_type = "cover"
+
+[background]
+type = "solid"
+color = "$background"
+
+[[elements]]
+id = "accent_bar"
+type = "shape"
+bounds = [0, 0, 18, 720]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$cyan"
+
+[[elements]]
+id = "label"
+type = "text"
+bounds = [90, 96, 820, 42]
+
+[elements.content]
+style = "$small"
+color = "$cyan"
+bold = true
+text = "Typed lambda calculus · polymorphism · parametricity"
+
+[[elements]]
+id = "title"
+type = "text"
+bounds = [88, 172, 900, 130]
+
+[elements.content]
+style = "$title"
+text = "System F 类型系统"
+
+[[elements]]
+id = "subtitle"
+type = "text"
+bounds = [92, 318, 760, 82]
+
+[elements.content]
+style = "$body"
+color = "$muted"
+text = "从简单类型 lambda 演算走向显式的全称多态：类型也可以被抽象、传递和实例化。"
+
+[[elements]]
+id = "formula_panel"
+type = "shape"
+bounds = [760, 155, 385, 220]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$line"
+
+[[elements]]
+id = "formula"
+type = "text"
+bounds = [795, 205, 320, 110]
+
+[elements.content]
+style = "$code"
+font_size = 30
+align = ["center", "center"]
+text = """
+ΛA. λx:A. x
+:
+forall A. A -> A
+"""
+
+[[elements]]
+id = "footer"
+type = "text"
+bounds = [90, 620, 1040, 38]
+
+[elements.content]
+style = "$small"
+text = "目标：读懂 System F 的语法、类型规则、典型例子，以及它为什么影响现代语言设计。"

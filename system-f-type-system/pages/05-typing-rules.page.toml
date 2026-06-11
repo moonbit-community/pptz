@@ -1,0 +1,148 @@
+page_type = "content"
+
+[background]
+type = "solid"
+color = "$background"
+
+[[elements]]
+id = "heading"
+type = "text"
+bounds = [78, 56, 900, 58]
+
+[elements.content]
+style = "$heading"
+text = "关键类型规则"
+
+[[elements]]
+id = "rule1"
+type = "shape"
+bounds = [80, 145, 520, 205]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$green"
+
+[[elements]]
+id = "rule2"
+type = "shape"
+bounds = [680, 145, 520, 205]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$green"
+
+[[elements]]
+id = "rule3"
+type = "shape"
+bounds = [80, 405, 520, 205]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel_alt"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$cyan"
+
+[[elements]]
+id = "rule4"
+type = "shape"
+bounds = [680, 405, 520, 205]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel_alt"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$cyan"
+
+[[elements]]
+id = "rule1_text"
+type = "text"
+bounds = [112, 176, 455, 135]
+
+[elements.content]
+style = "$code"
+font_size = 22
+text = """
+T-Abs
+
+Gamma, x:S |- t : T
+-----------------------
+Gamma |- lambda x:S. t : S -> T
+"""
+
+[[elements]]
+id = "rule2_text"
+type = "text"
+bounds = [712, 176, 455, 135]
+
+[elements.content]
+style = "$code"
+font_size = 22
+text = """
+T-App
+
+Gamma |- f : S -> T
+Gamma |- u : S
+-----------------------
+Gamma |- f u : T
+"""
+
+[[elements]]
+id = "rule3_text"
+type = "text"
+bounds = [112, 436, 455, 135]
+
+[elements.content]
+style = "$code"
+font_size = 22
+text = """
+T-TAbs
+
+Gamma |- t : T
+A not free in Gamma
+-----------------------
+Gamma |- Lambda A. t : forall A. T
+"""
+
+[[elements]]
+id = "rule4_text"
+type = "text"
+bounds = [712, 436, 455, 135]
+
+[elements.content]
+style = "$code"
+font_size = 22
+text = """
+T-TApp
+
+Gamma |- t : forall A. T
+-----------------------
+Gamma |- t [S] : T[A := S]
+"""

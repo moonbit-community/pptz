@@ -1,0 +1,118 @@
+page_type = "content"
+
+[background]
+type = "solid"
+color = "$background"
+
+[[elements]]
+id = "heading"
+type = "text"
+bounds = [78, 56, 900, 58]
+
+[elements.content]
+style = "$heading"
+text = "元理论：强约束换来强保证"
+
+[[elements]]
+id = "progress"
+type = "shape"
+bounds = [95, 170, 315, 300]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$green"
+
+[[elements]]
+id = "preserve"
+type = "shape"
+bounds = [482, 170, 315, 300]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$cyan"
+
+[[elements]]
+id = "normalize"
+type = "shape"
+bounds = [870, 170, 315, 300]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$yellow"
+
+[[elements]]
+id = "progress_text"
+type = "text"
+bounds = [125, 210, 255, 205]
+
+[elements.content]
+style = "$body"
+font_size = 22
+text = """
+Progress
+
+闭合且类型正确的项，要么已经是值，要么还能继续求值。
+"""
+
+[[elements]]
+id = "preserve_text"
+type = "text"
+bounds = [512, 210, 255, 205]
+
+[elements.content]
+style = "$body"
+font_size = 22
+text = """
+Preservation
+
+如果 t : T 且 t -> t'，那么 t' : T。
+"""
+
+[[elements]]
+id = "normalize_text"
+type = "text"
+bounds = [900, 210, 255, 205]
+
+[elements.content]
+style = "$body"
+font_size = 22
+text = """
+Strong normalization
+
+纯 System F 中，类型正确的程序不会无限规约。
+"""
+
+[[elements]]
+id = "bottom"
+type = "text"
+bounds = [125, 545, 1030, 70]
+
+[elements.content]
+style = "$body"
+font_size = 23
+align = ["center", "center"]
+text = "这些性质解释了 System F 为什么常被当作编程语言核心演算，而不是只当语法糖。"

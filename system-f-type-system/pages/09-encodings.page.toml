@@ -1,0 +1,130 @@
+page_type = "content"
+
+[background]
+type = "solid"
+color = "$background"
+
+[[elements]]
+id = "heading"
+type = "text"
+bounds = [78, 56, 900, 58]
+
+[elements.content]
+style = "$heading"
+text = "高阶多态能编码很多结构"
+
+[[elements]]
+id = "card1"
+type = "shape"
+bounds = [80, 160, 345, 360]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$cyan"
+
+[[elements]]
+id = "card2"
+type = "shape"
+bounds = [467, 160, 345, 360]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$yellow"
+
+[[elements]]
+id = "card3"
+type = "shape"
+bounds = [855, 160, 345, 360]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$green"
+
+[[elements]]
+id = "card1_text"
+type = "text"
+bounds = [112, 198, 280, 255]
+
+[elements.content]
+style = "$body"
+font_size = 22
+text = """
+Church Boolean
+
+Bool =
+forall R. R -> R -> R
+
+true 选择第一个分支，
+false 选择第二个分支。
+"""
+
+[[elements]]
+id = "card2_text"
+type = "text"
+bounds = [500, 198, 280, 255]
+
+[elements.content]
+style = "$body"
+font_size = 22
+text = """
+Pair
+
+Pair A B =
+forall R.
+  (A -> B -> R) -> R
+
+消费者决定如何拆包。
+"""
+
+[[elements]]
+id = "card3_text"
+type = "text"
+bounds = [888, 198, 280, 255]
+
+[elements.content]
+style = "$body"
+font_size = 22
+text = """
+Existential
+
+exists A. T
+可编码为
+forall R.
+  (forall A. T -> R) -> R
+
+隐藏实现类型。
+"""
+
+[[elements]]
+id = "bottom"
+type = "text"
+bounds = [120, 585, 1040, 42]
+
+[elements.content]
+style = "$small"
+align = ["center", "center"]
+text = "这些编码说明 System F 的表达力；真实语言通常提供原生数据类型来提升可读性和效率。"

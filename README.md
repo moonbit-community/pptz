@@ -30,6 +30,38 @@ moon runwasm . examples/minimal/deck.pptz.toml --out examples/minimal/dist/demo.
 
 If `--out` is omitted, the output path defaults to `output.pptx`.
 
+## Agent Skill
+
+This repository can also be installed as an agent skill with the Skills CLI.
+Keep the `SKILL.md` frontmatter name as `portable-pptx-skill`.
+
+```bash
+npx skills add <this-repository-url>
+```
+
+If you are installing from a repository that contains multiple skills, select
+this skill explicitly:
+
+```bash
+npx skills add <repository-url> --skill portable-pptx-skill
+```
+
+You can also target a specific agent or install globally:
+
+```bash
+npx skills add <this-repository-url> --agent codex
+npx skills add <this-repository-url> --global
+```
+
+After installation, ask your agent to use `portable-pptx-skill` when you need a
+PPTX deck generated from TOML sources. The skill will guide the agent to:
+
+- design a deck directory with `deck.pptz.toml`, `pages/`, optional `images/`,
+  and `dist/`;
+- keep sources within the writer's supported feature set;
+- compile the deck with `moon runwasm Milky2018/pptz`;
+- deliver both the TOML sources and generated `.pptx`.
+
 ## Current Writer Scope
 
 The current writer supports:

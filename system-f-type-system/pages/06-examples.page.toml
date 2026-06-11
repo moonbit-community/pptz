@@ -1,0 +1,95 @@
+page_type = "content"
+
+[background]
+type = "solid"
+color = "$background"
+
+[[elements]]
+id = "heading"
+type = "text"
+bounds = [78, 56, 900, 58]
+
+[elements.content]
+style = "$heading"
+text = "典型程序：多态恒等函数"
+
+[[elements]]
+id = "code_panel"
+type = "shape"
+bounds = [85, 150, 620, 410]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$cyan"
+
+[[elements]]
+id = "code"
+type = "text"
+bounds = [122, 185, 550, 310]
+
+[elements.content]
+style = "$code"
+font_size = 25
+text = """
+id =
+  Lambda A.
+    lambda x:A. x
+
+id : forall A. A -> A
+
+id [Int]  42    ==> 42
+id [Bool] true  ==> true
+"""
+
+[[elements]]
+id = "explain_panel"
+type = "shape"
+bounds = [760, 150, 420, 410]
+
+[elements.content]
+shape = "rect"
+
+[elements.content.fill]
+type = "solid"
+color = "$panel_alt"
+
+[elements.content.border]
+style = "solid"
+width = 2
+color = "$line"
+
+[[elements]]
+id = "explain"
+type = "text"
+bounds = [795, 185, 350, 300]
+
+[elements.content]
+style = "$body"
+font_size = 23
+text = """
+读法：
+
+1. 先选择一个类型 A。
+2. 得到函数 A -> A。
+3. 再传入一个 A 类型的值。
+
+类型应用不会在运行时制造新算法；它选择同一个多态项的一个类型实例。
+"""
+
+[[elements]]
+id = "note"
+type = "text"
+bounds = [120, 600, 1040, 42]
+
+[elements.content]
+style = "$small"
+align = ["center", "center"]
+text = "如果语言做类型推断，许多类型应用可省略；System F 本身通常保持显式。"
