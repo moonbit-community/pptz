@@ -1,6 +1,7 @@
 import {
   "bobzhang/toml",
   "moonbit-community/miniio",
+  "moonbitlang/core/argparse",
   "moonbitlang/x/path",
 }
 

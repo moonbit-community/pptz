@@ -12,46 +12,95 @@ pub fn version() -> String {
 
 ///|
 pub fn usage() -> String {
-  (
-    #|pptz - PowerPoint Zero, compile TOML presentation sources to PPTX
-    #|
-    #|Usage:
-    #|  pptz <deck.toml> [--out <output.pptx>]
-    #|  pptz --version
-    #|
-    #|The current implementation has the CLI contract and semantic AST. The
-    #|compile path will be wired to project loading, validation, and PPTX writing
-    #|in later slices.
-  )
+  cli_command().render_help()
 }
 
 ///|
 pub fn dispatch(args : ArrayView[String]) -> CliResponse {
-  let argc = args.length()
-  if argc == 0 || args[0] == "help" || args[0] == "--help" || args[0] == "-h" {
+  if args.length() == 1 && (args[0] == "--help" || args[0] == "-h") {
     return CliResponse::{ exit_code: 0, stdout: usage(), stderr: "" }
   }
-  if args[0] == "--version" || args[0] == "version" {
+  if args.length() == 1 && (args[0] == "--version" || args[0] == "-V") {
     return CliResponse::{ exit_code: 0, stdout: version(), stderr: "" }
   }
-  if argc == 3 && args[1] == "--out" {
-    return compile_not_implemented(args[0], args[2])
+  let matches = cli_command().parse(argv=args, env={}) catch {
+    err => return CliResponse::{ exit_code: 2, stdout: "", stderr: "\{err}" }
   }
+  let deck_path = matches.values["deck"][0]
+  let output_path = matches.values["out"][0]
+  compile_deck(deck_path, output_path)
+}
+
+///|
+fn cli_command() -> @argparse.Command {
+  @argparse.Command(
+    "pptz",
+    about="PowerPoint Zero, compile TOML presentation sources to PPTX",
+    version=version(),
+    options=[
+      @argparse.OptionArg("out", long="out", about="Output PPTX path.", default_values=[
+        "output.pptx",
+      ]),
+    ],
+    positionals=[
+      @argparse.PositionArg(
+        "deck",
+        about="Input TOML deck file.",
+        num_args=@argparse.ValueRange::single(),
+      ),
+    ],
+  )
+}
+
+///|
+fn compile_deck(deck_path : String, output_path : String) -> CliResponse {
+  let loaded = load_deck(deck_path) catch {
+    LoadError::Fatal(message) =>
+      return CliResponse::{
+        exit_code: 1,
+        stdout: "",
+        stderr: "error: \{message}",
+      }
+    LoadError::Diagnostics(diagnostics) =>
+      return CliResponse::{
+        exit_code: 1,
+        stdout: "",
+        stderr: format_diagnostics(diagnostics),
+      }
+    err =>
+      return CliResponse::{ exit_code: 1, stdout: "", stderr: "error: \{err}" }
+  }
+  let warning_text = format_diagnostics(loaded.warnings)
   CliResponse::{
-    exit_code: 2,
+    exit_code: 1,
     stdout: "",
-    stderr: "usage: pptz <deck.toml> [--out <output.pptx>]",
+    stderr: warning_text +
+    "error: pptx writer is not implemented yet for \{deck_path} -> \{output_path}",
   }
 }
 
 ///|
-fn compile_not_implemented(
-  project_dir : String,
-  output : String,
-) -> CliResponse {
-  CliResponse::{
-    exit_code: 1,
-    stdout: "",
-    stderr: "pptz compile is not implemented yet for \{project_dir} -> \{output}",
+fn format_diagnostics(diagnostics : Array[Diagnostic]) -> String {
+  let mut text = ""
+  for diagnostic in diagnostics {
+    text = text + format_diagnostic(diagnostic) + "\n"
+  }
+  text
+}
+
+///|
+fn format_diagnostic(diagnostic : Diagnostic) -> String {
+  let severity = match diagnostic.severity {
+    Error => "error"
+    Warning => "warning"
+  }
+  "\{severity} \{diagnostic.code} \{optional_text(diagnostic.path)} \{optional_text(diagnostic.element_id)} \{optional_text(diagnostic.field)}: \{diagnostic.message}"
+}
+
+///|
+fn optional_text(value : String?) -> String {
+  match value {
+    None => "-"
+    Some(value) => value
   }
 }
