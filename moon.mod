@@ -10,6 +10,8 @@ keywords = [ "pptx", "presentation", "toml", "wasm" ]
 
 description = "PowerPoint Zero: a portable MoonBit PPTX generator driven by TOML deck and page sources."
 
+preferred_target = "wasm"
+
 import {
   "bobzhang/toml@0.4.1",
   "moonbit-community/miniio@0.2.0",
