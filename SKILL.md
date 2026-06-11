@@ -7,8 +7,10 @@ description: Creates PPTX decks from TOML pptz/page sources using the portable M
 
 ## Quick Start
 
-Use `moon runwasm Milky2018/pptz` as the published presentation compiler. While
-developing this repository, use the top-level package with `moon runwasm .`.
+Use `moon runwasm Milky2018/pptz` as the published presentation compiler. Run
+it from the deck project directory and pass relative paths for the deck, page,
+image, and output files. While developing this repository, use the top-level
+package with `moon runwasm .`.
 
 Expected project layout:
 
@@ -39,10 +41,11 @@ deck-topic/
    below.
 5. Find or create required `images/` assets. Do not use low-quality,
    watermarked, license-unknown, or unreadable images.
-6. Compile the project with `pptz`:
+6. Compile the project with `pptz` from the deck directory:
 
    ```bash
-   moon runwasm Milky2018/pptz deck-topic/deck.pptz.toml --out deck-topic/dist/deck.pptx
+   cd deck-topic
+   moon runwasm Milky2018/pptz deck.pptz.toml --out dist/deck.pptx
    ```
 
 7. Fix any `pptz` errors. Inspect every warning and either fix it or record why
@@ -80,6 +83,9 @@ elements, image `cover` or `contain`, alpha colors, `line_height`,
   but its sample files are YAML-like. This skill uses real TOML.
 - `pptz` and page sources must be parseable by `bobzhang/toml@0.4.1`.
 - File IO for the MoonBit tool should use `moonbit-community/miniio`.
+- Published `moon runwasm` executes inside a WASI-style file sandbox. Prefer
+  running from the deck directory with relative paths; absolute paths outside
+  the current working tree may not be visible to the tool.
 - See [REFERENCE.md](REFERENCE.md) for the source schema and CLI contract.
 - See [examples/minimal](examples/minimal) for the maintained TOML deck that
   covers the currently supported writer features.
