@@ -21,17 +21,26 @@ test "compile command validates arguments before implementation" {
 }
 
 ///|
-test "compile command is reserved but not implemented" {
+test "compile command writes pptx" {
+  let output = "examples/testdata/out/dispatch-demo.pptx"
   let response = dispatch(
-    ["examples/minimal/deck.pptz.toml", "--out", "dist/demo.pptx"][0:],
+    ["examples/minimal/deck.pptz.toml", "--out", output][0:],
   )
-  assert_eq(response.exit_code, 1)
-  assert_true(response.stderr.contains("writer is not implemented"))
+  assert_eq(response.exit_code, 0)
+  assert_eq(response.stdout, "wrote \{output}")
+  assert_true(@miniio.is_file(output) catch { _ => false })
+  @miniio.remove_file(output) catch {
+    _ => ()
+  }
 }
 
 ///|
 test "compile command defaults output path" {
   let response = dispatch(["examples/minimal/deck.pptz.toml"][0:])
-  assert_eq(response.exit_code, 1)
-  assert_true(response.stderr.contains("-> output.pptx"))
+  assert_eq(response.exit_code, 0)
+  assert_eq(response.stdout, "wrote output.pptx")
+  assert_true(@miniio.is_file("output.pptx") catch { _ => false })
+  @miniio.remove_file("output.pptx") catch {
+    _ => ()
+  }
 }

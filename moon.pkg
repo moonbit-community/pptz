@@ -3,6 +3,10 @@ import {
   "moonbit-community/miniio",
   "moonbitlang/core/argparse",
   "moonbitlang/x/path",
+  "t-ujiie-g/moon-pptx/oxml",
+  "t-ujiie-g/moon-pptx/presentation",
+  "t-ujiie-g/moon-pptx/slide",
+  "t-ujiie-g/moon-pptx/units",
 }
 
 supported_targets = "wasm"

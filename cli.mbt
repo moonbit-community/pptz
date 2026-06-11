@@ -71,11 +71,36 @@ fn compile_deck(deck_path : String, output_path : String) -> CliResponse {
       return CliResponse::{ exit_code: 1, stdout: "", stderr: "error: \{err}" }
   }
   let warning_text = format_diagnostics(loaded.warnings)
+  write_pptx_file(loaded, output_path) catch {
+    WriteError::Capability(message) =>
+      return CliResponse::{
+        exit_code: 1,
+        stdout: "",
+        stderr: warning_text + "error: \{message}",
+      }
+    WriteError::Backend(message) =>
+      return CliResponse::{
+        exit_code: 1,
+        stdout: "",
+        stderr: warning_text + "error: \{message}",
+      }
+    WriteError::Io(message) =>
+      return CliResponse::{
+        exit_code: 1,
+        stdout: "",
+        stderr: warning_text + "error: \{message}",
+      }
+    err =>
+      return CliResponse::{
+        exit_code: 1,
+        stdout: "",
+        stderr: warning_text + "error: \{err}",
+      }
+  }
   CliResponse::{
-    exit_code: 1,
-    stdout: "",
-    stderr: warning_text +
-    "error: pptx writer is not implemented yet for \{deck_path} -> \{output_path}",
+    exit_code: 0,
+    stdout: "wrote \{output_path}",
+    stderr: warning_text,
   }
 }
 

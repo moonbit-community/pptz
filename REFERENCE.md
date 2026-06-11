@@ -220,6 +220,7 @@ Build `pptz` in this order:
    `parse_page_toml(String) -> Page raise` are implemented in `parser.mbt`.
 3. Add a loader that reads the input deck file, resolves pages, validates the
    resulting bundle, and reports diagnostics with file and element context.
+   Current status: implemented in `loader.mbt`.
 4. Add the PPTX writer after loader validation is reliable.
    A successful writer result must be a valid PPTX that PowerPoint-compatible
    tools can open. Do not report success with a placeholder file.
@@ -246,6 +247,11 @@ Build `pptz` in this order:
    outside the MVP writer scope.
    The MVP writer must not silently ignore declared fields that it cannot map
    to `moon-pptx`. Fail with a writer capability error instead.
+   Current status: `writer.mbt` generates valid PPTX bytes for deck size,
+   ordered pages, optional solid backgrounds, text elements, rectangle/ellipse
+   shape elements, stretch image elements, and basic theme color/text-style
+   resolution. It returns capability errors for schema-valid features that are
+   still outside the implemented writer subset.
 
 Do not add a `format` command. Formatting TOML is outside `pptz`; `pptz`
 converts a TOML deck file into a PPTX.
