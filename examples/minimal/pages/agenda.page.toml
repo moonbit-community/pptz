@@ -43,10 +43,12 @@ bounds = [650, 500, 500, 120]
 [elements.content]
 col_widths = [220, 140, 140]
 row_heights = [40, 40, 40]
-data = [
-  ["Metric", "Q1", "Q2"],
-  ["Revenue", "100", "150"],
-  ["Users", "42", "64"],
+rows = [
+  { cells = [
+    { text = "Metrics", col_span = 3 },
+  ] },
+  { cells = ["Revenue", "100", "150"] },
+  { cells = ["Users", "42", "64"] },
 ]
 
 [[elements]]
@@ -56,6 +58,11 @@ bounds = [110, 480, 440, 160]
 
 [elements.content]
 kind = "bar"
+title = "Revenue"
+legend = "bottom"
+style = 4
+data_labels = "outside_end"
+rounded_corners = false
 categories = ["Q1", "Q2", "Q3"]
 
 [[elements.content.series]]

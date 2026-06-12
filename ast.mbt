@@ -230,6 +230,12 @@ pub(all) struct TableCellMargin {
 ///|
 pub(all) struct ChartSpec {
   kind : String
+  title : String?
+  legend : String?
+  style : Int?
+  data_labels : String?
+  data_table : Bool?
+  rounded_corners : Bool?
   categories : Array[String]?
   series : Array[ChartSeriesSpec]
 } derive(Eq, Debug)

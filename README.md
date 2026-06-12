@@ -15,7 +15,7 @@ moon runwasm Milky2018/pptz <deck.toml> [--out <output.pptx>]
 For reproducible runs, pin the published version:
 
 ```bash
-moon runwasm Milky2018/pptz@0.2.3 <deck.toml> [--out <output.pptx>]
+moon runwasm Milky2018/pptz@0.2.4 <deck.toml> [--out <output.pptx>]
 ```
 
 Run the command from the deck project directory and use relative paths. The
@@ -71,16 +71,20 @@ The current writer supports:
 - text elements with theme text styles, local overrides, text wrapping, and
   line breaks;
 - PowerPoint preset auto-shapes, excluding line and connector presets;
-- straight connectors with coordinate or element endpoints, stroke, dash, and
-  arrowheads;
+- straight, bent, and curved connectors with coordinate or element endpoints,
+  stroke, dash, and arrowheads;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
 - outer shadows for shape and connector elements;
-- built-in icon elements for `cube`, `circle`, `square`, `star`, `heart`, and
-  `plus`, with optional `fas:`-style prefixes;
+- built-in icon elements for `cube`, `circle`, `square`, `star`, `heart`,
+  `plus`, `home`, `info`, `help`, `return`, `blank`, `smiley`, `sun`, `moon`,
+  `cloud`, `lightning`, `gear6`, `gear9`, `funnel`, `chart_plus`,
+  `chart_star`, `chart_x`, and `no_smoking`, with optional `fas:`-style
+  prefixes;
 - table elements with explicit or evenly distributed column widths and row
-  heights;
+  heights, including cell merge spans;
 - inline chart elements for `bar`, `line`, `pie`, `doughnut`, `area`,
-  `scatter`, `bubble`, and `radar`;
+  `scatter`, `bubble`, and `radar`, with title, legend, style, data labels,
+  data table, and rounded-corner options;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
 - image crop rectangles;
@@ -88,9 +92,9 @@ The current writer supports:
   `moon-pptx`.
 
 Schema-valid features outside this scope fail with a writer capability error
-instead of being silently ignored. This includes `letter_spacing`, table merge
-spans, unsupported icon names, unsupported connector kinds, line/connector
-shape presets, and unsupported shape names.
+instead of being silently ignored. This includes `letter_spacing`, unsupported
+icon names, unsupported connector kinds, line/connector shape presets, and
+unsupported shape names.
 
 ## Example
 

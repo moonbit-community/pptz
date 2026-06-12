@@ -601,9 +601,24 @@ fn parse_chart_spec(
   table : Map[String, @toml.TomlValue],
   path : String,
 ) -> ChartSpec raise {
-  reject_unknown_fields(table, path, ["kind", "categories", "series"])
+  reject_unknown_fields(table, path, [
+    "kind", "title", "legend", "style", "data_labels", "data_table", "rounded_corners",
+    "categories", "series",
+  ])
   ChartSpec::{
     kind: required_string(table, "\{path}.kind", key="kind"),
+    title: optional_string(table.get("title"), "\{path}.title"),
+    legend: optional_string(table.get("legend"), "\{path}.legend"),
+    style: optional_int_or_none(table.get("style"), "\{path}.style"),
+    data_labels: optional_string(
+      table.get("data_labels"),
+      "\{path}.data_labels",
+    ),
+    data_table: optional_bool(table.get("data_table"), "\{path}.data_table"),
+    rounded_corners: optional_bool(
+      table.get("rounded_corners"),
+      "\{path}.rounded_corners",
+    ),
     categories: parse_optional_string_array(
       table.get("categories"),
       "\{path}.categories",
@@ -994,6 +1009,14 @@ fn optional_int(
   match value {
     None => default
     Some(value) => expect_int(value, path)
+  }
+}
+
+///|
+fn optional_int_or_none(value : @toml.TomlValue?, path : String) -> Int? raise {
+  match value {
+    None => None
+    Some(value) => Some(expect_int(value, path))
   }
 }
 

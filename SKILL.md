@@ -73,25 +73,28 @@ Use these features for deliverable decks:
 - text elements with theme text styles, local overrides, text wrapping, and
   line breaks;
 - PowerPoint preset auto-shapes, excluding line and connector presets;
-- straight connectors with coordinate or element endpoints, stroke, dash, and
-  arrowheads;
+- straight, bent, and curved connectors with coordinate or element endpoints,
+  stroke, dash, and arrowheads;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
 - outer shadows for shape and connector elements;
-- built-in icon elements for `cube`, `circle`, `square`, `star`, `heart`, and
-  `plus`, with optional `fas:`-style prefixes;
+- built-in icon elements for `cube`, `circle`, `square`, `star`, `heart`,
+  `plus`, `home`, `info`, `help`, `return`, `blank`, `smiley`, `sun`, `moon`,
+  `cloud`, `lightning`, `gear6`, `gear9`, `funnel`, `chart_plus`,
+  `chart_star`, `chart_x`, and `no_smoking`, with optional `fas:`-style
+  prefixes;
 - table elements with explicit or evenly distributed column widths and row
-  heights;
+  heights, including cell merge spans;
 - inline chart elements for `bar`, `line`, `pie`, `doughnut`, `area`,
-  `scatter`, `bubble`, and `radar`;
+  `scatter`, `bubble`, and `radar`, with title, legend, style, data labels,
+  data table, and rounded-corner options;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
 - image crop rectangles;
 - SVG image elements.
 
 Do not use these in deliverable decks until `pptz` implements them in the
-writer: `letter_spacing`, table merge spans, unsupported icon names,
-line/connector shape presets, unsupported connector kinds, or unsupported
-shape names.
+writer: `letter_spacing`, unsupported icon names, line/connector shape presets,
+unsupported connector kinds, or unsupported shape names.
 
 ## Important Notes
 

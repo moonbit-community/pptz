@@ -212,7 +212,7 @@ fn add_chart(
 
 ///|
 fn chart_from_spec(spec : ChartSpec) -> @chart.Chart raise {
-  match spec.kind {
+  let chart = match spec.kind {
     "bar" => @chart.Chart::of_bar(chart_data(spec))
     "line" => @chart.Chart::of_line(chart_data(spec))
     "pie" => @chart.Chart::of_pie(chart_data(spec))
@@ -223,6 +223,73 @@ fn chart_from_spec(spec : ChartSpec) -> @chart.Chart raise {
     "bubble" => @chart.Chart::of_bubble(bubble_data(spec))
     other =>
       raise WriteError::Capability("chart kind '\{other}' is not implemented")
+  }
+  chart.with_options(chart_options(spec))
+}
+
+///|
+fn chart_options(spec : ChartSpec) -> Array[@chart.ChartOption] raise {
+  let options = []
+  match spec.title {
+    None => ()
+    Some(title) => options.push(@chart.ChartOption::Title(title))
+  }
+  match spec.legend {
+    None => ()
+    Some("hidden") => options.push(@chart.ChartOption::LegendHidden)
+    Some(legend) =>
+      options.push(@chart.ChartOption::Legend(chart_legend_pos(legend)))
+  }
+  match spec.style {
+    None => ()
+    Some(style) => options.push(@chart.ChartOption::Style(style))
+  }
+  match spec.data_labels {
+    None => ()
+    Some("hidden") => options.push(@chart.ChartOption::DataLabelsHidden)
+    Some(pos) =>
+      options.push(@chart.ChartOption::DataLabels(chart_data_label_pos(pos)))
+  }
+  match spec.data_table {
+    None => ()
+    Some(show) => options.push(@chart.ChartOption::DataTable(show))
+  }
+  match spec.rounded_corners {
+    None => ()
+    Some(value) => options.push(@chart.ChartOption::RoundedCorners(value))
+  }
+  options
+}
+
+///|
+fn chart_legend_pos(value : String) -> @chart.LegendPos raise {
+  match value {
+    "bottom" => @chart.LegendPos::LegendBottom
+    "top_right" => @chart.LegendPos::LegendTopRight
+    "left" => @chart.LegendPos::LegendLeft
+    "right" => @chart.LegendPos::LegendRight
+    "top" => @chart.LegendPos::LegendTop
+    other =>
+      raise WriteError::Capability("chart legend '\{other}' is not implemented")
+  }
+}
+
+///|
+fn chart_data_label_pos(value : String) -> @chart.DLblPos raise {
+  match value {
+    "best_fit" => @chart.DLblPos::DLblBestFit
+    "bottom" => @chart.DLblPos::DLblBottom
+    "center" => @chart.DLblPos::DLblCenter
+    "inside_base" => @chart.DLblPos::DLblInBase
+    "inside_end" => @chart.DLblPos::DLblInEnd
+    "left" => @chart.DLblPos::DLblLeft
+    "outside_end" => @chart.DLblPos::DLblOutEnd
+    "right" => @chart.DLblPos::DLblRight
+    "top" => @chart.DLblPos::DLblTop
+    other =>
+      raise WriteError::Capability(
+        "chart data_labels '\{other}' is not implemented",
+      )
   }
 }
 
@@ -723,14 +790,21 @@ fn table_rows(
   bounds : Bounds,
 ) -> Array[@slide.TableRow] raise {
   let row_heights = table_row_heights(spec, bounds)
+  let column_count = table_column_count(spec)
+  let mut active_counts = zero_int_array(column_count)
+  let mut active_horizontal = false_bool_array(column_count)
   let rows = []
   for index, row in spec.rows {
-    rows.push(
-      @slide.TableRow::of_cells(
-        table_cells(bundle, row.cells),
-        height=row_heights[index],
-      ),
+    let (cells, next_counts, next_horizontal) = table_cells(
+      bundle,
+      row.cells,
+      active_counts,
+      active_horizontal,
+      column_count,
     )
+    rows.push(@slide.TableRow::of_cells(cells, height=row_heights[index]))
+    active_counts = next_counts
+    active_horizontal = next_horizontal
   }
   rows
 }
@@ -739,20 +813,79 @@ fn table_rows(
 fn table_cells(
   bundle : DeckBundle,
   cells : Array[TableCellSpec],
-) -> Array[@slide.TableCell] raise {
+  active_counts : Array[Int],
+  active_horizontal : Array[Bool],
+  column_count : Int,
+) -> (Array[@slide.TableCell], Array[Int], Array[Bool]) raise {
   let result = []
-  for cell in cells {
-    if cell.col_span != 1 || cell.row_span != 1 {
-      raise WriteError::Capability("table cell merge spans are not implemented")
+  let next_counts = zero_int_array(column_count)
+  let next_horizontal = false_bool_array(column_count)
+  let mut column = 0
+  let mut cell_index = 0
+  while column < column_count {
+    if active_counts[column] > 0 {
+      if active_horizontal[column] {
+        result.push(@slide.TableCell::hv_merge_covered())
+      } else {
+        result.push(@slide.TableCell::v_merge_covered())
+      }
+      next_counts[column] = active_counts[column] - 1
+      next_horizontal[column] = active_counts[column] > 1 &&
+        active_horizontal[column]
+      column += 1
+    } else if cell_index < cells.length() {
+      let cell = cells[cell_index]
+      if column + cell.col_span > column_count {
+        raise WriteError::Backend("table row exceeds computed column count")
+      }
+      for offset in 0..<cell.col_span {
+        if active_counts[column + offset] > 0 {
+          raise WriteError::Backend("table merge overlaps active row span")
+        }
+      }
+      result.push(table_origin_cell(bundle, cell))
+      if cell.row_span > 1 {
+        next_counts[column] = cell.row_span - 1
+        next_horizontal[column] = false
+      }
+      for offset in 1..<cell.col_span {
+        result.push(@slide.TableCell::h_merge_covered())
+        if cell.row_span > 1 {
+          next_counts[column + offset] = cell.row_span - 1
+          next_horizontal[column + offset] = true
+        }
+      }
+      column += cell.col_span
+      cell_index += 1
+    } else {
+      raise WriteError::Backend("table row does not fill computed column count")
     }
-    let mut table_cell = @slide.TableCell::of_text(cell.text)
-    let properties = table_cell_properties(bundle, cell)
-    if properties is Some(_) {
-      table_cell = @slide.TableCell::{ ..table_cell, properties, }
-    }
-    result.push(table_cell)
   }
-  result
+  if cell_index != cells.length() {
+    raise WriteError::Backend("table row has unused cells after grid expansion")
+  }
+  (result, next_counts, next_horizontal)
+}
+
+///|
+fn table_origin_cell(
+  bundle : DeckBundle,
+  cell : TableCellSpec,
+) -> @slide.TableCell raise {
+  let mut table_cell = if cell.col_span == 1 && cell.row_span == 1 {
+    @slide.TableCell::of_text(cell.text)
+  } else {
+    @slide.TableCell::merged_origin(
+      cell.text,
+      grid_span=cell.col_span,
+      row_span=cell.row_span,
+    )
+  }
+  let properties = table_cell_properties(bundle, cell)
+  if properties is Some(_) {
+    table_cell = @slide.TableCell::{ ..table_cell, properties, }
+  }
+  table_cell
 }
 
 ///|
@@ -843,8 +976,22 @@ fn table_col_widths(spec : TableSpec, bounds : Bounds) -> Array[@units.Emu] {
   match spec.col_widths {
     Some(widths) => double_array_to_emu(widths)
     None => {
-      let column_count = spec.rows[0].cells.length()
+      let column_count = table_column_count(spec)
       equal_emu_array(bounds.width, column_count)
+    }
+  }
+}
+
+///|
+fn table_column_count(spec : TableSpec) -> Int {
+  match spec.col_widths {
+    Some(widths) => widths.length()
+    None => {
+      let mut count = 0
+      for cell in spec.rows[0].cells {
+        count += cell.col_span
+      }
+      count
     }
   }
 }
@@ -877,6 +1024,24 @@ fn equal_emu_array(total : Double, count : Int) -> Array[@units.Emu] {
 }
 
 ///|
+fn zero_int_array(count : Int) -> Array[Int] {
+  let result = []
+  for _ in 0..<count {
+    result.push(0)
+  }
+  result
+}
+
+///|
+fn false_bool_array(count : Int) -> Array[Bool] {
+  let result = []
+  for _ in 0..<count {
+    result.push(false)
+  }
+  result
+}
+
+///|
 fn icon_preset_shape(name : String) -> @slide.PresetShape raise {
   match icon_local_name(name) {
     "cube" => @slide.PresetShape::Cube
@@ -885,9 +1050,26 @@ fn icon_preset_shape(name : String) -> @slide.PresetShape raise {
     "star" => @slide.PresetShape::Star5
     "heart" => @slide.PresetShape::Heart
     "plus" => @slide.PresetShape::Plus
+    "home" => @slide.PresetShape::ActionButtonHome
+    "info" => @slide.PresetShape::ActionButtonInformation
+    "help" => @slide.PresetShape::ActionButtonHelp
+    "return" => @slide.PresetShape::ActionButtonReturn
+    "blank" => @slide.PresetShape::ActionButtonBlank
+    "smiley" => @slide.PresetShape::SmileyFace
+    "sun" => @slide.PresetShape::Sun
+    "moon" => @slide.PresetShape::Moon
+    "cloud" => @slide.PresetShape::Cloud
+    "lightning" => @slide.PresetShape::LightningBolt
+    "gear6" => @slide.PresetShape::Gear6
+    "gear9" => @slide.PresetShape::Gear9
+    "funnel" => @slide.PresetShape::Funnel
+    "chart_plus" => @slide.PresetShape::ChartPlus
+    "chart_star" => @slide.PresetShape::ChartStar
+    "chart_x" => @slide.PresetShape::ChartX
+    "no_smoking" => @slide.PresetShape::NoSmoking
     _ =>
       raise WriteError::Capability(
-        "icon '\{name}' is not implemented; supported icon names: cube, circle, square, star, heart, plus",
+        "icon '\{name}' is not implemented; supported icon names: cube, circle, square, star, heart, plus, home, info, help, return, blank, smiley, sun, moon, cloud, lightning, gear6, gear9, funnel, chart_plus, chart_star, chart_x, no_smoking",
       )
   }
 }
@@ -1055,6 +1237,14 @@ fn build_connector(
 fn connector_geometry(kind : String) -> @slide.PresetShape raise {
   match kind {
     "straight" => @slide.PresetShape::StraightConnector1
+    "bent2" => @slide.PresetShape::BentConnector2
+    "bent3" => @slide.PresetShape::BentConnector3
+    "bent4" => @slide.PresetShape::BentConnector4
+    "bent5" => @slide.PresetShape::BentConnector5
+    "curved2" => @slide.PresetShape::CurvedConnector2
+    "curved3" => @slide.PresetShape::CurvedConnector3
+    "curved4" => @slide.PresetShape::CurvedConnector4
+    "curved5" => @slide.PresetShape::CurvedConnector5
     other =>
       raise WriteError::Capability(
         "connector kind '\{other}' is not implemented",

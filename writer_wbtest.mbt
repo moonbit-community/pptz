@@ -16,7 +16,7 @@ test "render minimal deck as pptx bytes" {
   assert_eq(slides.length(), 4)
   assert_true(slides[0].shapes.length() >= 2)
   assert_slide_xml_contains(prs, 2, "<a:tbl>")
-  assert_slide_xml_contains(prs, 2, "<a:t>Metric</a:t>")
+  assert_slide_xml_contains(prs, 2, "<a:t>Metrics</a:t>")
   let charts = prs.charts() catch {
     err => abort("read generated charts failed: \{err}")
   }
@@ -94,6 +94,96 @@ test "writer renders chart elements" {
   }
   assert_eq(charts.length(), 1)
   assert_slide_xml_contains(prs, 1, "<c:chart")
+  assert_chart_xml_contains(prs, 1, "Revenue")
+  assert_chart_xml_contains(prs, 1, "<c:legendPos val=\"b\"/>")
+  assert_chart_xml_contains(prs, 1, "<c:dLblPos val=\"outEnd\"/>")
+  assert_chart_xml_contains(prs, 1, "<c:style val=\"4\"/>")
+}
+
+///|
+test "writer renders table merge spans" {
+  let loaded = unsupported_loaded(
+    page_with_element(
+      TableElement(test_base("merged_table"), test_merged_table_spec()),
+    ),
+  )
+  let bytes = render_pptx(loaded) catch {
+    err => abort("render failed: \{err}")
+  }
+  let prs = @presentation.Presentation::open(bytes) catch {
+    err => abort("open generated pptx failed: \{err}")
+  }
+  assert_slide_xml_contains(prs, 1, "gridSpan=\"2\"")
+  assert_slide_xml_contains(prs, 1, "rowSpan=\"2\"")
+  assert_slide_xml_contains(prs, 1, "hMerge=\"1\"")
+  assert_slide_xml_contains(prs, 1, "vMerge=\"1\"")
+}
+
+///|
+test "writer maps expanded connector kinds" {
+  let cases = [
+    ("straight", "straightConnector1"),
+    ("bent2", "bentConnector2"),
+    ("bent3", "bentConnector3"),
+    ("bent4", "bentConnector4"),
+    ("bent5", "bentConnector5"),
+    ("curved2", "curvedConnector2"),
+    ("curved3", "curvedConnector3"),
+    ("curved4", "curvedConnector4"),
+    ("curved5", "curvedConnector5"),
+  ]
+  for item in cases {
+    let (kind, xml_name) = item
+    let loaded = unsupported_loaded(
+      page_with_element(
+        ConnectorElement(kind, ConnectorSpec::{
+          kind,
+          start: CoordinateEndpoint(100.0, 100.0),
+          end: CoordinateEndpoint(320.0, 180.0),
+          stroke: None,
+          start_arrow: None,
+          end_arrow: None,
+          shadow: None,
+        }),
+      ),
+    )
+    let bytes = render_pptx(loaded) catch {
+      err => abort("render \{kind} failed: \{err}")
+    }
+    let prs = @presentation.Presentation::open(bytes) catch {
+      err => abort("open generated \{kind} pptx failed: \{err}")
+    }
+    assert_slide_xml_contains(prs, 1, "prst=\"\{xml_name}\"")
+  }
+}
+
+///|
+test "writer maps expanded icon names" {
+  let cases = [
+    ("fas:home", "actionButtonHome"),
+    ("fas:info", "actionButtonInformation"),
+    ("fas:sun", "sun"),
+    ("fas:gear6", "gear6"),
+    ("fas:chart_plus", "chartPlus"),
+  ]
+  for item in cases {
+    let (name, xml_name) = item
+    let loaded = unsupported_loaded(
+      page_with_element(
+        IconElement(test_base(xml_name), IconSpec::{
+          name,
+          fill: Some(SolidFill("#F59E0B")),
+        }),
+      ),
+    )
+    let bytes = render_pptx(loaded) catch {
+      err => abort("render \{name} failed: \{err}")
+    }
+    let prs = @presentation.Presentation::open(bytes) catch {
+      err => abort("open generated \{name} pptx failed: \{err}")
+    }
+    assert_slide_xml_contains(prs, 1, "prst=\"\{xml_name}\"")
+  }
 }
 
 ///|
@@ -370,6 +460,21 @@ fn assert_slide_xml_contains(
 }
 
 ///|
+fn assert_chart_xml_contains(
+  prs : @presentation.Presentation,
+  chart_number : Int,
+  expected : String,
+) -> Unit raise {
+  let part = prs.pkg.require_part("/ppt/charts/chart\{chart_number}.xml") catch {
+    err => abort("missing chart \{chart_number}: \{err}")
+  }
+  let text = part.text() catch {
+    err => abort("decode chart \{chart_number}: \{err}")
+  }
+  assert_true(text.contains(expected))
+}
+
+///|
 fn expect_capability(loaded : LoadedDeck, message : String) -> Unit raise {
   ignore(
     render_pptx(loaded) catch {
@@ -466,9 +571,60 @@ fn test_table_spec() -> TableSpec {
 }
 
 ///|
+fn test_merged_table_spec() -> TableSpec {
+  TableSpec::{
+    col_widths: Some([80.0, 80.0, 80.0]),
+    row_heights: Some([32.0, 32.0]),
+    rows: [
+      TableRowSpec::{
+        cells: [
+          TableCellSpec::{
+            text: "A",
+            fill: None,
+            border: None,
+            col_span: 2,
+            row_span: 2,
+            align: None,
+            margin: None,
+          },
+          TableCellSpec::{
+            text: "B",
+            fill: None,
+            border: None,
+            col_span: 1,
+            row_span: 1,
+            align: None,
+            margin: None,
+          },
+        ],
+      },
+      TableRowSpec::{
+        cells: [
+          TableCellSpec::{
+            text: "C",
+            fill: None,
+            border: None,
+            col_span: 1,
+            row_span: 1,
+            align: None,
+            margin: None,
+          },
+        ],
+      },
+    ],
+  }
+}
+
+///|
 fn test_chart_spec() -> ChartSpec {
   ChartSpec::{
     kind: "bar",
+    title: Some("Revenue"),
+    legend: Some("bottom"),
+    style: Some(4),
+    data_labels: Some("outside_end"),
+    data_table: Some(false),
+    rounded_corners: Some(false),
     categories: Some(["Q1", "Q2"]),
     series: [
       ChartSeriesSpec::{

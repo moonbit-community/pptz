@@ -246,7 +246,7 @@ test "parse minimal agenda page multiline text" {
   match page.elements[3] {
     TableElement(base, spec) => {
       assert_eq(base.id, "summary_table")
-      assert_eq(spec.rows[0].cells[0].text, "Metric")
+      assert_eq(spec.rows[0].cells[0].text, "Metrics")
     }
     _ => abort("expected table element")
   }
@@ -254,6 +254,14 @@ test "parse minimal agenda page multiline text" {
     ChartElement(base, spec) => {
       assert_eq(base.id, "revenue_chart")
       assert_eq(spec.kind, "bar")
+      match spec.title {
+        Some(title) => assert_eq(title, "Revenue")
+        None => abort("expected chart title")
+      }
+      match spec.legend {
+        Some(legend) => assert_eq(legend, "bottom")
+        None => abort("expected chart legend")
+      }
     }
     _ => abort("expected chart element")
   }
@@ -400,6 +408,12 @@ test "parse chart content" {
       #|
       #|[elements.content]
       #|kind = "bar"
+      #|title = "Quarterly revenue"
+      #|legend = "bottom"
+      #|style = 5
+      #|data_labels = "outside_end"
+      #|data_table = true
+      #|rounded_corners = false
       #|categories = ["Q1", "Q2", "Q3"]
       #|
       #|[[elements.content.series]]
@@ -416,6 +430,30 @@ test "parse chart content" {
       match spec.categories {
         Some(categories) => assert_eq(categories[1], "Q2")
         None => abort("expected categories")
+      }
+      match spec.title {
+        Some(title) => assert_eq(title, "Quarterly revenue")
+        None => abort("expected title")
+      }
+      match spec.legend {
+        Some(legend) => assert_eq(legend, "bottom")
+        None => abort("expected legend")
+      }
+      match spec.style {
+        Some(style) => assert_eq(style, 5)
+        None => abort("expected style")
+      }
+      match spec.data_labels {
+        Some(pos) => assert_eq(pos, "outside_end")
+        None => abort("expected data labels")
+      }
+      match spec.data_table {
+        Some(show) => assert_true(show)
+        None => abort("expected data table")
+      }
+      match spec.rounded_corners {
+        Some(value) => assert_false(value)
+        None => abort("expected rounded corners")
       }
       assert_eq(spec.series[0].name, "Revenue")
       assert_eq(spec.series[0].values[2], 150.0)

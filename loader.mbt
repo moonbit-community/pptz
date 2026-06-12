@@ -509,6 +509,7 @@ fn validate_chart(
       ),
     )
   }
+  validate_chart_options(page_path, base.id, spec, errors)
   if spec.series.is_empty() {
     errors.push(
       error_diagnostic(
@@ -596,6 +597,100 @@ fn validate_chart(
         )
       }
     }
+  }
+}
+
+///|
+fn validate_chart_options(
+  page_path : String,
+  element_id : String,
+  spec : ChartSpec,
+  errors : Array[Diagnostic],
+) -> Unit {
+  match spec.title {
+    None => ()
+    Some(title) =>
+      if title.is_blank() {
+        errors.push(
+          error_diagnostic(
+            "PZ070",
+            "chart title must not be empty",
+            path=page_path,
+            element_id~,
+            field="elements.content.title",
+          ),
+        )
+      }
+  }
+  match spec.legend {
+    None => ()
+    Some(legend) =>
+      if !chart_legend_supported(legend) {
+        errors.push(
+          error_diagnostic(
+            "PZ070",
+            "unsupported chart legend",
+            path=page_path,
+            element_id~,
+            field="elements.content.legend",
+          ),
+        )
+      }
+  }
+  match spec.style {
+    None => ()
+    Some(style) =>
+      if style < 1 || style > 48 {
+        errors.push(
+          error_diagnostic(
+            "PZ070",
+            "chart style must be between 1 and 48",
+            path=page_path,
+            element_id~,
+            field="elements.content.style",
+          ),
+        )
+      }
+  }
+  match spec.data_labels {
+    None => ()
+    Some(pos) =>
+      if !chart_data_label_supported(pos) {
+        errors.push(
+          error_diagnostic(
+            "PZ070",
+            "unsupported chart data_labels position",
+            path=page_path,
+            element_id~,
+            field="elements.content.data_labels",
+          ),
+        )
+      }
+  }
+}
+
+///|
+fn chart_legend_supported(value : String) -> Bool {
+  match value {
+    "hidden" | "bottom" | "top_right" | "left" | "right" | "top" => true
+    _ => false
+  }
+}
+
+///|
+fn chart_data_label_supported(value : String) -> Bool {
+  match value {
+    "hidden"
+    | "best_fit"
+    | "bottom"
+    | "center"
+    | "inside_base"
+    | "inside_end"
+    | "left"
+    | "outside_end"
+    | "right"
+    | "top" => true
+    _ => false
   }
 }
 
@@ -728,33 +823,7 @@ fn validate_table(
     )
     return
   }
-  let mut expected_columns = 0
   for row_index, row in spec.rows {
-    if row.cells.is_empty() {
-      errors.push(
-        error_diagnostic(
-          "PZ060",
-          "table row must have at least one cell",
-          path=page_path,
-          element_id=base.id,
-          field="elements.content.rows[\{row_index}].cells",
-        ),
-      )
-    }
-    let columns = table_row_columns(row)
-    if row_index == 0 {
-      expected_columns = columns
-    } else if columns != expected_columns {
-      errors.push(
-        error_diagnostic(
-          "PZ060",
-          "table rows must have the same column span",
-          path=page_path,
-          element_id=base.id,
-          field="elements.content.rows[\{row_index}].cells",
-        ),
-      )
-    }
     for cell_index, cell in row.cells {
       validate_table_cell(
         bundle,
@@ -768,6 +837,7 @@ fn validate_table(
       )
     }
   }
+  let expected_columns = validate_table_grid(page_path, base.id, spec, errors)
   validate_table_sizes(
     page_path,
     base.id,
@@ -787,12 +857,129 @@ fn validate_table(
 }
 
 ///|
-fn table_row_columns(row : TableRowSpec) -> Int {
+fn validate_table_grid(
+  page_path : String,
+  element_id : String,
+  spec : TableSpec,
+  errors : Array[Diagnostic],
+) -> Int {
+  let mut expected_columns = match spec.col_widths {
+    Some(widths) => widths.length()
+    None => 0
+  }
+  let mut active_counts = zero_int_array(expected_columns)
+  let mut active_horizontal = false_bool_array(expected_columns)
+  for row_index, row in spec.rows {
+    if expected_columns == 0 {
+      expected_columns = table_row_span_sum(row)
+      active_counts = zero_int_array(expected_columns)
+      active_horizontal = false_bool_array(expected_columns)
+    }
+    let occupied = false_bool_array(expected_columns)
+    let next_counts = zero_int_array(expected_columns)
+    let next_horizontal = false_bool_array(expected_columns)
+    for column in 0..<expected_columns {
+      if active_counts[column] > 0 {
+        occupied[column] = true
+        next_counts[column] = active_counts[column] - 1
+        next_horizontal[column] = active_counts[column] > 1 &&
+          active_horizontal[column]
+      }
+    }
+    let mut column = 0
+    for cell_index, cell in row.cells {
+      while column < expected_columns && occupied[column] {
+        column += 1
+      }
+      if column >= expected_columns || column + cell.col_span > expected_columns {
+        errors.push(
+          error_diagnostic(
+            "PZ060",
+            "table row exceeds the table column span",
+            path=page_path,
+            element_id~,
+            field="elements.content.rows[\{row_index}].cells[\{cell_index}]",
+          ),
+        )
+        continue
+      }
+      let mut conflict = false
+      for offset in 0..<cell.col_span {
+        if occupied[column + offset] {
+          conflict = true
+        }
+      }
+      if conflict {
+        errors.push(
+          error_diagnostic(
+            "PZ060",
+            "table cell merge overlaps another cell",
+            path=page_path,
+            element_id~,
+            field="elements.content.rows[\{row_index}].cells[\{cell_index}]",
+          ),
+        )
+      } else {
+        for offset in 0..<cell.col_span {
+          occupied[column + offset] = true
+          if cell.row_span > 1 {
+            next_counts[column + offset] = cell.row_span - 1
+            next_horizontal[column + offset] = offset > 0
+          }
+        }
+      }
+      column += cell.col_span
+    }
+    if !row_complete(occupied) {
+      errors.push(
+        error_diagnostic(
+          "PZ060",
+          "table rows must fill the same column span after merges",
+          path=page_path,
+          element_id~,
+          field="elements.content.rows[\{row_index}].cells",
+        ),
+      )
+    }
+    if row.cells.is_empty() && !row_complete(occupied) {
+      errors.push(
+        error_diagnostic(
+          "PZ060",
+          "table row must have at least one cell unless it is covered by row spans",
+          path=page_path,
+          element_id~,
+          field="elements.content.rows[\{row_index}].cells",
+        ),
+      )
+    }
+    active_counts = next_counts
+    active_horizontal = next_horizontal
+  }
+  expected_columns
+}
+
+///|
+fn table_row_span_sum(row : TableRowSpec) -> Int {
   let mut columns = 0
   for cell in row.cells {
-    columns += cell.col_span
+    if cell.col_span > 0 {
+      columns += cell.col_span
+    }
   }
   columns
+}
+
+///|
+fn row_complete(occupied : Array[Bool]) -> Bool {
+  if occupied.is_empty() {
+    return false
+  }
+  for item in occupied {
+    if !item {
+      return false
+    }
+  }
+  true
 }
 
 ///|

@@ -82,7 +82,7 @@ not expose the full `moon-pptx` `EffectList` surface in the first v2 slice.
 
 ## Image Element
 
-The first `0.2.0` capability release implements the image slice.
+The first `0.2.0` capability release implemented the image slice.
 
 ```toml
 [[elements]]
@@ -199,8 +199,8 @@ backend connection site.
 ## Table Element
 
 Tables have a canonical PowerPoint table form and an optional shorthand. The
-current writer renders rectangular tables; merge spans remain writer
-capability errors.
+current writer renders rectangular tables, including cells that declare
+`col_span` or `row_span`.
 
 Canonical form:
 
@@ -216,9 +216,11 @@ row_heights = [48, 48]
 
 [[elements.content.rows]]
 cells = [
-  { text = "Metric", fill = { type = "solid", color = "$surface" } },
-  { text = "Q1" },
-  { text = "Q2" },
+  {
+    text = "Metric",
+    col_span = 3,
+    fill = { type = "solid", color = "$surface" },
+  },
 ]
 ```
 
@@ -266,6 +268,11 @@ bounds = [80, 120, 720, 360]
 
 [elements.content]
 kind = "bar"
+title = "Quarterly revenue"
+legend = "bottom"
+style = 4
+data_labels = "outside_end"
+rounded_corners = false
 categories = ["Q1", "Q2", "Q3", "Q4"]
 
 [[elements.content.series]]
@@ -273,15 +280,20 @@ name = "Revenue"
 values = [100.0, 200.0, 300.0, 250.0]
 ```
 
+Supported `legend` values are `hidden`, `bottom`, `top_right`, `left`,
+`right`, and `top`. Supported `data_labels` values are `hidden`, `best_fit`,
+`bottom`, `center`, `inside_base`, `inside_end`, `left`, `outside_end`,
+`right`, and `top`.
+
 Scatter series use `x_values` plus `values` for Y values. Bubble series add
 `bubble_sizes`.
 
 3D charts, stock charts, surface charts, of-pie charts, chartEx families, and
 external CSV/TOML/spreadsheet-backed data are outside the first chart slice.
 
-## 0.2.0 Release Boundary
+## 0.2.x Release Boundary
 
-`0.2.0` ships only after:
+`0.2.0` shipped after:
 
 - this v2 schema architecture is documented;
 - the image slice compiles end-to-end from TOML to PPTX;
@@ -289,4 +301,6 @@ external CSV/TOML/spreadsheet-backed data are outside the first chart slice.
   the maintained example deck and tests;
 - writer capability errors are removed for implemented image slice features.
 
-Shape, connector, table, and chart designs may remain design-only in `0.2.0`.
+Later 0.2.x releases promote documented shape, connector, table, and chart
+schema from design-only concepts into implemented writer slices. The current
+writer state is documented in `README.md` and `REFERENCE.md`.

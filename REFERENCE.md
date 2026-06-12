@@ -108,12 +108,10 @@ semantic fields that the loader can validate.
 Treat the v2 schema design as a design milestone, not a release by itself. A
 published `pptz` release should be bounded by capabilities that compile from
 TOML to PPTX.
-The minimum `0.2.0` release boundary is: the v2 AST/TOML schema architecture is
-documented, and the image capability slice compiles end-to-end from TOML to
-PPTX. The `0.2.0` implementation should support `stretch`, `cover`, and
-`contain`, explicit crop rectangles, and SVG pictures. Shape, connector, table,
-and chart v2 designs may be documented without being exposed as implemented
-schema in `0.2.0`.
+The minimum `0.2.0` release boundary was: the v2 AST/TOML schema architecture
+is documented, and the image capability slice compiles end-to-end from TOML to
+PPTX. Later 0.2.x releases have added implemented shape, connector, table, and
+chart writer slices; this reference tracks the current accepted schema.
 
 The v2 schema architecture is documented in `docs/v2-schema.md`. It is the
 planning-level source for shared primitives and future capability slices; this
@@ -306,22 +304,23 @@ Build `pptz` in this order:
    writer capability errors.
    MVP text styling follows the `moon-pptx@0.4.0` text builder surface:
    `font_size`, `font_family`, `color`, `bold`, `italic`, `line_height`, and
-   `wrap`. `letter_spacing` may remain a schema/AST concept but is outside the
-   MVP writer scope.
+   `wrap`. `letter_spacing` remains a schema/AST concept but is outside the
+   current `moon-pptx@0.4.0` writer surface.
    The MVP writer must not silently ignore declared fields that it cannot map
    to `moon-pptx`. Fail with a writer capability error instead.
    Current status: `writer.mbt` generates valid PPTX bytes for deck size,
    ordered pages, optional solid/gradient/image backgrounds, text elements
    with wrapping and line breaks, preset auto-shape elements excluding line and
-   connector presets, straight connectors with coordinate or element endpoints,
-   solid/no-fill/gradient shape fills, alpha colors, solid and dashed shape
-   borders, outer shadows for shape and connector elements, built-in icon
-   elements, table elements with explicit or evenly distributed column widths
-   and row heights, inline chart elements, image elements with `stretch`,
-   `cover`, `contain`, explicit crop, SVG pictures, and basic theme
-   color/text-style resolution including `line_height`. It returns capability
-   errors for schema-valid features that are still outside the implemented
-   writer subset.
+   connector presets, straight, bent, and curved connectors with coordinate or
+   element endpoints, solid/no-fill/gradient shape fills, alpha colors, solid
+   and dashed shape borders, outer shadows for shape and connector elements,
+   built-in icon elements, table elements with explicit or evenly distributed
+   column widths and row heights including merge spans, inline chart elements
+   with title, legend, style, data-label, data-table, and rounded-corner
+   options, image elements with `stretch`, `cover`, `contain`, explicit crop,
+   SVG pictures, and basic theme color/text-style resolution including
+   `line_height`. It returns capability errors for schema-valid features that
+   are still outside the implemented writer subset.
 
 Compiler Reliability status:
 
@@ -612,8 +611,9 @@ metadata. Type-specific fields live under `[elements.content]`.
 
 Allowed element types: `text`, `shape`, `image`, `icon`, `table`, `chart`.
 Allowed background types: `solid`, `gradient`, `image`.
-`table` and `chart` are allowed schema/AST concepts but are outside the MVP
-writer scope unless later implementation work explicitly adds them.
+The current writer implements all allowed element types. Schema-valid fields
+outside the implemented writer subset fail with capability errors instead of
+being silently ignored.
 MVP shape content supports PowerPoint preset auto-shapes by canonical `pptz`
 snake_case names. Examples include `rect`, `round_rect`, `ellipse`, `diamond`,
 `right_arrow`, `flow_chart_process`, `action_button_home`, `round2_diag_rect`,
@@ -647,8 +647,10 @@ it should not accept both naming styles for the same shape.
 Lines and connectors are not shape subtypes in v2. They are represented by a
 separate `connector` element family so connector-specific semantics can grow
 without overloading preset auto shapes.
-The current writer supports straight connectors with both coordinate endpoints
-and element endpoints. Coordinate endpoints use explicit slide coordinates.
+The current writer supports straight, bent, and curved connectors with both
+coordinate endpoints and element endpoints. Supported connector kinds are
+`straight`, `bent2`, `bent3`, `bent4`, `bent5`, `curved2`, `curved3`,
+`curved4`, and `curved5`. Coordinate endpoints use explicit slide coordinates.
 Element endpoints refer to another text or shape element by id and let `pptz`
 choose the backend connection site; the connector schema does not expose raw
 PowerPoint connection site indices.
@@ -664,10 +666,12 @@ Opacity/alpha is a shared color, fill, stroke, and text capability rather than
 an effect. `pptz` should not expose the full `moon-pptx` `EffectList` surface
 in the first v2 slice.
 
-The current writer supports built-in icon elements by mapping `icon.name` to a
-small set of PowerPoint preset shapes. Supported names are `cube`, `circle`,
-`square`, `star`, `heart`, and `plus`; names may also use a prefix such as
-`fas:cube`. Unknown icon names are writer capability errors.
+The current writer supports built-in icon elements by mapping `icon.name` to
+PowerPoint preset shapes. Supported names are `cube`, `circle`, `square`,
+`star`, `heart`, `plus`, `home`, `info`, `help`, `return`, `blank`, `smiley`,
+`sun`, `moon`, `cloud`, `lightning`, `gear6`, `gear9`, `funnel`,
+`chart_plus`, `chart_star`, `chart_x`, and `no_smoking`; names may also use a
+prefix such as `fas:cube`. Unknown icon names are writer capability errors.
 
 Current table schema has a canonical table form based on PowerPoint table
 concepts: rows, cells, merge spans, cell fills, cell borders, cell margins, and
@@ -677,14 +681,16 @@ shorthand may omit column widths and row heights; omitted sizes are evenly
 distributed inside the table element bounds by the writer. Explicit
 `col_widths` and `row_heights` may override the equal distribution.
 Weight-based table sizing is outside the v2 shorthand scope. The current
-writer renders rectangular tables and treats merge spans as writer capability
-errors.
+writer renders rectangular tables, including cells that declare `col_span` or
+`row_span`.
 
 Current chart writer support covers bar, line, pie, doughnut, area, scatter,
-bubble, and radar chart families. 3D charts, stock charts, surface charts,
-of-pie charts, and chartEx families are outside the first v2 chart slice. The
-first chart slice uses inline chart data in page TOML. External CSV, TOML, or
-spreadsheet-backed chart data is outside the first v2 chart slice.
+bubble, and radar chart families, with chart title, legend, style,
+data-labels, data-table, and rounded-corner options. 3D charts, stock charts,
+surface charts, of-pie charts, and chartEx families are outside the first v2
+chart slice. The first chart slice uses inline chart data in page TOML.
+External CSV, TOML, or spreadsheet-backed chart data is outside the first v2
+chart slice.
 
 Image `fit` values are `stretch`, `cover`, or `contain`. Omitted `fit` defaults
 to `stretch`. The writer maps `stretch` directly to the requested bounds, uses
