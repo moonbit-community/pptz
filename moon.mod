@@ -6,6 +6,8 @@ readme = "README.md"
 
 license = "Apache-2.0"
 
+repository = "https://github.com/moonbit-community/pptz.git"
+
 keywords = [ "pptx", "presentation", "toml", "wasm" ]
 
 description = "PowerPoint Zero: a portable MoonBit PPTX generator driven by TOML deck and page sources."

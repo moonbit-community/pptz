@@ -97,6 +97,23 @@ settings do not belong in the deck file.
 Before 1.0, the source schema is strict: unknown fields are errors. Do not keep
 unknown fields for forward compatibility.
 TOML keys use snake_case. camelCase aliases are not accepted.
+Do not introduce schema-version negotiation for `pptz v2`; compatibility across
+pre-1.0 schema revisions is outside the current planning scope.
+For `pptz v2`, design the overall AST and TOML schema architecture upfront so
+image, shape, connector, table, and chart features share consistent primitives.
+Implementation can still land incrementally by capability slice.
+Do not provide raw OpenXML, arbitrary XML extension, or backend-passthrough
+fields in the TOML schema. Capabilities must be expressed through `pptz`
+semantic fields that the loader can validate.
+Treat the v2 schema design as a design milestone, not a release by itself. A
+published `pptz` release should be bounded by capabilities that compile from
+TOML to PPTX.
+The minimum `0.2.0` release boundary is: the v2 AST/TOML schema architecture is
+documented, and the image capability slice compiles end-to-end from TOML to
+PPTX. The `0.2.0` implementation should support `stretch`, `cover`, and
+`contain`, explicit crop rectangles, and SVG pictures. Shape, connector, table,
+and chart v2 designs may be documented without being exposed as implemented
+schema in `0.2.0`.
 
 Parser responsibilities:
 
@@ -546,10 +563,76 @@ type = "solid"
 color = "$surface"
 ```
 
+Planned v2 shape semantics expand shape subtypes toward the `moon-pptx`
+preset-shape capability surface. User-facing shape names use `pptz`
+snake_case names, not OpenXML camelCase names. For example, a backend preset
+such as `roundRect` should be exposed as `round_rect`. `pptz` should maintain a
+single mapping from snake_case shape names to `moon-pptx` preset shape values;
+it should not accept both naming styles for the same shape.
+Lines and connectors are not shape subtypes in v2. They are represented by a
+separate `connector` element family so connector-specific semantics can grow
+without overloading preset auto shapes.
+The first connector slice supports both coordinate endpoints and element
+endpoints. Coordinate endpoints use explicit slide coordinates. Element
+endpoints refer to another element by id and let `pptz` choose the backend
+connection site; the first v2 connector schema should not expose raw PowerPoint
+connection site indices.
+Shape borders, connector lines, and later table cell borders share a basic
+stroke primitive for color, width, and dash style. Connector arrowheads are
+connector-specific fields such as `start_arrow` and `end_arrow`; they are not
+part of the shared basic stroke model.
+The first v2 effect slice supports shadow only. Opacity/alpha is a shared
+color, fill, stroke, and text capability rather than an effect. `pptz` should
+not expose the full `moon-pptx` `EffectList` surface in the first v2 slice.
+
+Planned v2 table semantics have a canonical table form based on PowerPoint
+table concepts: rows, cells, merge spans, cell fills, cell borders, cell
+margins, and cell anchors. A compact `data` shorthand may be accepted for
+simple tables, but the loader should normalize shorthand input into the
+canonical rows/cells model before validation and writing. Table shorthand may
+omit column widths and row heights; omitted sizes are evenly distributed inside
+the table element bounds. Explicit `col_widths` and `row_heights` may override
+the equal distribution. Weight-based table sizing is outside the v2 shorthand
+scope.
+
+Planned v2 chart semantics start with bar, line, pie, doughnut, area, scatter,
+bubble, and radar chart families. 3D charts, stock charts, surface charts,
+of-pie charts, and chartEx families are outside the first v2 chart slice.
+The first chart slice uses inline chart data in page TOML. External CSV, TOML,
+or spreadsheet-backed chart data is outside the first v2 chart slice.
+
 Image `fit` values are `stretch`, `cover`, or `contain`. Omitted `fit` defaults
 to `stretch`. The MVP writer maps raster image elements with `stretch` directly
 to `moon-pptx` picture bounds; `cover` and `contain` may fail as writer
 capability errors until implemented.
+
+Planned v2 image semantics: `cover` and `contain` use the image asset's
+intrinsic size to preserve aspect ratio automatically. Explicit crop rectangles
+use edge insets, not pixel rectangles:
+
+```toml
+[elements.content.crop]
+left = 0.1
+top = 0.0
+right = 0.1
+bottom = 0.0
+```
+
+Each crop value is a `Double` in `0.0..1.0` and means "crop this fraction from
+that source edge". This matches the PowerPoint/OpenXML source-rectangle model
+and works for both raster images and SVG pictures. Automatically computed
+`cover` crops should resolve to the same edge-inset model; explicit crop values
+are for user-controlled refinement.
+
+When `fit = "cover"` or `fit = "contain"` is combined with an explicit crop,
+`pptz` first applies the explicit crop to choose the source region, then
+computes the aspect-ratio-preserving fit from that cropped region into the
+element bounds. Explicit crop values therefore narrow the source image before
+automatic fitting; they do not replace the fit mode.
+
+SVG pictures are allowed in the planned v2 image slice. They use the SVG asset
+directly; `pptz` does not support or require a raster fallback image for SVG.
+
 MVP image element content uses a deck-relative raster image path:
 
 ```toml

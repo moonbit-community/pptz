@@ -21,6 +21,98 @@ agent workflow policy.
 A development stage for making `pptz`'s documented compile contract dependable
 before expanding the presentation features it can render.
 
+## pptz v2
+
+The next `pptz` product stage after the compiler reliability slice, focused on
+expanding TOML-to-PPTX capabilities rather than changing the Agent skill
+workflow.
+
+## PPTX capability surface
+
+The set of presentation features that `pptz` exposes to TOML users because the
+underlying PPTX backend can generate them.
+
+## Thin semantic layer
+
+A `pptz` schema design style that keeps user-facing TOML concepts close to
+`moon-pptx` capabilities while avoiding raw backend API serialization.
+
+## Element-first expansion
+
+A `pptz v2` planning approach that exposes new slide element families before
+building a full theme or style system.
+
+## Schema architecture upfront
+
+A `pptz v2` planning approach that designs the full AST and TOML schema shape
+before implementing each capability incrementally.
+
+## v2 design milestone
+
+The planning checkpoint where the full `pptz v2` AST and TOML schema shape is
+documented before deciding what ships in the next release.
+
+## Capability release
+
+A `pptz` release boundary based on capabilities that compile from TOML to PPTX,
+not on design documents alone.
+
+## Shared presentation primitive
+
+A small reusable `pptz` concept, such as bounds, fill, stroke, text run
+properties, image crop, or effect, used consistently across element families.
+
+## Basic stroke
+
+A shared line styling primitive for borders and connectors that covers color,
+width, and dash style but excludes connector-only arrowheads.
+
+## First effect slice
+
+The initial `pptz v2` effect scope: shadow support only, with opacity handled
+as a shared color/fill/stroke/text capability rather than as an effect.
+
+## Canonical table form
+
+The full `pptz` table representation based on rows, cells, merges, fills,
+borders, margins, and anchors.
+
+## Table shorthand
+
+A compact table representation for simple row-and-column data that the loader
+normalizes into the canonical table form.
+
+## Chart first slice
+
+The first `pptz v2` chart scope: bar, line, pie, doughnut, area, scatter,
+bubble, and radar chart families.
+
+## Connector element
+
+A slide element that represents a PPTX connector rather than a preset auto
+shape.
+
+## Element expansion order
+
+The `pptz v2` sequencing preference: expand picture/image and
+shape/connector/effect support first, table support second, and chart support
+third.
+
+## Image capability slice
+
+The first `pptz v2` picture/image expansion: `stretch`, `contain`, and `cover`
+fit modes, explicit crop rectangles, and SVG picture support.
+
+## Intrinsic image size
+
+The natural width and height parsed from an image asset so `pptz` can compute
+aspect-ratio-preserving picture placement.
+
+## Crop rectangle
+
+A picture crop described by normalized left, top, right, and bottom edge
+insets from the source image.
+
 ## Deck definition
 
 A TOML file, at any path, that declares presentation metadata, theme tokens,

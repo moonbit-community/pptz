@@ -33,27 +33,27 @@ If `--out` is omitted, the output path defaults to `output.pptx`.
 ## Agent Skill
 
 This repository can also be installed as an agent skill with the Skills CLI.
-Keep the `SKILL.md` frontmatter name as `portable-pptx-skill`.
+Keep the `SKILL.md` frontmatter name as `pptz`.
 
 ```bash
-npx skills add <this-repository-url>
+npx skills add https://github.com/moonbit-community/pptz.git
 ```
 
 If you are installing from a repository that contains multiple skills, select
 this skill explicitly:
 
 ```bash
-npx skills add <repository-url> --skill portable-pptx-skill
+npx skills add https://github.com/moonbit-community/pptz.git --skill pptz
 ```
 
 You can also target a specific agent or install globally:
 
 ```bash
-npx skills add <this-repository-url> --agent codex
-npx skills add <this-repository-url> --global
+npx skills add https://github.com/moonbit-community/pptz.git --agent codex
+npx skills add https://github.com/moonbit-community/pptz.git --global
 ```
 
-After installation, ask your agent to use `portable-pptx-skill` when you need a
+After installation, ask your agent to use `pptz` when you need a
 PPTX deck generated from TOML sources. The skill will guide the agent to:
 
 - design a deck directory with `deck.pptz.toml`, `pages/`, optional `images/`,
