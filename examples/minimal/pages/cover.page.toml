@@ -1,8 +1,12 @@
 page_type = "cover"
 
 [background]
-type = "solid"
-color = "$background"
+type = "gradient"
+direction = 90
+stops = [
+  { at = 0.0, color = "$background" },
+  { at = 1.0, color = "$surface" },
+]
 
 [[elements]]
 id = "title"

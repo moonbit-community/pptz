@@ -16,6 +16,8 @@ test "render minimal deck as pptx bytes" {
   assert_eq(slides.length(), 4)
   assert_true(slides[0].shapes.length() >= 2)
   assert_true(count_pictures(slides[3]) >= 4)
+  assert_slide_xml_contains(prs, 1, "<p:bg>")
+  assert_slide_xml_contains(prs, 1, "<a:gradFill")
   assert_slide_xml_contains(prs, 3, "prst=\"roundRect\"")
   assert_slide_xml_contains(prs, 3, "<a:gradFill")
   assert_slide_xml_contains(prs, 3, "prstDash val=\"dash\"")
@@ -37,13 +39,7 @@ test "writer preserves existing output when render fails" {
   let failing = unsupported_loaded(Page::{
     page_type: None,
     background: Some(
-      GradientBackground(Gradient::{
-        direction: Some(90.0),
-        stops: [
-          GradientStop::{ at: 0.0, color: "#10131A" },
-          GradientStop::{ at: 1.0, color: "#1C2230" },
-        ],
-      }),
+      ImageBackground(ImageFill::{ path: "images/hero.png", fit: StretchFit }),
     ),
     elements: [],
   })
@@ -69,22 +65,6 @@ test "writer preserves existing output when render fails" {
 
 ///|
 test "writer reports capability errors for unsupported schema-valid features" {
-  expect_capability(
-    unsupported_loaded(Page::{
-      page_type: None,
-      background: Some(
-        GradientBackground(Gradient::{
-          direction: Some(90.0),
-          stops: [
-            GradientStop::{ at: 0.0, color: "#10131A" },
-            GradientStop::{ at: 1.0, color: "#1C2230" },
-          ],
-        }),
-      ),
-      elements: [],
-    }),
-    "gradient backgrounds",
-  )
   expect_capability(
     unsupported_loaded(Page::{
       page_type: None,

@@ -67,7 +67,7 @@ PPTX deck generated from TOML sources. The skill will guide the agent to:
 The current writer supports:
 
 - explicit deck size and ordered page files;
-- optional solid page backgrounds;
+- optional solid or gradient page backgrounds;
 - text elements with theme text styles and local overrides;
 - rectangle, rounded rectangle, and ellipse shapes;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
@@ -78,8 +78,8 @@ The current writer supports:
   `moon-pptx`.
 
 Schema-valid features outside this scope fail with a writer capability error
-instead of being silently ignored. This includes gradient backgrounds, image
-backgrounds, icon/table/chart elements, alpha colors, `line_height`,
+instead of being silently ignored. This includes image backgrounds,
+icon/table/chart elements, alpha colors, `line_height`,
 `letter_spacing`, and shape names other than `rect`, `round_rect`, or
 `ellipse`.
 

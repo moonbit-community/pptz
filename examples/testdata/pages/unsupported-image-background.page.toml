@@ -1,0 +1,12 @@
+[background]
+type = "image"
+path = "images/tiny.svg"
+fit = "stretch"
+
+[[elements]]
+id = "title"
+type = "text"
+bounds = [80, 80, 800, 80]
+
+[elements.content]
+text = "Unsupported image background"

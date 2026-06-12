@@ -85,8 +85,8 @@ fn build_slide(
     None => ()
     Some(SolidBackground(color)) =>
       slide = slide.with_background(SolidFill(resolve_color(bundle, color)))
-    Some(GradientBackground(_)) =>
-      raise WriteError::Capability("gradient backgrounds are not implemented")
+    Some(GradientBackground(gradient)) =>
+      slide = slide.with_background(to_gradient_fill(bundle, gradient))
     Some(ImageBackground(_)) =>
       raise WriteError::Capability("image backgrounds are not implemented")
   }

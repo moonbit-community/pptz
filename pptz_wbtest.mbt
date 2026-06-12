@@ -48,15 +48,17 @@ test "compile command defaults output path" {
 
 ///|
 test "compile command reports writer capability errors" {
-  let output = "examples/testdata/out/unsupported-gradient.pptx"
+  let output = "examples/testdata/out/unsupported-image-background.pptx"
   @miniio.remove_file(output) catch {
     _ => ()
   }
   let response = dispatch(
-    ["examples/testdata/unsupported-gradient.pptz.toml", "--out", output][0:],
+    [
+      "examples/testdata/unsupported-image-background.pptz.toml", "--out", output,
+    ][0:],
   )
   assert_eq(response.exit_code, 1)
   assert_eq(response.stdout, "")
-  assert_true(response.stderr.contains("gradient backgrounds"))
+  assert_true(response.stderr.contains("image backgrounds"))
   assert_false(@miniio.exists(output) catch { _ => false })
 }

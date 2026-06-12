@@ -295,7 +295,7 @@ Build `pptz` in this order:
    builder API. Keep MVP source features close to what that API can express
    directly.
    Current writer scope:
-   deck size, ordered pages, optional solid background, text elements,
+   deck size, ordered pages, optional solid/gradient background, text elements,
    rectangle/round-rectangle/ellipse shape elements, solid/no-fill/gradient
    shape fills, solid and dashed shape borders, raster image elements with
    `stretch`, `cover`, or `contain`, SVG image elements, image crop rectangles,
@@ -308,7 +308,7 @@ Build `pptz` in this order:
    The MVP writer must not silently ignore declared fields that it cannot map
    to `moon-pptx`. Fail with a writer capability error instead.
    Current status: `writer.mbt` generates valid PPTX bytes for deck size,
-   ordered pages, optional solid backgrounds, text elements,
+   ordered pages, optional solid/gradient backgrounds, text elements,
    rectangle/round-rectangle/ellipse shape elements, solid/no-fill/gradient
    shape fills, solid and dashed shape borders, image elements with `stretch`,
    `cover`, `contain`, explicit crop, SVG pictures, and basic theme
@@ -457,7 +457,7 @@ Radial gradients, conic gradients, CSS gradient strings, and unit-bearing
 directions are not part of the first schema.
 Shape gradient fills use the same `direction` and `stops` fields under
 `[elements.content.fill]` when `type = "gradient"`. The current writer supports
-shape gradient fills but still reports gradient backgrounds as unsupported.
+both page background gradients and shape gradient fills.
 
 Loader diagnostics must include a stable code in addition to human-readable
 text. Messages may change; codes should not. Initial code ranges:
@@ -588,9 +588,9 @@ metadata. Type-specific fields live under `[elements.content]`.
 
 Allowed element types: `text`, `shape`, `image`, `icon`, `table`, `chart`.
 Allowed background types: `solid`, `gradient`, `image`.
-`icon`, `table`, `chart`, image backgrounds, and `gradient` backgrounds are
-allowed schema/AST concepts but are outside the MVP writer scope unless later
-implementation work explicitly adds them.
+`icon`, `table`, `chart`, and image backgrounds are allowed schema/AST concepts
+but are outside the MVP writer scope unless later implementation work
+explicitly adds them.
 MVP shape content supports only `rect`, `round_rect`, and `ellipse` shape
 subtypes:
 

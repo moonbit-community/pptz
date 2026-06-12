@@ -43,8 +43,14 @@ test "parse minimal cover page toml" {
     None => abort("expected page_type")
   }
   match page.background {
-    Some(SolidBackground(color)) => assert_eq(color, "$background")
-    _ => abort("expected solid background")
+    Some(GradientBackground(gradient)) => {
+      assert_eq(gradient.stops.length(), 2)
+      match gradient.direction {
+        Some(direction) => assert_eq(direction, 90.0)
+        None => abort("expected gradient direction")
+      }
+    }
+    _ => abort("expected gradient background")
   }
   assert_eq(page.elements.length(), 3)
   match page.elements[0] {
