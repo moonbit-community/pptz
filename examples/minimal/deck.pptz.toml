@@ -20,6 +20,7 @@ bold = true
 font_size = 24
 font_family = "Liter, MiSans"
 color = "$text"
+line_height = 1.15
 
 [theme.text_styles.caption]
 font_size = 16

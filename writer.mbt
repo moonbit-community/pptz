@@ -293,6 +293,9 @@ fn build_textbox(
         horizontal_alignment(align.horizontal),
       )
   }
+  paragraph = paragraph.with_properties(
+    text_paragraph_properties(bundle, content, paragraph.properties),
+  )
   let mut text_body = @slide.TextBody::of_paragraphs([paragraph])
   match content.align {
     None => ()
@@ -400,12 +403,27 @@ fn text_run_properties(
   if text.italic == Some(true) {
     props = props.with_italic()
   }
-  if text.line_height is Some(_) || text.letter_spacing is Some(_) {
-    raise WriteError::Capability(
-      "line_height and letter_spacing are not implemented by the MVP writer",
-    )
+  if text.letter_spacing is Some(_) {
+    raise WriteError::Capability("letter_spacing is not implemented")
   }
   props
+}
+
+///|
+fn text_paragraph_properties(
+  bundle : DeckBundle,
+  content : TextContent,
+  props : @slide.ParagraphProperties,
+) -> @slide.ParagraphProperties {
+  let text = resolve_text_properties(bundle, content)
+  match text.line_height {
+    None => props
+    Some(line_height) =>
+      @slide.ParagraphProperties::{
+        ..props,
+        line_spacing: Some(@units.Percentage((line_height * 100.0).round())),
+      }
+  }
 }
 
 ///|

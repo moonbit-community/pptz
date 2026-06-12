@@ -22,6 +22,7 @@ test "render minimal deck as pptx bytes" {
   assert_slide_xml_contains(prs, 3, "<a:gradFill")
   assert_slide_xml_contains(prs, 3, "alpha val=\"80000\"")
   assert_slide_xml_contains(prs, 3, "prstDash val=\"dash\"")
+  assert_slide_xml_contains(prs, 3, "spcPct val=\"115000\"")
 }
 
 ///|
@@ -135,7 +136,7 @@ test "writer reports capability errors for unsupported schema-valid features" {
         }),
       ),
     ),
-    "line_height and letter_spacing",
+    "letter_spacing",
   )
 }
 
