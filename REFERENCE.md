@@ -586,7 +586,8 @@ Allowed background types: `solid`, `gradient`, `image`.
 `icon`, `table`, `chart`, image backgrounds, and `gradient` backgrounds are
 allowed schema/AST concepts but are outside the MVP writer scope unless later
 implementation work explicitly adds them.
-MVP shape content supports only `rect` and `ellipse` shape subtypes:
+MVP shape content supports only `rect`, `round_rect`, and `ellipse` shape
+subtypes:
 
 ```toml
 [[elements]]

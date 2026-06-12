@@ -69,7 +69,7 @@ The current writer supports:
 - explicit deck size and ordered page files;
 - optional solid page backgrounds;
 - text elements with theme text styles and local overrides;
-- rectangle and ellipse shapes;
+- rectangle, rounded rectangle, and ellipse shapes;
 - solid fills, no-fill shapes, and solid borders;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
@@ -80,7 +80,8 @@ The current writer supports:
 Schema-valid features outside this scope fail with a writer capability error
 instead of being silently ignored. This includes gradient backgrounds/fills,
 image backgrounds, icon/table/chart elements, alpha colors, `line_height`,
-`letter_spacing`, and shape names other than `rect` or `ellipse`.
+`letter_spacing`, and shape names other than `rect`, `round_rect`, or
+`ellipse`.
 
 ## Example
 

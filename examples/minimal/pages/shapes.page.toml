@@ -20,7 +20,7 @@ type = "shape"
 bounds = [90, 170, 500, 320]
 
 [elements.content]
-shape = "rect"
+shape = "round_rect"
 
 [elements.content.fill]
 type = "solid"
@@ -70,8 +70,9 @@ font_size = 22
 color = "$muted"
 text = """
 Current writer support:
-rectangles, ellipses, solid fills,
-no-fill shapes, and solid borders.
+rect, round_rect, ellipse,
+solid fills, no-fill shapes,
+and solid borders.
 """
 
 [[elements]]

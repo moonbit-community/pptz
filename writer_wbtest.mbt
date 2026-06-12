@@ -16,6 +16,7 @@ test "render minimal deck as pptx bytes" {
   assert_eq(slides.length(), 4)
   assert_true(slides[0].shapes.length() >= 2)
   assert_true(count_pictures(slides[3]) >= 4)
+  assert_slide_xml_contains(prs, 3, "prst=\"roundRect\"")
 }
 
 ///|
@@ -225,6 +226,21 @@ fn count_pictures(slide : @slide.Slide) -> Int {
     }
   }
   count
+}
+
+///|
+fn assert_slide_xml_contains(
+  prs : @presentation.Presentation,
+  slide_number : Int,
+  expected : String,
+) -> Unit raise {
+  let part = prs.pkg.require_part("/ppt/slides/slide\{slide_number}.xml") catch {
+    err => abort("missing slide \{slide_number}: \{err}")
+  }
+  let text = part.text() catch {
+    err => abort("decode slide \{slide_number}: \{err}")
+  }
+  assert_true(text.contains(expected))
 }
 
 ///|

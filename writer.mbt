@@ -345,6 +345,15 @@ fn build_auto_shape(
         to_emu(bounds.width),
         to_emu(bounds.height),
       )
+    "round_rect" =>
+      @slide.AutoShape::round_rect(
+        shape_id,
+        base.id,
+        to_emu(bounds.x),
+        to_emu(bounds.y),
+        to_emu(bounds.width),
+        to_emu(bounds.height),
+      )
     other => raise WriteError::Capability("shape '\{other}' is not implemented")
   }
   match spec.fill {

@@ -251,7 +251,7 @@ test "parse minimal shapes page" {
   match page.elements[1] {
     ShapeElement(base, spec) => {
       assert_eq(base.id, "panel")
-      assert_eq(spec.shape, "rect")
+      assert_eq(spec.shape, "round_rect")
     }
     _ => abort("expected shape element")
   }
