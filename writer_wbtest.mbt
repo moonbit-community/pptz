@@ -25,6 +25,7 @@ test "render minimal deck as pptx bytes" {
   assert_slide_xml_contains(prs, 3, "prstDash val=\"dash\"")
   assert_slide_xml_contains(prs, 3, "<p:cxnSp>")
   assert_slide_xml_contains(prs, 3, "<a:tailEnd type=\"triangle\"")
+  assert_slide_xml_contains(prs, 3, "<a:outerShdw")
   assert_slide_xml_contains(prs, 3, "spcPct val=\"115000\"")
   assert_slide_xml_contains(prs, 3, "wrap=\"square\"")
   assert_slide_xml_contains(prs, 3, "<a:br>")
@@ -130,6 +131,7 @@ test "writer maps preset shape names" {
           shape: shape_name,
           fill: Some(SolidFill("#3B82F6")),
           border: None,
+          shadow: None,
         }),
       ),
     )
@@ -197,6 +199,7 @@ test "writer reports capability errors for unsupported schema-valid features" {
           shape: "straightConnector1",
           fill: None,
           border: None,
+          shadow: None,
         }),
       ),
     ),
@@ -209,6 +212,7 @@ test "writer reports capability errors for unsupported schema-valid features" {
           shape: "straight_connector1",
           fill: None,
           border: None,
+          shadow: None,
         }),
       ),
     ),
@@ -221,6 +225,7 @@ test "writer reports capability errors for unsupported schema-valid features" {
           shape: "rect",
           fill: None,
           border: Some(Border::{ style: "zigzag", width: 2.0, color: "#F4F6FB" }),
+          shadow: None,
         }),
       ),
     ),

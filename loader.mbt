@@ -422,6 +422,7 @@ fn validate_element(
             errors,
           )
       }
+      validate_shadow(bundle, page_path, base.id, spec.shadow, errors)
     }
     ImageElement(base, spec) => {
       validate_asset_path(
@@ -457,7 +458,7 @@ fn validate_element(
             errors,
           )
       }
-    ConnectorElement(id, spec) =>
+    ConnectorElement(id, spec) => {
       match spec.stroke {
         None => ()
         Some(stroke) =>
@@ -470,7 +471,31 @@ fn validate_element(
             errors,
           )
       }
+      validate_shadow(bundle, page_path, id, spec.shadow, errors)
+    }
     TableElement(_) | ChartElement(_) => ()
+  }
+}
+
+///|
+fn validate_shadow(
+  bundle : DeckBundle,
+  page_path : String,
+  element_id : String,
+  shadow : ShadowSpec?,
+  errors : Array[Diagnostic],
+) -> Unit {
+  match shadow {
+    None => ()
+    Some(shadow) =>
+      validate_page_color(
+        bundle,
+        page_path,
+        Some(element_id),
+        "elements.content.shadow.color",
+        shadow.color,
+        errors,
+      )
   }
 }
 

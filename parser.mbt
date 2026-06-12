@@ -410,11 +410,12 @@ fn parse_shape_spec(
   table : Map[String, @toml.TomlValue],
   path : String,
 ) -> ShapeSpec raise {
-  reject_unknown_fields(table, path, ["shape", "fill", "border"])
+  reject_unknown_fields(table, path, ["shape", "fill", "border", "shadow"])
   ShapeSpec::{
     shape: required_string(table, "\{path}.shape", key="shape"),
     fill: parse_optional_fill(table.get("fill"), "\{path}.fill"),
     border: parse_optional_border(table.get("border"), "\{path}.border"),
+    shadow: parse_optional_shadow(table.get("shadow"), "\{path}.shadow"),
   }
 }
 
@@ -440,7 +441,7 @@ fn parse_connector_spec(
   path : String,
 ) -> ConnectorSpec raise {
   reject_unknown_fields(table, path, [
-    "kind", "start", "end", "stroke", "start_arrow", "end_arrow",
+    "kind", "start", "end", "stroke", "start_arrow", "end_arrow", "shadow",
   ])
   ConnectorSpec::{
     kind: required_string(table, "\{path}.kind", key="kind"),
@@ -452,6 +453,7 @@ fn parse_connector_spec(
       "\{path}.start_arrow",
     ),
     end_arrow: optional_string(table.get("end_arrow"), "\{path}.end_arrow"),
+    shadow: parse_optional_shadow(table.get("shadow"), "\{path}.shadow"),
   }
 }
 
@@ -488,6 +490,28 @@ fn parse_optional_stroke(
         style: required_string(table, "\{path}.dash", key="dash"),
         width: required_double(table, "\{path}.width", key="width"),
         color: required_string(table, "\{path}.color", key="color"),
+      })
+    }
+  }
+}
+
+///|
+fn parse_optional_shadow(
+  value : @toml.TomlValue?,
+  path : String,
+) -> ShadowSpec? raise {
+  match value {
+    None => None
+    Some(value) => {
+      let table = expect_table(value, path)
+      reject_unknown_fields(table, path, [
+        "color", "blur", "distance", "direction",
+      ])
+      Some(ShadowSpec::{
+        color: required_string(table, "\{path}.color", key="color"),
+        blur: required_double(table, "\{path}.blur", key="blur"),
+        distance: required_double(table, "\{path}.distance", key="distance"),
+        direction: required_double(table, "\{path}.direction", key="direction"),
       })
     }
   }

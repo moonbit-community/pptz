@@ -258,6 +258,10 @@ test "parse minimal shapes page" {
     ShapeElement(base, spec) => {
       assert_eq(base.id, "panel")
       assert_eq(spec.shape, "round_rect")
+      match spec.shadow {
+        Some(shadow) => assert_eq(shadow.blur, 14.0)
+        None => abort("expected panel shadow")
+      }
     }
     _ => abort("expected shape element")
   }
@@ -289,6 +293,10 @@ test "parse minimal shapes page" {
       match spec.end_arrow {
         Some(arrow) => assert_eq(arrow, "triangle")
         None => abort("expected end arrow")
+      }
+      match spec.shadow {
+        Some(shadow) => assert_eq(shadow.distance, 3.0)
+        None => abort("expected connector shadow")
       }
     }
     _ => abort("expected connector element")

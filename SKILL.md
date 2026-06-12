@@ -76,6 +76,7 @@ Use these features for deliverable decks:
 - straight connectors with coordinate or element endpoints, stroke, dash, and
   arrowheads;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
+- outer shadows for shape and connector elements;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
 - image crop rectangles;

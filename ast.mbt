@@ -133,6 +133,7 @@ pub(all) struct ShapeSpec {
   shape : String
   fill : Fill?
   border : Border?
+  shadow : ShadowSpec?
 } derive(Eq, Debug)
 
 ///|
@@ -150,6 +151,14 @@ pub(all) struct Border {
 } derive(Eq, Debug)
 
 ///|
+pub(all) struct ShadowSpec {
+  color : String
+  blur : Double
+  distance : Double
+  direction : Double
+} derive(Eq, Debug)
+
+///|
 pub(all) struct ImageSpec {
   path : String
   fit : ImageFit
@@ -164,6 +173,7 @@ pub(all) struct ConnectorSpec {
   stroke : Border?
   start_arrow : String?
   end_arrow : String?
+  shadow : ShadowSpec?
 } derive(Eq, Debug)
 
 ///|

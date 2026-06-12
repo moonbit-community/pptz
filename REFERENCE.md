@@ -298,11 +298,11 @@ Build `pptz` in this order:
    deck size, ordered pages, optional solid/gradient/image background, text
    elements with wrapping and line breaks, preset auto-shape elements excluding
    line and connector presets, straight connector elements, solid/no-fill/
-   gradient shape fills, alpha colors, solid and dashed shape borders, raster
-   image elements with `stretch`, `cover`, or `contain`, SVG image elements,
-   image crop rectangles, and basic theme color/text-style resolution with
-   element-local overrides. Valid AST features outside this subset may fail as
-   writer capability errors.
+   gradient shape fills, alpha colors, solid and dashed shape borders, outer
+   shadows for shape and connector elements, raster image elements with
+   `stretch`, `cover`, or `contain`, SVG image elements, image crop rectangles,
+   and basic theme color/text-style resolution with element-local overrides.
+   Valid AST features outside this subset may fail as writer capability errors.
    MVP text styling follows the `moon-pptx@0.4.0` text builder surface:
    `font_size`, `font_family`, `color`, `bold`, `italic`, `line_height`, and
    `wrap`. `letter_spacing` may remain a schema/AST concept but is outside the
@@ -314,10 +314,11 @@ Build `pptz` in this order:
    with wrapping and line breaks, preset auto-shape elements excluding line and
    connector presets, straight connectors with coordinate or element endpoints,
    solid/no-fill/gradient shape fills, alpha colors, solid and dashed shape
-   borders, image elements with `stretch`, `cover`, `contain`, explicit crop,
-   SVG pictures, and basic theme color/text-style resolution including
-   `line_height`. It returns capability errors for schema-valid features that
-   are still outside the implemented writer subset.
+   borders, outer shadows for shape and connector elements, image elements with
+   `stretch`, `cover`, `contain`, explicit crop, SVG pictures, and basic theme
+   color/text-style resolution including `line_height`. It returns capability
+   errors for schema-valid features that are still outside the implemented
+   writer subset.
 
 Compiler Reliability status:
 
@@ -652,9 +653,10 @@ part of the shared basic stroke model.
 The current writer maps shape `border.style` values `solid`, `dot`, `dash`,
 `long_dash`, `dash_dot`, `long_dash_dot`, and `long_dash_dot_dot` to
 PowerPoint preset dash styles.
-The first v2 effect slice supports shadow only. Opacity/alpha is a shared
-color, fill, stroke, and text capability rather than an effect. `pptz` should
-not expose the full `moon-pptx` `EffectList` surface in the first v2 slice.
+The current writer supports outer shadows for shape and connector elements.
+Opacity/alpha is a shared color, fill, stroke, and text capability rather than
+an effect. `pptz` should not expose the full `moon-pptx` `EffectList` surface
+in the first v2 slice.
 
 Planned v2 table semantics have a canonical table form based on PowerPoint
 table concepts: rows, cells, merge spans, cell fills, cell borders, cell

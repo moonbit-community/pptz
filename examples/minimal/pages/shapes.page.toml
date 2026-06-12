@@ -35,6 +35,12 @@ style = "solid"
 width = 2
 color = "$primary"
 
+[elements.content.shadow]
+color = "#00000066"
+blur = 14
+distance = 5
+direction = 45
+
 [[elements]]
 id = "circle"
 type = "shape"
@@ -89,6 +95,12 @@ end_arrow = "triangle"
 dash = "dash"
 width = 2
 color = "$primary"
+
+[elements.content.shadow]
+color = "#00000066"
+blur = 8
+distance = 3
+direction = 45
 
 [[elements]]
 id = "body"

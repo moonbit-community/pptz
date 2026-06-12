@@ -77,8 +77,8 @@ source edge". Crop values are not pixel rectangles.
 
 ### Effects
 
-The first effect slice supports shadow only. Do not expose the full
-`moon-pptx` `EffectList` surface in the first v2 slice.
+The current writer supports outer shadows on shape and connector elements. Do
+not expose the full `moon-pptx` `EffectList` surface in the first v2 slice.
 
 ## Image Element
 

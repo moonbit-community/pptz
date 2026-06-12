@@ -523,6 +523,14 @@ fn build_auto_shape(
     None => ()
     Some(border) => shape = shape.with_stroke(to_stroke(bundle, border))
   }
+  match spec.shadow {
+    None => ()
+    Some(shadow) =>
+      shape = @slide.AutoShape::{
+        ..shape,
+        effects: Some(to_effect_list(bundle, shadow)),
+      }
+  }
   shape
 }
 
@@ -648,7 +656,10 @@ fn build_connector(
     transform: Some(connector_transform(start, end)),
     geometry: Some(@slide.Geometry::Preset(connector_geometry(spec.kind), [])),
     stroke: Some(to_connector_stroke(bundle, spec)),
-    effects: None,
+    effects: match spec.shadow {
+      None => None
+      Some(shadow) => Some(to_effect_list(bundle, shadow))
+    },
     extension: [],
   }
 }
@@ -781,6 +792,34 @@ fn connector_arrow(arrow : String) -> @oxml.ArrowEnd raise {
     },
     width: None,
     length: None,
+  }
+}
+
+///|
+fn to_effect_list(
+  bundle : DeckBundle,
+  shadow : ShadowSpec,
+) -> @oxml.EffectList raise {
+  @oxml.EffectList::{
+    outer_shadow: Some(@oxml.OuterShadow::{
+      blur_rad: to_emu(shadow.blur),
+      dist: to_emu(shadow.distance),
+      dir: @units.Angle(shadow.direction),
+      color: resolve_color(bundle, shadow.color),
+      sx: None,
+      sy: None,
+      kx: None,
+      ky: None,
+      alignment: None,
+      rotate_with_shape: Some(true),
+    }),
+    inner_shadow: None,
+    glow: None,
+    blur: None,
+    reflection: None,
+    soft_edge: None,
+    preset_shadow: None,
+    extension: [],
   }
 }
 
