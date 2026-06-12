@@ -7,7 +7,7 @@ color = "$background"
 [[elements]]
 id = "heading"
 type = "text"
-bounds = [80, 70, 900, 70]
+bounds = [80, 60, 900, 95]
 
 [elements.content]
 style = "$title"

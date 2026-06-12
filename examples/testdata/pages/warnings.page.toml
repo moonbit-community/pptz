@@ -5,3 +5,12 @@ bounds = [-10, 0, 0, 20]
 
 [elements.content]
 text = "   "
+
+[[elements]]
+id = "overflow"
+type = "text"
+bounds = [20, 40, 120, 24]
+
+[elements.content]
+font_size = 28
+text = "This sentence is intentionally much too long for the tiny text box."

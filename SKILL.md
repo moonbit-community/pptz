@@ -55,7 +55,9 @@ deck-topic/
 ## Quality Gate
 
 - `pptz` exits successfully and writes the expected PPTX.
-- Every warning is intentional and documented in the handoff.
+- Every warning is fixed before delivery unless it is intentional and documented
+  in the handoff. For text overflow warnings, first try larger bounds, smaller
+  font size, shorter copy, extra line breaks, or splitting the content.
 - All page/image paths are relative to the deck directory.
 - Text fits within its bounds and does not overlap important imagery.
 - The common visual system works on cover, section, dense content, and closing

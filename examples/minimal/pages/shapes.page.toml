@@ -77,7 +77,7 @@ no-fill shapes, and solid borders.
 [[elements]]
 id = "caption"
 type = "text"
-bounds = [760, 580, 360, 40]
+bounds = [740, 565, 400, 70]
 
 [elements.content]
 style = "$caption"

@@ -53,6 +53,7 @@ test "loader returns non-blocking warnings" {
   assert_true(has_diagnostic_code(loaded.warnings, "PZ100"))
   assert_true(has_diagnostic_code(loaded.warnings, "PZ101"))
   assert_true(has_diagnostic_code(loaded.warnings, "PZ102"))
+  assert_true(has_diagnostic_code(loaded.warnings, "PZ103"))
 }
 
 ///|

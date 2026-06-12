@@ -468,6 +468,8 @@ text. Messages may change; codes should not. Initial code ranges:
 - `PZ101`: invalid or zero-size element bounds. Negative width or height is an
   error; zero width or height is a warning.
 - `PZ102`: empty or whitespace-only text content.
+- `PZ103`: text may overflow its element bounds. This is an estimate because
+  PowerPoint text layout depends on viewer fonts and rendering behavior.
 
 Loader validation should collect all diagnostics it can collect before failing,
 so agents can fix multiple issues in one pass. Blocking input errors, such as
@@ -726,3 +728,7 @@ A warning is acceptable only when the agent can state:
 - why changing it would make the slide worse.
 
 All other warnings must be fixed.
+
+For `PZ103`, prefer fixing the source instead of accepting the warning: enlarge
+the bounds, reduce font size, shorten the copy, split content across multiple
+text boxes or slides, or add intentional line breaks.

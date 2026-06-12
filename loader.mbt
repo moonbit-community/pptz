@@ -331,6 +331,7 @@ fn validate_element(
           ),
         )
       }
+      validate_text_fit(bundle, page_path, base, content, warnings)
       validate_text_style_ref(bundle, page_path, base.id, content.style, errors)
       match content.color {
         None => ()
@@ -415,6 +416,35 @@ fn validate_element(
           )
       }
     TableElement(_) | ChartElement(_) => ()
+  }
+}
+
+///|
+fn validate_text_fit(
+  bundle : DeckBundle,
+  page_path : String,
+  base : ElementBase,
+  content : TextContent,
+  warnings : Array[Diagnostic],
+) -> Unit {
+  let bounds = base.bounds
+  if bounds.width <= 0.0 ||
+    bounds.height <= 0.0 ||
+    content.text.trim().is_empty() {
+    return
+  }
+  let estimate = estimate_text_fit(bundle, bounds, content)
+  if estimate.height > bounds.height * 1.05 ||
+    estimate.longest_token_width > bounds.width {
+    warnings.push(
+      warning_diagnostic(
+        "PZ103",
+        "text may overflow its bounds",
+        path=page_path,
+        element_id=base.id,
+        field="elements.content.text",
+      ),
+    )
   }
 }
 
