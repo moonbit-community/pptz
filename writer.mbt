@@ -361,8 +361,8 @@ fn build_auto_shape(
     Some(NoFill) => shape = shape.with_no_fill()
     Some(SolidFill(color)) =>
       shape = shape.with_fill(SolidFill(resolve_color(bundle, color)))
-    Some(GradientFill(_)) =>
-      raise WriteError::Capability("shape gradient fill is not implemented")
+    Some(GradientFill(gradient)) =>
+      shape = shape.with_fill(to_gradient_fill(bundle, gradient))
   }
   match spec.border {
     None => ()
@@ -448,6 +448,38 @@ fn to_stroke(bundle : DeckBundle, border : Border) -> @oxml.Stroke raise {
     tail_end: None,
     extension: [],
   }
+}
+
+///|
+fn to_gradient_fill(
+  bundle : DeckBundle,
+  gradient : Gradient,
+) -> @oxml.Fill raise {
+  @oxml.Fill::GradientFill(@oxml.Gradient::{
+    stops: gradient_stops(bundle, gradient.stops),
+    direction: @oxml.GradientDirection::Linear(
+      @units.Angle(gradient.direction.unwrap_or(0.0)),
+      false,
+    ),
+    rotate_with_shape: Some(true),
+    flip: None,
+    extension: [],
+  })
+}
+
+///|
+fn gradient_stops(
+  bundle : DeckBundle,
+  stops : Array[GradientStop],
+) -> Array[@oxml.GradientStop] raise {
+  let result = []
+  for stop in stops {
+    result.push(@oxml.GradientStop::{
+      position: @units.Percentage(stop.at * 100.0),
+      color: resolve_color(bundle, stop.color),
+    })
+  }
+  result
 }
 
 ///|

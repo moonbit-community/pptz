@@ -70,7 +70,7 @@ The current writer supports:
 - optional solid page backgrounds;
 - text elements with theme text styles and local overrides;
 - rectangle, rounded rectangle, and ellipse shapes;
-- solid fills, no-fill shapes, and solid or dashed borders;
+- solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
 - image crop rectangles;
@@ -78,8 +78,8 @@ The current writer supports:
   `moon-pptx`.
 
 Schema-valid features outside this scope fail with a writer capability error
-instead of being silently ignored. This includes gradient backgrounds/fills,
-image backgrounds, icon/table/chart elements, alpha colors, `line_height`,
+instead of being silently ignored. This includes gradient backgrounds, image
+backgrounds, icon/table/chart elements, alpha colors, `line_height`,
 `letter_spacing`, and shape names other than `rect`, `round_rect`, or
 `ellipse`.
 

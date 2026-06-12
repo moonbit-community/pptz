@@ -17,6 +17,7 @@ test "render minimal deck as pptx bytes" {
   assert_true(slides[0].shapes.length() >= 2)
   assert_true(count_pictures(slides[3]) >= 4)
   assert_slide_xml_contains(prs, 3, "prst=\"roundRect\"")
+  assert_slide_xml_contains(prs, 3, "<a:gradFill")
   assert_slide_xml_contains(prs, 3, "prstDash val=\"dash\"")
 }
 
@@ -112,26 +113,6 @@ test "writer reports capability errors for unsupported schema-valid features" {
   expect_capability(
     unsupported_loaded(page_with_element(ChartElement(test_base("chart")))),
     "chart elements",
-  )
-  expect_capability(
-    unsupported_loaded(
-      page_with_element(
-        ShapeElement(test_base("gradient_shape"), ShapeSpec::{
-          shape: "rect",
-          fill: Some(
-            GradientFill(Gradient::{
-              direction: Some(0.0),
-              stops: [
-                GradientStop::{ at: 0.0, color: "#10131A" },
-                GradientStop::{ at: 1.0, color: "#1C2230" },
-              ],
-            }),
-          ),
-          border: None,
-        }),
-      ),
-    ),
-    "shape gradient fill",
   )
   expect_capability(
     unsupported_loaded(

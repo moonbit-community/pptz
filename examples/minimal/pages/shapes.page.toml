@@ -23,8 +23,12 @@ bounds = [90, 170, 500, 320]
 shape = "round_rect"
 
 [elements.content.fill]
-type = "solid"
-color = "$surface"
+type = "gradient"
+direction = 90
+stops = [
+  { at = 0.0, color = "$surface" },
+  { at = 1.0, color = "$surface_alt" },
+]
 
 [elements.content.border]
 style = "solid"
@@ -71,7 +75,7 @@ color = "$muted"
 text = """
 Current writer support:
 rect, round_rect, ellipse,
-solid fills, no-fill shapes,
+solid/gradient/no-fill shapes,
 solid and dash borders.
 """
 

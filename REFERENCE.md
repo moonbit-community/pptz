@@ -296,11 +296,11 @@ Build `pptz` in this order:
    directly.
    Current writer scope:
    deck size, ordered pages, optional solid background, text elements,
-   rectangle/round-rectangle/ellipse shape elements, solid and dashed shape
-   borders, raster image elements with `stretch`, `cover`, or `contain`, SVG
-   image elements, image crop rectangles, and basic theme color/text-style
-   resolution with element-local overrides. Valid AST features outside this
-   subset may fail as writer capability errors.
+   rectangle/round-rectangle/ellipse shape elements, solid/no-fill/gradient
+   shape fills, solid and dashed shape borders, raster image elements with
+   `stretch`, `cover`, or `contain`, SVG image elements, image crop rectangles,
+   and basic theme color/text-style resolution with element-local overrides.
+   Valid AST features outside this subset may fail as writer capability errors.
    MVP text styling follows the `moon-pptx@0.4.0` `RunProperties` builder
    surface: `font_size`, `font_family`, `color`, `bold`, and `italic`.
    `letter_spacing` and `line_height` may remain schema/AST concepts but are
@@ -309,11 +309,11 @@ Build `pptz` in this order:
    to `moon-pptx`. Fail with a writer capability error instead.
    Current status: `writer.mbt` generates valid PPTX bytes for deck size,
    ordered pages, optional solid backgrounds, text elements,
-   rectangle/round-rectangle/ellipse shape elements, solid and dashed shape
-   borders, image elements with `stretch`, `cover`, `contain`, explicit crop,
-   SVG pictures, and basic theme color/text-style resolution. It returns
-   capability errors for schema-valid features that are still outside the
-   implemented writer subset.
+   rectangle/round-rectangle/ellipse shape elements, solid/no-fill/gradient
+   shape fills, solid and dashed shape borders, image elements with `stretch`,
+   `cover`, `contain`, explicit crop, SVG pictures, and basic theme
+   color/text-style resolution. It returns capability errors for schema-valid
+   features that are still outside the implemented writer subset.
 
 Compiler Reliability status:
 
@@ -455,6 +455,9 @@ count, stop ordering, or `at` ranges in the first schema; the writer should emit
 the user-provided gradient data into PPTX as directly as its backend allows.
 Radial gradients, conic gradients, CSS gradient strings, and unit-bearing
 directions are not part of the first schema.
+Shape gradient fills use the same `direction` and `stops` fields under
+`[elements.content.fill]` when `type = "gradient"`. The current writer supports
+shape gradient fills but still reports gradient backgrounds as unsupported.
 
 Loader diagnostics must include a stable code in addition to human-readable
 text. Messages may change; codes should not. Initial code ranges:
