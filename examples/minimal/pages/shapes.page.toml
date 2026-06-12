@@ -45,7 +45,7 @@ shape = "ellipse"
 
 [elements.content.fill]
 type = "solid"
-color = "$accent"
+color = "#F59E0BCC"
 
 [[elements]]
 id = "outline"
@@ -75,7 +75,7 @@ color = "$muted"
 text = """
 Current writer support:
 rect, round_rect, ellipse,
-solid/gradient/no-fill shapes,
+alpha, gradient, no-fill shapes,
 solid and dash borders.
 """
 

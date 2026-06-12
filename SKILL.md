@@ -78,9 +78,9 @@ Use these features for deliverable decks:
 - SVG image elements.
 
 Do not use these in deliverable decks until `pptz` implements them in the
-writer: image backgrounds, icon/table/chart elements, alpha colors,
-`line_height`, `letter_spacing`, or shape names other than `rect`,
-`round_rect`, and `ellipse`.
+writer: image backgrounds, icon/table/chart elements, `line_height`,
+`letter_spacing`, or shape names other than `rect`, `round_rect`, and
+`ellipse`.
 
 ## Important Notes
 

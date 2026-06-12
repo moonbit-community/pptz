@@ -20,6 +20,7 @@ test "render minimal deck as pptx bytes" {
   assert_slide_xml_contains(prs, 1, "<a:gradFill")
   assert_slide_xml_contains(prs, 3, "prst=\"roundRect\"")
   assert_slide_xml_contains(prs, 3, "<a:gradFill")
+  assert_slide_xml_contains(prs, 3, "alpha val=\"80000\"")
   assert_slide_xml_contains(prs, 3, "prstDash val=\"dash\"")
 }
 
@@ -117,24 +118,6 @@ test "writer reports capability errors for unsupported schema-valid features" {
       ),
     ),
     "border style 'zigzag'",
-  )
-  expect_capability(
-    unsupported_loaded(
-      page_with_element(
-        TextElement(test_base("alpha_text"), TextContent::{
-          text: "Alpha",
-          style: None,
-          align: None,
-          wrap: None,
-          font_size: None,
-          font_family: None,
-          color: Some("#11223344"),
-          bold: None,
-          italic: None,
-        }),
-      ),
-    ),
-    "alpha colors",
   )
   expect_capability(
     unsupported_loaded(

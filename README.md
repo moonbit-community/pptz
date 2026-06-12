@@ -79,9 +79,8 @@ The current writer supports:
 
 Schema-valid features outside this scope fail with a writer capability error
 instead of being silently ignored. This includes image backgrounds,
-icon/table/chart elements, alpha colors, `line_height`,
-`letter_spacing`, and shape names other than `rect`, `round_rect`, or
-`ellipse`.
+icon/table/chart elements, `line_height`, `letter_spacing`, and shape names
+other than `rect`, `round_rect`, or `ellipse`.
 
 ## Example
 

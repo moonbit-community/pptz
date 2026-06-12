@@ -388,7 +388,11 @@ fn text_run_properties(
   }
   match text.color {
     None => ()
-    Some(color) => props = props.with_color(resolve_rgb(bundle, color))
+    Some(color) =>
+      props = @slide.RunProperties::{
+        ..props,
+        fill: Some(resolve_color(bundle, color)),
+      }
   }
   if text.bold == Some(true) {
     props = props.with_bold()
@@ -406,12 +410,25 @@ fn text_run_properties(
 
 ///|
 fn resolve_color(bundle : DeckBundle, color : String) -> @oxml.Color raise {
-  @oxml.Color::srgb(resolve_rgb(bundle, color))
+  let color = resolve_color_text(bundle, color)
+  let rgb = @units.RgbColor::parse_hex(rgb_hex(color)) catch {
+    err =>
+      raise WriteError::Backend("invalid color after loader validation: \{err}")
+  }
+  let base = @oxml.Color::srgb(rgb)
+  if color.length() == 9 {
+    @oxml.Color::{
+      ..base,
+      transforms: [@units.ColorTransform::Alpha(alpha_percentage(color))],
+    }
+  } else {
+    base
+  }
 }
 
 ///|
-fn resolve_rgb(bundle : DeckBundle, color : String) -> @units.RgbColor raise {
-  let color = match token_name_unchecked(color) {
+fn resolve_color_text(bundle : DeckBundle, color : String) -> String {
+  match token_name_unchecked(color) {
     None => color
     Some(name) =>
       match bundle.deck.theme {
@@ -423,14 +440,46 @@ fn resolve_rgb(bundle : DeckBundle, color : String) -> @units.RgbColor raise {
         None => color
       }
   }
+}
+
+///|
+fn rgb_hex(color : String) -> String {
   if color.length() == 9 {
-    raise WriteError::Capability(
-      "alpha colors are not implemented by the MVP writer",
-    )
+    String::from_iter(color.iter().take(7))
+  } else {
+    color
   }
-  @units.RgbColor::parse_hex(color) catch {
-    err =>
-      raise WriteError::Backend("invalid color after loader validation: \{err}")
+}
+
+///|
+fn alpha_percentage(color : String) -> @units.Percentage raise {
+  let chars = color.to_array()
+  let alpha = parse_hex_byte(chars[7], chars[8], color)
+  @units.Percentage(alpha.to_double() / 255.0 * 100.0)
+}
+
+///|
+fn parse_hex_byte(hi : Char, lo : Char, original : String) -> Int raise {
+  match (hex_digit(hi), hex_digit(lo)) {
+    (Some(hi), Some(lo)) => hi * 16 + lo
+    _ =>
+      raise WriteError::Backend(
+        "invalid alpha color after loader validation: \{original}",
+      )
+  }
+}
+
+///|
+fn hex_digit(char : Char) -> Int? {
+  let code = char.to_int()
+  if code >= '0'.to_int() && code <= '9'.to_int() {
+    Some(code - '0'.to_int())
+  } else if code >= 'a'.to_int() && code <= 'f'.to_int() {
+    Some(code - 'a'.to_int() + 10)
+  } else if code >= 'A'.to_int() && code <= 'F'.to_int() {
+    Some(code - 'A'.to_int() + 10)
+  } else {
+    None
   }
 }
 
