@@ -295,13 +295,13 @@ Build `pptz` in this order:
    builder API. Keep MVP source features close to what that API can express
    directly.
    Current writer scope:
-   deck size, ordered pages, optional solid/gradient background, text elements
-   with wrapping, rectangle/round-rectangle/ellipse and common preset shape
-   elements, solid/no-fill/gradient shape fills, alpha colors, solid and dashed
-   shape borders, raster image elements with `stretch`, `cover`, or `contain`,
-   SVG image elements, image crop rectangles, and basic theme color/text-style
-   resolution with element-local overrides. Valid AST features outside this
-   subset may fail as writer capability errors.
+   deck size, ordered pages, optional solid/gradient/image background, text
+   elements with wrapping, rectangle/round-rectangle/ellipse and common preset
+   shape elements, solid/no-fill/gradient shape fills, alpha colors, solid and
+   dashed shape borders, raster image elements with `stretch`, `cover`, or
+   `contain`, SVG image elements, image crop rectangles, and basic theme
+   color/text-style resolution with element-local overrides. Valid AST features
+   outside this subset may fail as writer capability errors.
    MVP text styling follows the `moon-pptx@0.4.0` text builder surface:
    `font_size`, `font_family`, `color`, `bold`, `italic`, `line_height`, and
    `wrap`. `letter_spacing` may remain a schema/AST concept but is outside the
@@ -309,11 +309,11 @@ Build `pptz` in this order:
    The MVP writer must not silently ignore declared fields that it cannot map
    to `moon-pptx`. Fail with a writer capability error instead.
    Current status: `writer.mbt` generates valid PPTX bytes for deck size,
-   ordered pages, optional solid/gradient backgrounds, text elements with
-   wrapping, rectangle/round-rectangle/ellipse and common preset shape elements,
-   solid/no-fill/gradient shape fills, alpha colors, solid and dashed shape
-   borders, image elements with `stretch`, `cover`, `contain`, explicit crop,
-   SVG pictures, and basic theme color/text-style resolution including
+   ordered pages, optional solid/gradient/image backgrounds, text elements
+   with wrapping, rectangle/round-rectangle/ellipse and common preset shape
+   elements, solid/no-fill/gradient shape fills, alpha colors, solid and dashed
+   shape borders, image elements with `stretch`, `cover`, `contain`, explicit
+   crop, SVG pictures, and basic theme color/text-style resolution including
    `line_height`. It returns capability errors for schema-valid features that
    are still outside the implemented writer subset.
 
@@ -461,6 +461,19 @@ Shape gradient fills use the same `direction` and `stops` fields under
 `[elements.content.fill]` when `type = "gradient"`. The current writer supports
 both page background gradients and shape gradient fills.
 
+Image backgrounds use the same deck-relative image path and `fit` values as
+image elements, without explicit crop:
+
+```toml
+[background]
+type = "image"
+path = "images/background.png"
+fit = "cover"
+```
+
+The writer renders an image background as the first full-slide picture shape so
+subsequent text, shapes, and image elements appear above it.
+
 Loader diagnostics must include a stable code in addition to human-readable
 text. Messages may change; codes should not. Initial code ranges:
 
@@ -590,9 +603,8 @@ metadata. Type-specific fields live under `[elements.content]`.
 
 Allowed element types: `text`, `shape`, `image`, `icon`, `table`, `chart`.
 Allowed background types: `solid`, `gradient`, `image`.
-`icon`, `table`, `chart`, and image backgrounds are allowed schema/AST concepts
-but are outside the MVP writer scope unless later implementation work
-explicitly adds them.
+`icon`, `table`, and `chart` are allowed schema/AST concepts but are outside
+the MVP writer scope unless later implementation work explicitly adds them.
 MVP shape content supports `rect`, `round_rect`, `ellipse`, and this common
 preset subset: `diamond`, `triangle`, `right_triangle`, `parallelogram`,
 `trapezoid`, `pentagon`, `hexagon`, `octagon`, `chevron`, `right_arrow`,

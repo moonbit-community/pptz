@@ -31,8 +31,9 @@ deck-topic/
 1. Clarify the deck goal, audience, language, duration, required slide count,
    and delivery constraints.
 2. Design a reusable visual system that fits the subject and supports text
-   legibility across all slides. Use a solid theme background when the current
-   `pptz` writer does not support the desired image background behavior.
+   legibility across all slides. Use a solid theme background when an image
+   background would reduce legibility or needs behavior outside current writer
+   support.
 3. Write a `.pptz.toml` file with title, canvas size, theme tokens, shared text
    styles, image paths, and ordered page list.
 4. Write every `pages/*.page.toml` file. Keep coordinates explicit and reuse
@@ -68,7 +69,7 @@ deck-topic/
 Use these features for deliverable decks:
 
 - explicit deck size and ordered page files;
-- optional solid or gradient page backgrounds;
+- optional solid, gradient, or image page backgrounds;
 - text elements with theme text styles, local overrides, and text wrapping;
 - rectangle, rounded rectangle, ellipse, and common preset shapes;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
@@ -78,8 +79,8 @@ Use these features for deliverable decks:
 - SVG image elements.
 
 Do not use these in deliverable decks until `pptz` implements them in the
-writer: image backgrounds, icon/table/chart elements, `letter_spacing`, or
-shape names outside the documented common preset subset.
+writer: icon/table/chart elements, `letter_spacing`, or shape names outside
+the documented common preset subset.
 
 ## Important Notes
 

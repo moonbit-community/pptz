@@ -34,7 +34,11 @@ fn render_page_mut(
   let _ = prs.add_blank_typed_slide_mut().finish_mut() catch {
       err => raise WriteError::Backend("cannot add slide: \{err}")
     }
-  let slide = build_slide(bundle, resolved_page) catch { err => raise err }
+  add_page_background_image(prs, slide_index, bundle, resolved_page)
+  let initial_slide = current_slide(prs, slide_index)
+  let slide = build_slide(bundle, resolved_page, initial_slide) catch {
+    err => raise err
+  }
   prs.update_slide_mut(slide_index, slide) catch {
     err =>
       raise WriteError::Backend("cannot update slide \{slide_index}: \{err}")
@@ -73,24 +77,18 @@ pub fn write_pptx_file(loaded : LoadedDeck, output_path : String) -> Unit raise 
 fn build_slide(
   bundle : DeckBundle,
   resolved_page : ResolvedPage,
+  initial_slide : @slide.Slide,
 ) -> @slide.Slide raise {
-  let prs = @presentation.Presentation::new() catch {
-    err => raise WriteError::Backend("cannot create slide template: \{err}")
-  }
-  let _ = prs.add_blank_typed_slide_mut().finish_mut() catch {
-      err => raise WriteError::Backend("cannot create slide template: \{err}")
-    }
-  let mut slide = prs.slides()[0]
+  let mut slide = initial_slide
   match resolved_page.page.background {
     None => ()
     Some(SolidBackground(color)) =>
       slide = slide.with_background(SolidFill(resolve_color(bundle, color)))
     Some(GradientBackground(gradient)) =>
       slide = slide.with_background(to_gradient_fill(bundle, gradient))
-    Some(ImageBackground(_)) =>
-      raise WriteError::Capability("image backgrounds are not implemented")
+    Some(ImageBackground(_)) => ()
   }
-  let mut shape_id = 2
+  let mut shape_id = slide.shapes.length() + 2
   for element in resolved_page.page.elements {
     match element {
       ImageElement(_, _) => ()
@@ -102,6 +100,25 @@ fn build_slide(
     }
   }
   slide
+}
+
+///|
+fn add_page_background_image(
+  prs : @presentation.Presentation,
+  slide_index : Int,
+  bundle : DeckBundle,
+  resolved_page : ResolvedPage,
+) -> Unit raise {
+  match resolved_page.page.background {
+    Some(ImageBackground(fill)) =>
+      add_image_fill(prs, slide_index, bundle, fill.path, fill.fit, None, Bounds::{
+        x: 0.0,
+        y: 0.0,
+        width: bundle.deck.size.width,
+        height: bundle.deck.size.height,
+      })
+    _ => ()
+  }
 }
 
 ///|
@@ -150,32 +167,46 @@ fn add_image(
   base : ElementBase,
   spec : ImageSpec,
 ) -> Unit raise {
-  let path = source_full_path(bundle.deck_dir, spec.path).to_string()
-  let bytes = @miniio.read_file(path) catch {
-    err => raise WriteError::Io("cannot read image '\{spec.path}': \{err}")
+  add_image_fill(
+    prs,
+    slide_index,
+    bundle,
+    spec.path,
+    spec.fit,
+    spec.crop,
+    base.bounds,
+  )
+}
+
+///|
+fn add_image_fill(
+  prs : @presentation.Presentation,
+  slide_index : Int,
+  bundle : DeckBundle,
+  path : String,
+  fit : ImageFit,
+  crop : CropRect?,
+  bounds : Bounds,
+) -> Unit raise {
+  let full_path = source_full_path(bundle.deck_dir, path).to_string()
+  let bytes = @miniio.read_file(full_path) catch {
+    err => raise WriteError::Io("cannot read image '\{path}': \{err}")
   }
   let image_bytes = bytes.binary().to_fixedarray()
   let placement = image_placement(
-    base.bounds,
-    spec.fit,
-    image_source_size(spec.path, image_bytes),
-    spec.crop,
+    bounds,
+    fit,
+    image_source_size(path, image_bytes),
+    crop,
   )
-  let bounds = placement.bounds
   let shape_index = add_picture_shape_mut(
     prs,
     slide_index,
-    spec.path,
+    path,
     image_bytes,
-    bounds,
+    placement.bounds,
   )
-  apply_picture_crop_at(
-    prs,
-    slide_index,
-    shape_index,
-    placement.crop,
-    spec.path,
-  )
+  apply_picture_crop_at(prs, slide_index, shape_index, placement.crop, path)
 }
 
 ///|
@@ -269,6 +300,17 @@ fn last_shape_index(
     err => raise WriteError::Backend("cannot read slides: \{err}")
   }
   slides[slide_index].shapes.length() - 1
+}
+
+///|
+fn current_slide(
+  prs : @presentation.Presentation,
+  slide_index : Int,
+) -> @slide.Slide raise {
+  let slides = prs.slides() catch {
+    err => raise WriteError::Backend("cannot read slides: \{err}")
+  }
+  slides[slide_index]
 }
 
 ///|

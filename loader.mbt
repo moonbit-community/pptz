@@ -315,7 +315,7 @@ fn validate_background(
       )
     GradientBackground(gradient) =>
       validate_gradient(bundle, page_path, None, "background", gradient, errors)
-    ImageBackground(fill) =>
+    ImageBackground(fill) => {
       validate_asset_path(
         bundle,
         page_path,
@@ -324,6 +324,17 @@ fn validate_background(
         fill.path,
         errors,
       )
+      validate_image_fit_source_size(
+        bundle,
+        page_path,
+        None,
+        "background.path",
+        "background.fit",
+        fill.path,
+        fill.fit,
+        errors,
+      )
+    }
   }
 }
 
@@ -759,52 +770,84 @@ fn validate_image_source_size(
   spec : ImageSpec,
   errors : Array[Diagnostic],
 ) -> Unit {
-  match spec.fit {
+  validate_image_fit_source_size(
+    bundle,
+    page_path,
+    Some(element_id),
+    "elements.content.path",
+    "elements.content.fit",
+    spec.path,
+    spec.fit,
+    errors,
+  )
+}
+
+///|
+fn validate_image_fit_source_size(
+  bundle : DeckBundle,
+  page_path : String,
+  element_id : String?,
+  path_field : String,
+  fit_field : String,
+  image_path : String,
+  fit : ImageFit,
+  errors : Array[Diagnostic],
+) -> Unit {
+  match fit {
     StretchFit => ()
     CoverFit | ContainFit =>
-      match resolve_existing_asset_path(bundle, spec.path) {
+      match resolve_existing_asset_path(bundle, image_path) {
         None => ()
         Some(full_path) => {
           let bytes = @miniio.read_file(full_path) catch {
             err => {
               errors.push(
-                error_diagnostic(
+                image_fit_diagnostic(
                   "PZ040",
                   "cannot read image asset: \{err}",
-                  path=page_path,
-                  element_id~,
-                  field="elements.content.path",
+                  page_path,
+                  element_id,
+                  path_field,
                 ),
               )
               return
             }
           }
-          match image_source_size(spec.path, bytes.binary().to_fixedarray()) {
+          match image_source_size(image_path, bytes.binary().to_fixedarray()) {
             Some(size) =>
               if size.width <= 0.0 || size.height <= 0.0 {
                 errors.push(
-                  error_diagnostic(
-                    "PZ041",
-                    "image dimensions must be positive",
-                    path=page_path,
-                    element_id~,
-                    field="elements.content.path",
+                  image_fit_diagnostic(
+                    "PZ041", "image dimensions must be positive", page_path, element_id,
+                    path_field,
                   ),
                 )
               }
             None =>
               errors.push(
-                error_diagnostic(
-                  "PZ041",
-                  "image fit requires readable image dimensions",
-                  path=page_path,
-                  element_id~,
-                  field="elements.content.fit",
+                image_fit_diagnostic(
+                  "PZ041", "image fit requires readable image dimensions", page_path,
+                  element_id, fit_field,
                 ),
               )
           }
         }
       }
+  }
+}
+
+///|
+fn image_fit_diagnostic(
+  code : String,
+  message : String,
+  page_path : String,
+  element_id : String?,
+  field : String,
+) -> Diagnostic {
+  match element_id {
+    None => error_diagnostic(code, message, path=page_path, field~)
+    Some(element_id) =>
+      error_diagnostic(code, message, path=page_path, element_id~, field~)
   }
 }
 

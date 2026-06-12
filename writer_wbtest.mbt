@@ -42,10 +42,13 @@ test "writer preserves existing output when render fails" {
   assert_openxml_pptx(before.binary().to_fixedarray(), slide_count=4)
   let failing = unsupported_loaded(Page::{
     page_type: None,
-    background: Some(
-      ImageBackground(ImageFill::{ path: "images/hero.png", fit: StretchFit }),
-    ),
-    elements: [],
+    background: None,
+    elements: [
+      IconElement(test_base("icon"), IconSpec::{
+        name: "fas:cube",
+        fill: Some(SolidFill("#F59E0B")),
+      }),
+    ],
   })
   ignore(
     write_pptx_file(failing, output) catch {
@@ -65,6 +68,29 @@ test "writer preserves existing output when render fails" {
   @miniio.remove_file(output) catch {
     _ => ()
   }
+}
+
+///|
+test "writer renders image page backgrounds behind elements" {
+  let loaded = load_deck("examples/testdata/image-background.pptz.toml") catch {
+    err => abort("load failed: \{err}")
+  }
+  let bytes = render_pptx(loaded) catch {
+    err => abort("render failed: \{err}")
+  }
+  assert_openxml_pptx(bytes, slide_count=1)
+  let prs = @presentation.Presentation::open(bytes) catch {
+    err => abort("open generated pptx failed: \{err}")
+  }
+  let slides = prs.slides() catch {
+    err => abort("read generated slides failed: \{err}")
+  }
+  assert_true(slides[0].shapes.length() >= 2)
+  match slides[0].shapes[0] {
+    @slide.Picture(_) => ()
+    _ => abort("expected background image to be first shape")
+  }
+  assert_slide_xml_contains(prs, 1, "Image background")
 }
 
 ///|
@@ -142,16 +168,6 @@ test "writer maps text wrap false" {
 
 ///|
 test "writer reports capability errors for unsupported schema-valid features" {
-  expect_capability(
-    unsupported_loaded(Page::{
-      page_type: None,
-      background: Some(
-        ImageBackground(ImageFill::{ path: "images/hero.png", fit: StretchFit }),
-      ),
-      elements: [],
-    }),
-    "image backgrounds",
-  )
   expect_capability(
     unsupported_loaded(
       page_with_element(
