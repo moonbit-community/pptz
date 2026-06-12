@@ -152,6 +152,15 @@ pub(all) struct Border {
 pub(all) struct ImageSpec {
   path : String
   fit : ImageFit
+  crop : CropRect?
+} derive(Eq, Debug)
+
+///|
+pub(all) struct CropRect {
+  left : Double
+  top : Double
+  right : Double
+  bottom : Double
 } derive(Eq, Debug)
 
 ///|

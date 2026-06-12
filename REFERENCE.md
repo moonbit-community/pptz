@@ -115,6 +115,11 @@ PPTX. The `0.2.0` implementation should support `stretch`, `cover`, and
 and chart v2 designs may be documented without being exposed as implemented
 schema in `0.2.0`.
 
+The v2 schema architecture is documented in `docs/v2-schema.md`. It is the
+planning-level source for shared primitives and future capability slices; this
+reference remains the implementation contract for fields accepted by the current
+parser.
+
 Parser responsibilities:
 
 - Required fields.
@@ -201,6 +206,38 @@ Page paths and asset paths share the same deck-relative source path rules.
 They differ only in what the loader does after resolution: page paths are read
 and parsed as TOML, while asset paths are checked for existence and file kind
 without parsing asset contents.
+
+Image elements use a required deck-relative `path`, optional `fit`, and optional
+`crop` table:
+
+```toml
+[[elements]]
+id = "hero"
+type = "image"
+bounds = [80, 120, 640, 360]
+
+[elements.content]
+path = "images/hero.svg"
+fit = "cover"
+
+[elements.content.crop]
+left = 0.1
+top = 0
+right = 0.1
+bottom = 0
+```
+
+`fit` defaults to `stretch`. `cover` fills the element bounds and crops overflow
+from the source image. `contain` preserves the source aspect ratio and centers
+the image inside the element bounds. Explicit crop values are normalized
+fractions of the source rectangle, each between `0.0` and `1.0`; `left + right`
+and `top + bottom` must each leave a non-empty source rectangle. Explicit crop
+is applied before `cover` or `contain` fit math.
+
+Raster image dimensions are read through `moon-pptx`. SVG dimensions are read
+from numeric `width`/`height` attributes or `viewBox`. SVG TOML does not expose
+a fallback image field; the writer provides the backend-required fallback
+internally.
 
 Keep the boundary clear: `pptz` defines the TOML-to-AST-to-PPTX conversion
 semantics. The portable Agent skill defines a recommended slide-making

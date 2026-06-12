@@ -380,7 +380,7 @@ fn validate_element(
           )
       }
     }
-    ImageElement(base, spec) =>
+    ImageElement(base, spec) => {
       validate_asset_path(
         bundle,
         page_path,
@@ -389,6 +389,9 @@ fn validate_element(
         spec.path,
         errors,
       )
+      validate_image_crop(page_path, base.id, spec.crop, errors)
+      validate_image_source_size(bundle, page_path, base.id, spec, errors)
+    }
     IconElement(base, spec) =>
       match spec.fill {
         None | Some(NoFill) => ()
@@ -652,6 +655,125 @@ fn validate_asset_path(
             field~,
           ),
         )
+      }
+    }
+  }
+}
+
+///|
+fn validate_image_crop(
+  page_path : String,
+  element_id : String,
+  crop : CropRect?,
+  errors : Array[Diagnostic],
+) -> Unit {
+  match crop {
+    None => ()
+    Some(crop) => {
+      if !valid_crop_edge(crop.left) ||
+        !valid_crop_edge(crop.top) ||
+        !valid_crop_edge(crop.right) ||
+        !valid_crop_edge(crop.bottom) {
+        errors.push(
+          error_diagnostic(
+            "PZ041",
+            "image crop values must be between 0.0 and 1.0",
+            path=page_path,
+            element_id~,
+            field="elements.content.crop",
+          ),
+        )
+      }
+      if crop.left + crop.right >= 1.0 || crop.top + crop.bottom >= 1.0 {
+        errors.push(
+          error_diagnostic(
+            "PZ041",
+            "image crop must leave a non-empty source rectangle",
+            path=page_path,
+            element_id~,
+            field="elements.content.crop",
+          ),
+        )
+      }
+    }
+  }
+}
+
+///|
+fn valid_crop_edge(value : Double) -> Bool {
+  value >= 0.0 && value <= 1.0
+}
+
+///|
+fn validate_image_source_size(
+  bundle : DeckBundle,
+  page_path : String,
+  element_id : String,
+  spec : ImageSpec,
+  errors : Array[Diagnostic],
+) -> Unit {
+  match spec.fit {
+    StretchFit => ()
+    CoverFit | ContainFit =>
+      match resolve_existing_asset_path(bundle, spec.path) {
+        None => ()
+        Some(full_path) => {
+          let bytes = @miniio.read_file(full_path) catch {
+            err => {
+              errors.push(
+                error_diagnostic(
+                  "PZ040",
+                  "cannot read image asset: \{err}",
+                  path=page_path,
+                  element_id~,
+                  field="elements.content.path",
+                ),
+              )
+              return
+            }
+          }
+          match image_source_size(spec.path, bytes.binary().to_fixedarray()) {
+            Some(size) =>
+              if size.width <= 0.0 || size.height <= 0.0 {
+                errors.push(
+                  error_diagnostic(
+                    "PZ041",
+                    "image dimensions must be positive",
+                    path=page_path,
+                    element_id~,
+                    field="elements.content.path",
+                  ),
+                )
+              }
+            None =>
+              errors.push(
+                error_diagnostic(
+                  "PZ041",
+                  "image fit requires readable image dimensions",
+                  path=page_path,
+                  element_id~,
+                  field="elements.content.fit",
+                ),
+              )
+          }
+        }
+      }
+  }
+}
+
+///|
+fn resolve_existing_asset_path(
+  bundle : DeckBundle,
+  asset_path : String,
+) -> String? {
+  match resolve_source_path(bundle.deck_dir, asset_path) {
+    None => None
+    Some(full_path) => {
+      let full_path_text = full_path.to_string()
+      if (@miniio.is_file(full_path_text) catch { _ => false }) {
+        Some(full_path_text)
+      } else {
+        None
       }
     }
   }

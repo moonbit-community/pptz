@@ -71,13 +71,16 @@ The current writer supports:
 - text elements with theme text styles and local overrides;
 - rectangle and ellipse shapes;
 - solid fills, no-fill shapes, and solid borders;
-- raster image elements with `fit = "stretch"`.
+- raster image elements with `fit = "stretch"`, `fit = "cover"`, or
+  `fit = "contain"`;
+- image crop rectangles;
+- SVG image elements, using an internal transparent PNG fallback required by
+  `moon-pptx`.
 
 Schema-valid features outside this scope fail with a writer capability error
 instead of being silently ignored. This includes gradient backgrounds/fills,
-image backgrounds, icon/table/chart elements, image `cover`/`contain`, alpha
-colors, `line_height`, `letter_spacing`, and shape names other than `rect` or
-`ellipse`.
+image backgrounds, icon/table/chart elements, alpha colors, `line_height`,
+`letter_spacing`, and shape names other than `rect` or `ellipse`.
 
 ## Example
 

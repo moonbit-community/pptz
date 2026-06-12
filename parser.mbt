@@ -377,13 +377,34 @@ fn parse_image_spec(
   table : Map[String, @toml.TomlValue],
   path : String,
 ) -> ImageSpec raise {
-  reject_unknown_fields(table, path, ["path", "fit"])
+  reject_unknown_fields(table, path, ["path", "fit", "crop"])
   ImageSpec::{
     path: required_string(table, "\{path}.path", key="path"),
     fit: parse_image_fit(
       optional_string(table.get("fit"), "\{path}.fit"),
       "\{path}.fit",
     ),
+    crop: parse_optional_crop_rect(table.get("crop"), "\{path}.crop"),
+  }
+}
+
+///|
+fn parse_optional_crop_rect(
+  value : @toml.TomlValue?,
+  path : String,
+) -> CropRect? raise {
+  match value {
+    None => None
+    Some(value) => {
+      let table = expect_table(value, path)
+      reject_unknown_fields(table, path, ["left", "top", "right", "bottom"])
+      Some(CropRect::{
+        left: required_double(table, "\{path}.left", key="left"),
+        top: required_double(table, "\{path}.top", key="top"),
+        right: required_double(table, "\{path}.right", key="right"),
+        bottom: required_double(table, "\{path}.bottom", key="bottom"),
+      })
+    }
   }
 }
 

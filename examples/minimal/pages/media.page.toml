@@ -12,30 +12,54 @@ bounds = [80, 70, 900, 70]
 [elements.content]
 style = "$title"
 font_size = 44
-text = "Stretch Images"
+text = "Images"
 
 [[elements]]
-id = "hero"
+id = "stretch_raster"
 type = "image"
-bounds = [90, 170, 520, 300]
+bounds = [80, 155, 330, 195]
 
 [elements.content]
 path = "images/hero.png"
 fit = "stretch"
 
 [[elements]]
-id = "diagram"
+id = "cover_raster"
 type = "image"
-bounds = [670, 170, 520, 290]
+bounds = [475, 155, 330, 195]
+
+[elements.content]
+path = "images/hero.png"
+fit = "cover"
+
+[elements.content.crop]
+left = 0.08
+top = 0
+right = 0.08
+bottom = 0
+
+[[elements]]
+id = "contain_raster"
+type = "image"
+bounds = [870, 155, 330, 195]
 
 [elements.content]
 path = "images/diagram.png"
-fit = "stretch"
+fit = "contain"
+
+[[elements]]
+id = "svg_badge"
+type = "image"
+bounds = [360, 400, 560, 110]
+
+[elements.content]
+path = "images/badge.svg"
+fit = "cover"
 
 [[elements]]
 id = "note_panel"
 type = "shape"
-bounds = [180, 520, 920, 80]
+bounds = [180, 545, 920, 80]
 
 [elements.content]
 shape = "rect"
@@ -52,9 +76,9 @@ color = "$primary"
 [[elements]]
 id = "note"
 type = "text"
-bounds = [220, 540, 840, 40]
+bounds = [220, 565, 840, 40]
 
 [elements.content]
 style = "$caption"
 align = ["center", "center"]
-text = "Raster images currently render with fit = stretch."
+text = "Image elements support stretch, cover, contain, explicit crop, and SVG."

@@ -141,28 +141,96 @@ fn add_image(
   base : ElementBase,
   spec : ImageSpec,
 ) -> Unit raise {
-  match spec.fit {
-    StretchFit => ()
-    CoverFit =>
-      raise WriteError::Capability("image fit 'cover' is not implemented")
-    ContainFit =>
-      raise WriteError::Capability("image fit 'contain' is not implemented")
-  }
   let path = source_full_path(bundle.deck_dir, spec.path).to_string()
   let bytes = @miniio.read_file(path) catch {
     err => raise WriteError::Io("cannot read image '\{spec.path}': \{err}")
   }
-  let bounds = base.bounds
-  prs.add_picture_mut(
-    slide_index,
-    bytes.binary().to_fixedarray(),
-    to_emu(bounds.x),
-    to_emu(bounds.y),
-    to_emu(bounds.width),
-    to_emu(bounds.height),
-  ) catch {
-    err => raise WriteError::Backend("cannot add image '\{spec.path}': \{err}")
+  let image_bytes = bytes.binary().to_fixedarray()
+  let placement = image_placement(
+    base.bounds,
+    spec.fit,
+    image_source_size(spec.path, image_bytes),
+    spec.crop,
+  )
+  let bounds = placement.bounds
+  if is_svg_path(spec.path) {
+    prs.add_svg_picture_mut(
+      slide_index,
+      image_bytes,
+      transparent_png_fallback(),
+      to_emu(bounds.x),
+      to_emu(bounds.y),
+      to_emu(bounds.width),
+      to_emu(bounds.height),
+    ) catch {
+      err =>
+        raise WriteError::Backend("cannot add SVG image '\{spec.path}': \{err}")
+    }
+  } else {
+    prs.add_picture_mut(
+      slide_index,
+      image_bytes,
+      to_emu(bounds.x),
+      to_emu(bounds.y),
+      to_emu(bounds.width),
+      to_emu(bounds.height),
+    ) catch {
+      err =>
+        raise WriteError::Backend("cannot add image '\{spec.path}': \{err}")
+    }
   }
+  apply_last_picture_crop(prs, slide_index, placement.crop, spec.path)
+}
+
+///|
+fn apply_last_picture_crop(
+  prs : @presentation.Presentation,
+  slide_index : Int,
+  crop : CropRect?,
+  path : String,
+) -> Unit raise {
+  match crop {
+    None => ()
+    Some(crop) => {
+      let slides = prs.slides() catch {
+        err => raise WriteError::Backend("cannot read slides: \{err}")
+      }
+      let slide = slides[slide_index]
+      let shape_index = slide.shapes.length() - 1
+      let shape = match slide.shapes[shape_index] {
+        @slide.Picture(picture) =>
+          @slide.Shape::Picture(
+            picture.with_crop(
+              left=@units.Percentage(crop.left * 100.0),
+              top=@units.Percentage(crop.top * 100.0),
+              right=@units.Percentage(crop.right * 100.0),
+              bottom=@units.Percentage(crop.bottom * 100.0),
+            ),
+          )
+        _ =>
+          raise WriteError::Backend(
+            "internal error: last shape is not image '\{path}'",
+          )
+      }
+      let slide = slide.with_shape_at(shape_index, shape) catch {
+        err =>
+          raise WriteError::Backend(
+            "cannot apply image crop for '\{path}': \{err}",
+          )
+      }
+      prs.update_slide_mut(slide_index, slide) catch {
+        err =>
+          raise WriteError::Backend(
+            "cannot update cropped image '\{path}': \{err}",
+          )
+      }
+    }
+  }
+}
+
+///|
+fn transparent_png_fallback() -> FixedArray[Byte] {
+  b"\x89PNG\r\n\x1A\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1F\x15\xC4\x89\x00\x00\x00\nIDATx\x9Cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xB4\x00\x00\x00\x00IEND\xAEB`\x82".to_fixedarray()
 }
 
 ///|

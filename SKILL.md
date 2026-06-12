@@ -70,12 +70,15 @@ Use these features for deliverable decks:
 - text elements with theme text styles and local overrides;
 - rectangle and ellipse shapes;
 - solid fills, no-fill shapes, and solid borders;
-- raster image elements with `fit = "stretch"`.
+- raster image elements with `fit = "stretch"`, `fit = "cover"`, or
+  `fit = "contain"`;
+- image crop rectangles;
+- SVG image elements.
 
 Do not use these in deliverable decks until `pptz` implements them in the
 writer: gradient backgrounds or fills, image backgrounds, icon/table/chart
-elements, image `cover` or `contain`, alpha colors, `line_height`,
-`letter_spacing`, or shape names other than `rect` and `ellipse`.
+elements, alpha colors, `line_height`, `letter_spacing`, or shape names other
+than `rect` and `ellipse`.
 
 ## Important Notes
 

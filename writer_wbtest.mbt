@@ -15,6 +15,7 @@ test "render minimal deck as pptx bytes" {
   }
   assert_eq(slides.length(), 4)
   assert_true(slides[0].shapes.length() >= 2)
+  assert_true(count_pictures(slides[3]) >= 4)
 }
 
 ///|
@@ -109,28 +110,6 @@ test "writer reports capability errors for unsupported schema-valid features" {
   expect_capability(
     unsupported_loaded(page_with_element(ChartElement(test_base("chart")))),
     "chart elements",
-  )
-  expect_capability(
-    unsupported_loaded(
-      page_with_element(
-        ImageElement(test_base("cover_image"), ImageSpec::{
-          path: "images/hero.png",
-          fit: CoverFit,
-        }),
-      ),
-    ),
-    "cover",
-  )
-  expect_capability(
-    unsupported_loaded(
-      page_with_element(
-        ImageElement(test_base("contain_image"), ImageSpec::{
-          path: "images/hero.png",
-          fit: ContainFit,
-        }),
-      ),
-    ),
-    "contain",
   )
   expect_capability(
     unsupported_loaded(
@@ -234,6 +213,18 @@ fn assert_openxml_pptx(bytes : FixedArray[Byte], slide_count~ : Int) -> Unit {
       err => abort("missing slide rels: \{err}")
     },
   )
+}
+
+///|
+fn count_pictures(slide : @slide.Slide) -> Int {
+  let mut count = 0
+  for shape in slide.shapes {
+    match shape {
+      @slide.Picture(_) => count += 1
+      _ => ()
+    }
+  }
+  count
 }
 
 ///|

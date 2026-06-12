@@ -56,6 +56,14 @@ test "loader returns non-blocking warnings" {
 }
 
 ///|
+test "loader rejects invalid image crop" {
+  let diagnostics = load_error_diagnostics(
+    "examples/testdata/invalid-crop.pptz.toml",
+  )
+  assert_true(has_diagnostic_code(diagnostics, "PZ041"))
+}
+
+///|
 fn load_error_diagnostics(path : String) -> Array[Diagnostic] {
   ignore(
     load_deck(path) catch {

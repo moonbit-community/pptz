@@ -153,9 +153,55 @@ test "image fit defaults to stretch" {
   match page.elements[0] {
     ImageElement(_, spec) =>
       match spec.fit {
-        StretchFit => ()
+        StretchFit =>
+          match spec.crop {
+            None => ()
+            Some(_) => abort("expected no crop")
+          }
         _ => abort("expected stretch fit")
       }
+    _ => abort("expected image element")
+  }
+}
+
+///|
+test "parse image crop" {
+  let page = parse_page_toml(
+    (
+      #|[[elements]]
+      #|id = "hero"
+      #|type = "image"
+      #|bounds = [0, 0, 640, 360]
+      #|
+      #|[elements.content]
+      #|path = "images/hero.png"
+      #|fit = "cover"
+      #|
+      #|[elements.content.crop]
+      #|left = 0.1
+      #|top = 0.2
+      #|right = 0.3
+      #|bottom = 0.4
+    ),
+  ) catch {
+    err => abort("parse page failed: \{err}")
+  }
+  match page.elements[0] {
+    ImageElement(_, spec) => {
+      match spec.fit {
+        CoverFit => ()
+        _ => abort("expected cover fit")
+      }
+      match spec.crop {
+        Some(crop) => {
+          assert_eq(crop.left, 0.1)
+          assert_eq(crop.top, 0.2)
+          assert_eq(crop.right, 0.3)
+          assert_eq(crop.bottom, 0.4)
+        }
+        None => abort("expected crop")
+      }
+    }
     _ => abort("expected image element")
   }
 }
