@@ -321,6 +321,8 @@ Build `pptz` in this order:
    explicit crop, SVG pictures, and basic theme color/text-style resolution
    including `line_height`. It returns capability errors for schema-valid
    features that are still outside the implemented writer subset.
+   Chart schema parsing and loader validation are implemented, but chart
+   elements remain outside the writer subset until the chart writer slice.
 
 Compiler Reliability status:
 
@@ -491,6 +493,7 @@ text. Messages may change; codes should not. Initial code ranges:
 - `PZ032`: invalid color value.
 - `PZ040`: invalid or empty asset path.
 - `PZ060`: invalid table structure.
+- `PZ070`: invalid chart data or unsupported chart kind.
 - `PZ100`: element bounds outside canvas.
 - `PZ101`: invalid or zero-size element bounds. Negative width or height is an
   error; zero width or height is a warning.
@@ -678,11 +681,11 @@ Weight-based table sizing is outside the v2 shorthand scope. The current
 writer renders rectangular tables and treats merge spans as writer capability
 errors.
 
-Planned v2 chart semantics start with bar, line, pie, doughnut, area, scatter,
-bubble, and radar chart families. 3D charts, stock charts, surface charts,
-of-pie charts, and chartEx families are outside the first v2 chart slice.
-The first chart slice uses inline chart data in page TOML. External CSV, TOML,
-or spreadsheet-backed chart data is outside the first v2 chart slice.
+Current chart schema covers bar, line, pie, doughnut, area, scatter, bubble,
+and radar chart families. 3D charts, stock charts, surface charts, of-pie
+charts, and chartEx families are outside the first v2 chart slice. The first
+chart slice uses inline chart data in page TOML. External CSV, TOML, or
+spreadsheet-backed chart data is outside the first v2 chart slice.
 
 Image `fit` values are `stretch`, `cover`, or `contain`. Omitted `fit` defaults
 to `stretch`. The writer maps `stretch` directly to the requested bounds, uses

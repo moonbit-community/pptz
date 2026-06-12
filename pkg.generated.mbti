@@ -59,6 +59,19 @@ pub(all) struct Bounds {
   height : Double
 } derive(Eq, @debug.Debug)
 
+pub(all) struct ChartSeriesSpec {
+  name : String
+  values : Array[Double]
+  x_values : Array[Double]?
+  bubble_sizes : Array[Double]?
+} derive(Eq, @debug.Debug)
+
+pub(all) struct ChartSpec {
+  kind : String
+  categories : Array[String]?
+  series : Array[ChartSeriesSpec]
+} derive(Eq, @debug.Debug)
+
 pub struct CliResponse {
   exit_code : Int
   stdout : String
@@ -117,7 +130,7 @@ pub(all) enum Element {
   ConnectorElement(String, ConnectorSpec)
   IconElement(ElementBase, IconSpec)
   TableElement(ElementBase, TableSpec)
-  ChartElement(ElementBase)
+  ChartElement(ElementBase, ChartSpec)
 } derive(Eq, @debug.Debug)
 
 pub(all) struct ElementBase {

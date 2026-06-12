@@ -298,10 +298,9 @@ fn reject_unknown_element_fields(
   kind : String,
 ) -> Unit raise {
   match kind {
-    "text" | "shape" | "image" | "icon" | "table" =>
+    "text" | "shape" | "image" | "icon" | "table" | "chart" =>
       reject_unknown_fields(table, path, ["id", "type", "bounds", "content"])
     "connector" => reject_unknown_fields(table, path, ["id", "type", "content"])
-    "chart" => reject_unknown_fields(table, path, ["id", "type", "bounds"])
     _ => fail("\{path}.type: unsupported element type '\{kind}'")
   }
 }
@@ -319,7 +318,7 @@ fn parse_element_content(
     "image" => ImageElement(base, parse_required_image_spec(table, path))
     "icon" => IconElement(base, parse_required_icon_spec(table, path))
     "table" => TableElement(base, parse_required_table_spec(table, path))
-    "chart" => ChartElement(base)
+    "chart" => ChartElement(base, parse_required_chart_spec(table, path))
     kind => fail("\{path}.type: unsupported element type '\{kind}'")
   }
 }
@@ -385,6 +384,17 @@ fn parse_required_table_spec(
   path : String,
 ) -> TableSpec raise {
   parse_table_spec(
+    required_table(table, "\{path}.content", key="content"),
+    "\{path}.content",
+  )
+}
+
+///|
+fn parse_required_chart_spec(
+  table : Map[String, @toml.TomlValue],
+  path : String,
+) -> ChartSpec raise {
+  parse_chart_spec(
     required_table(table, "\{path}.content", key="content"),
     "\{path}.content",
   )
@@ -584,6 +594,56 @@ fn parse_table_spec(
     ),
     rows,
   }
+}
+
+///|
+fn parse_chart_spec(
+  table : Map[String, @toml.TomlValue],
+  path : String,
+) -> ChartSpec raise {
+  reject_unknown_fields(table, path, ["kind", "categories", "series"])
+  ChartSpec::{
+    kind: required_string(table, "\{path}.kind", key="kind"),
+    categories: parse_optional_string_array(
+      table.get("categories"),
+      "\{path}.categories",
+    ),
+    series: parse_chart_series_array(
+      required_array(table, "\{path}.series", key="series"),
+      "\{path}.series",
+    ),
+  }
+}
+
+///|
+fn parse_chart_series_array(
+  values : Array[@toml.TomlValue],
+  path : String,
+) -> Array[ChartSeriesSpec] raise {
+  let series = []
+  for index, value in values {
+    let series_path = "\{path}[\{index}]"
+    let table = expect_table(value, series_path)
+    reject_unknown_fields(table, series_path, [
+      "name", "values", "x_values", "bubble_sizes",
+    ])
+    series.push(ChartSeriesSpec::{
+      name: required_string(table, "\{series_path}.name", key="name"),
+      values: parse_double_array(
+        required_array(table, "\{series_path}.values", key="values"),
+        "\{series_path}.values",
+      ),
+      x_values: parse_optional_double_array(
+        table.get("x_values"),
+        "\{series_path}.x_values",
+      ),
+      bubble_sizes: parse_optional_double_array(
+        table.get("bubble_sizes"),
+        "\{series_path}.bubble_sizes",
+      ),
+    })
+  }
+  series
 }
 
 ///|
@@ -862,10 +922,34 @@ fn parse_optional_double_array(
 ) -> Array[Double]? raise {
   match value {
     None => None
+    Some(@toml.TomlArray(values)) => Some(parse_double_array(values, path))
+    Some(_) => fail("\{path}: expected array")
+  }
+}
+
+///|
+fn parse_double_array(
+  values : Array[@toml.TomlValue],
+  path : String,
+) -> Array[Double] raise {
+  let result = []
+  for index, item in values {
+    result.push(expect_double(item, "\{path}[\{index}]"))
+  }
+  result
+}
+
+///|
+fn parse_optional_string_array(
+  value : @toml.TomlValue?,
+  path : String,
+) -> Array[String]? raise {
+  match value {
+    None => None
     Some(@toml.TomlArray(values)) => {
       let result = []
       for index, item in values {
-        result.push(expect_double(item, "\{path}[\{index}]"))
+        result.push(expect_string(item, "\{path}[\{index}]"))
       }
       Some(result)
     }

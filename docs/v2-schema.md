@@ -243,6 +243,9 @@ Weight-based sizing is outside the v2 shorthand scope.
 
 ## Chart Element
 
+The parser and loader accept the first chart schema. Chart elements remain
+writer capability errors until the chart writer slice.
+
 The first chart slice covers these chart families:
 
 - `bar`
@@ -270,6 +273,9 @@ categories = ["Q1", "Q2", "Q3", "Q4"]
 name = "Revenue"
 values = [100.0, 200.0, 300.0, 250.0]
 ```
+
+Scatter series use `x_values` plus `values` for Y values. Bubble series add
+`bubble_sizes`.
 
 3D charts, stock charts, surface charts, of-pie charts, chartEx families, and
 external CSV/TOML/spreadsheet-backed data are outside the first chart slice.

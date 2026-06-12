@@ -90,7 +90,7 @@ test "writer preserves existing output when render fails" {
   let failing = unsupported_loaded(Page::{
     page_type: None,
     background: None,
-    elements: [ChartElement(test_base("chart"))],
+    elements: [ChartElement(test_base("chart"), test_chart_spec())],
   })
   ignore(
     write_pptx_file(failing, output) catch {
@@ -223,7 +223,9 @@ test "writer reports capability errors for unsupported schema-valid features" {
     "icon 'fas:dragon'",
   )
   expect_capability(
-    unsupported_loaded(page_with_element(ChartElement(test_base("chart")))),
+    unsupported_loaded(
+      page_with_element(ChartElement(test_base("chart"), test_chart_spec())),
+    ),
     "chart elements",
   )
   expect_capability(
@@ -437,6 +439,22 @@ fn test_table_spec() -> TableSpec {
             }),
           },
         ],
+      },
+    ],
+  }
+}
+
+///|
+fn test_chart_spec() -> ChartSpec {
+  ChartSpec::{
+    kind: "bar",
+    categories: Some(["Q1", "Q2"]),
+    series: [
+      ChartSeriesSpec::{
+        name: "Revenue",
+        values: [100.0, 150.0],
+        x_values: None,
+        bubble_sizes: None,
       },
     ],
   }

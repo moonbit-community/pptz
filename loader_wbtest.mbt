@@ -73,6 +73,14 @@ test "loader rejects invalid table structure" {
 }
 
 ///|
+test "loader rejects invalid chart data" {
+  let diagnostics = load_error_diagnostics(
+    "examples/testdata/invalid-chart.pptz.toml",
+  )
+  assert_true(has_diagnostic_code(diagnostics, "PZ070"))
+}
+
+///|
 fn load_error_diagnostics(path : String) -> Array[Diagnostic] {
   ignore(
     load_deck(path) catch {

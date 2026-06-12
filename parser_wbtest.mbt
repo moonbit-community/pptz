@@ -383,6 +383,41 @@ test "parse table content rows and data shorthand" {
 }
 
 ///|
+test "parse chart content" {
+  let page = parse_page_toml(
+    (
+      #|[[elements]]
+      #|id = "revenue_chart"
+      #|type = "chart"
+      #|bounds = [80, 120, 720, 360]
+      #|
+      #|[elements.content]
+      #|kind = "bar"
+      #|categories = ["Q1", "Q2", "Q3"]
+      #|
+      #|[[elements.content.series]]
+      #|name = "Revenue"
+      #|values = [100.0, 200.0, 150.0]
+    ),
+  ) catch {
+    err => abort("parse chart page failed: \{err}")
+  }
+  match page.elements[0] {
+    ChartElement(base, spec) => {
+      assert_eq(base.id, "revenue_chart")
+      assert_eq(spec.kind, "bar")
+      match spec.categories {
+        Some(categories) => assert_eq(categories[1], "Q2")
+        None => abort("expected categories")
+      }
+      assert_eq(spec.series[0].name, "Revenue")
+      assert_eq(spec.series[0].values[2], 150.0)
+    }
+    _ => abort("expected chart element")
+  }
+}
+
+///|
 fn deck_parse_error(source : String) -> String {
   ignore(parse_deck_toml(source) catch { err => return "\{err}" })
   abort("expected parse failure")

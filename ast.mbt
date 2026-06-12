@@ -92,7 +92,7 @@ pub(all) enum Element {
   ConnectorElement(String, ConnectorSpec)
   IconElement(ElementBase, IconSpec)
   TableElement(ElementBase, TableSpec)
-  ChartElement(ElementBase)
+  ChartElement(ElementBase, ChartSpec)
 } derive(Eq, Debug)
 
 ///|
@@ -225,4 +225,19 @@ pub(all) struct TableCellMargin {
   right : Double?
   top : Double?
   bottom : Double?
+} derive(Eq, Debug)
+
+///|
+pub(all) struct ChartSpec {
+  kind : String
+  categories : Array[String]?
+  series : Array[ChartSeriesSpec]
+} derive(Eq, Debug)
+
+///|
+pub(all) struct ChartSeriesSpec {
+  name : String
+  values : Array[Double]
+  x_values : Array[Double]?
+  bubble_sizes : Array[Double]?
 } derive(Eq, Debug)

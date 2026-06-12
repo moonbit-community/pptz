@@ -229,7 +229,7 @@ fn build_shape(
           require_shape_id(shape_ids, base.id),
         ),
       )
-    ChartElement(_) =>
+    ChartElement(_, _) =>
       raise WriteError::Capability("chart elements are not implemented")
   }
 }

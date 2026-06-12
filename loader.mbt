@@ -487,7 +487,224 @@ fn validate_element(
     }
     TableElement(base, spec) =>
       validate_table(bundle, page_path, base, spec, errors)
-    ChartElement(_) => ()
+    ChartElement(base, spec) => validate_chart(page_path, base, spec, errors)
+  }
+}
+
+///|
+fn validate_chart(
+  page_path : String,
+  base : ElementBase,
+  spec : ChartSpec,
+  errors : Array[Diagnostic],
+) -> Unit {
+  if !chart_kind_supported(spec.kind) {
+    errors.push(
+      error_diagnostic(
+        "PZ070",
+        "unsupported chart kind",
+        path=page_path,
+        element_id=base.id,
+        field="elements.content.kind",
+      ),
+    )
+  }
+  if spec.series.is_empty() {
+    errors.push(
+      error_diagnostic(
+        "PZ070",
+        "chart must have at least one series",
+        path=page_path,
+        element_id=base.id,
+        field="elements.content.series",
+      ),
+    )
+  }
+  if chart_kind_uses_categories(spec.kind) {
+    match spec.categories {
+      None =>
+        errors.push(
+          error_diagnostic(
+            "PZ070",
+            "chart categories are required for this chart kind",
+            path=page_path,
+            element_id=base.id,
+            field="elements.content.categories",
+          ),
+        )
+      Some(categories) => {
+        if categories.is_empty() {
+          errors.push(
+            error_diagnostic(
+              "PZ070",
+              "chart categories must not be empty",
+              path=page_path,
+              element_id=base.id,
+              field="elements.content.categories",
+            ),
+          )
+        }
+        for index, series in spec.series {
+          validate_chart_series_common(
+            page_path,
+            base.id,
+            index,
+            series,
+            errors,
+          )
+          validate_chart_length(
+            page_path,
+            base.id,
+            "elements.content.series[\{index}].values",
+            series.values.length(),
+            categories.length(),
+            errors,
+          )
+        }
+      }
+    }
+  } else {
+    if spec.categories is Some(_) {
+      errors.push(
+        error_diagnostic(
+          "PZ070",
+          "scatter and bubble charts do not use categories",
+          path=page_path,
+          element_id=base.id,
+          field="elements.content.categories",
+        ),
+      )
+    }
+    for index, series in spec.series {
+      validate_chart_series_common(page_path, base.id, index, series, errors)
+      validate_required_chart_array(
+        page_path,
+        base.id,
+        "elements.content.series[\{index}].x_values",
+        series.x_values,
+        series.values.length(),
+        errors,
+      )
+      if spec.kind == "bubble" {
+        validate_required_chart_array(
+          page_path,
+          base.id,
+          "elements.content.series[\{index}].bubble_sizes",
+          series.bubble_sizes,
+          series.values.length(),
+          errors,
+        )
+      }
+    }
+  }
+}
+
+///|
+fn chart_kind_supported(kind : String) -> Bool {
+  match kind {
+    "bar"
+    | "line"
+    | "pie"
+    | "doughnut"
+    | "area"
+    | "scatter"
+    | "bubble"
+    | "radar" => true
+    _ => false
+  }
+}
+
+///|
+fn chart_kind_uses_categories(kind : String) -> Bool {
+  match kind {
+    "scatter" | "bubble" => false
+    _ => true
+  }
+}
+
+///|
+fn validate_chart_series_common(
+  page_path : String,
+  element_id : String,
+  index : Int,
+  series : ChartSeriesSpec,
+  errors : Array[Diagnostic],
+) -> Unit {
+  if series.name.is_blank() {
+    errors.push(
+      error_diagnostic(
+        "PZ070",
+        "chart series name must not be empty",
+        path=page_path,
+        element_id~,
+        field="elements.content.series[\{index}].name",
+      ),
+    )
+  }
+  if series.values.is_empty() {
+    errors.push(
+      error_diagnostic(
+        "PZ070",
+        "chart series values must not be empty",
+        path=page_path,
+        element_id~,
+        field="elements.content.series[\{index}].values",
+      ),
+    )
+  }
+}
+
+///|
+fn validate_required_chart_array(
+  page_path : String,
+  element_id : String,
+  field : String,
+  values : Array[Double]?,
+  expected_length : Int,
+  errors : Array[Diagnostic],
+) -> Unit {
+  match values {
+    None =>
+      errors.push(
+        error_diagnostic(
+          "PZ070",
+          "chart series array is required for this chart kind",
+          path=page_path,
+          element_id~,
+          field~,
+        ),
+      )
+    Some(values) =>
+      validate_chart_length(
+        page_path,
+        element_id,
+        field,
+        values.length(),
+        expected_length,
+        errors,
+      )
+  }
+}
+
+///|
+fn validate_chart_length(
+  page_path : String,
+  element_id : String,
+  field : String,
+  actual : Int,
+  expected : Int,
+  errors : Array[Diagnostic],
+) -> Unit {
+  if actual != expected {
+    errors.push(
+      error_diagnostic(
+        "PZ070",
+        "chart data arrays must have matching lengths",
+        path=page_path,
+        element_id~,
+        field~,
+      ),
+    )
   }
 }
 
@@ -1306,7 +1523,7 @@ fn element_id(element : Element) -> String {
     ConnectorElement(id, _) => id
     IconElement(base, _) => base.id
     TableElement(base, _) => base.id
-    ChartElement(base) => base.id
+    ChartElement(base, _) => base.id
   }
 }
 
@@ -1319,6 +1536,6 @@ fn element_base(element : Element) -> ElementBase? {
     ConnectorElement(_, _) => None
     IconElement(base, _) => Some(base)
     TableElement(base, _) => Some(base)
-    ChartElement(base) => Some(base)
+    ChartElement(base, _) => Some(base)
   }
 }

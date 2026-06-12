@@ -1,0 +1,12 @@
+[[elements]]
+id = "bad_chart"
+type = "chart"
+bounds = [80, 120, 720, 360]
+
+[elements.content]
+kind = "bar"
+categories = ["Q1", "Q2"]
+
+[[elements.content.series]]
+name = "Revenue"
+values = [100.0]
