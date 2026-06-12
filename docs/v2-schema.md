@@ -199,8 +199,8 @@ backend connection site.
 ## Table Element
 
 Tables have a canonical PowerPoint table form and an optional shorthand. The
-parser and loader accept this schema now; table elements remain writer
-capability errors until the table writer slice.
+current writer renders rectangular tables; merge spans remain writer
+capability errors.
 
 Canonical form:
 

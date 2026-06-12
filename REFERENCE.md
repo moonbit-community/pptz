@@ -316,12 +316,11 @@ Build `pptz` in this order:
    connector presets, straight connectors with coordinate or element endpoints,
    solid/no-fill/gradient shape fills, alpha colors, solid and dashed shape
    borders, outer shadows for shape and connector elements, built-in icon
-   elements, image elements with `stretch`, `cover`, `contain`, explicit crop,
-   SVG pictures, and basic theme color/text-style resolution including
-   `line_height`. It returns capability errors for schema-valid features that
-   are still outside the implemented writer subset.
-   Table schema parsing and loader validation are implemented, but table
-   elements remain outside the writer subset until the table writer slice.
+   elements, table elements with explicit or evenly distributed column widths
+   and row heights, image elements with `stretch`, `cover`, `contain`,
+   explicit crop, SVG pictures, and basic theme color/text-style resolution
+   including `line_height`. It returns capability errors for schema-valid
+   features that are still outside the implemented writer subset.
 
 Compiler Reliability status:
 
@@ -675,7 +674,9 @@ normalized into the canonical rows/cells model before validation. Table
 shorthand may omit column widths and row heights; omitted sizes are evenly
 distributed inside the table element bounds by the writer. Explicit
 `col_widths` and `row_heights` may override the equal distribution.
-Weight-based table sizing is outside the v2 shorthand scope.
+Weight-based table sizing is outside the v2 shorthand scope. The current
+writer renders rectangular tables and treats merge spans as writer capability
+errors.
 
 Planned v2 chart semantics start with bar, line, pie, doughnut, area, scatter,
 bubble, and radar chart families. 3D charts, stock charts, surface charts,

@@ -220,8 +220,15 @@ fn build_shape(
           require_shape_id(shape_ids, base.id),
         ),
       )
-    TableElement(_, _) =>
-      raise WriteError::Capability("table elements are not implemented")
+    TableElement(base, spec) =>
+      @slide.GraphicFrame(
+        build_table_frame(
+          bundle,
+          base,
+          spec,
+          require_shape_id(shape_ids, base.id),
+        ),
+      )
     ChartElement(_) =>
       raise WriteError::Capability("chart elements are not implemented")
   }
@@ -565,6 +572,189 @@ fn build_icon_shape(
       shape = shape.with_fill(to_gradient_fill(bundle, gradient))
   }
   shape
+}
+
+///|
+fn build_table_frame(
+  bundle : DeckBundle,
+  base : ElementBase,
+  spec : TableSpec,
+  shape_id : Int,
+) -> @slide.GraphicFrame raise {
+  let bounds = base.bounds
+  let table = @slide.Table::of_rows(
+    table_rows(bundle, spec, bounds),
+    col_widths=table_col_widths(spec, bounds),
+  )
+  @slide.GraphicFrame::of_table(
+    shape_id,
+    base.id,
+    to_emu(bounds.x),
+    to_emu(bounds.y),
+    to_emu(bounds.width),
+    to_emu(bounds.height),
+    table,
+  )
+}
+
+///|
+fn table_rows(
+  bundle : DeckBundle,
+  spec : TableSpec,
+  bounds : Bounds,
+) -> Array[@slide.TableRow] raise {
+  let row_heights = table_row_heights(spec, bounds)
+  let rows = []
+  for index, row in spec.rows {
+    rows.push(
+      @slide.TableRow::of_cells(
+        table_cells(bundle, row.cells),
+        height=row_heights[index],
+      ),
+    )
+  }
+  rows
+}
+
+///|
+fn table_cells(
+  bundle : DeckBundle,
+  cells : Array[TableCellSpec],
+) -> Array[@slide.TableCell] raise {
+  let result = []
+  for cell in cells {
+    if cell.col_span != 1 || cell.row_span != 1 {
+      raise WriteError::Capability("table cell merge spans are not implemented")
+    }
+    let mut table_cell = @slide.TableCell::of_text(cell.text)
+    let properties = table_cell_properties(bundle, cell)
+    if properties is Some(_) {
+      table_cell = @slide.TableCell::{ ..table_cell, properties, }
+    }
+    result.push(table_cell)
+  }
+  result
+}
+
+///|
+fn table_cell_properties(
+  bundle : DeckBundle,
+  cell : TableCellSpec,
+) -> @slide.TableCellProperties? raise {
+  let mut properties = @slide.TableCellProperties::default()
+  let mut has_properties = false
+  match cell.fill {
+    None => ()
+    Some(NoFill) => {
+      properties = @slide.TableCellProperties::{
+        ..properties,
+        fill: Some(@oxml.Fill::NoFill),
+      }
+      has_properties = true
+    }
+    Some(SolidFill(color)) => {
+      properties = properties.with_fill(SolidFill(resolve_color(bundle, color)))
+      has_properties = true
+    }
+    Some(GradientFill(gradient)) => {
+      properties = properties.with_fill(to_gradient_fill(bundle, gradient))
+      has_properties = true
+    }
+  }
+  match cell.border {
+    None => ()
+    Some(border) => {
+      properties = properties.with_border_all(to_stroke(bundle, border))
+      has_properties = true
+    }
+  }
+  match cell.margin {
+    None => ()
+    Some(margin) => {
+      properties = @slide.TableCellProperties::{
+        ..properties,
+        margin_l: optional_emu(margin.left),
+        margin_r: optional_emu(margin.right),
+        margin_t: optional_emu(margin.top),
+        margin_b: optional_emu(margin.bottom),
+      }
+      has_properties = true
+    }
+  }
+  match cell.align {
+    None => ()
+    Some(align) => {
+      properties = @slide.TableCellProperties::{
+        ..properties,
+        anchor: Some(vertical_anchor(align.vertical)),
+        anchor_ctr: table_anchor_center(align.horizontal),
+      }
+      has_properties = true
+    }
+  }
+  if has_properties {
+    Some(properties)
+  } else {
+    None
+  }
+}
+
+///|
+fn table_anchor_center(horizontal : String) -> Bool? raise {
+  match horizontal {
+    "left" => None
+    "center" => Some(true)
+    other =>
+      raise WriteError::Capability(
+        "table cell horizontal alignment '\{other}' is not implemented",
+      )
+  }
+}
+
+///|
+fn optional_emu(value : Double?) -> @units.Emu? {
+  match value {
+    None => None
+    Some(value) => Some(to_emu(value))
+  }
+}
+
+///|
+fn table_col_widths(spec : TableSpec, bounds : Bounds) -> Array[@units.Emu] {
+  match spec.col_widths {
+    Some(widths) => double_array_to_emu(widths)
+    None => {
+      let column_count = spec.rows[0].cells.length()
+      equal_emu_array(bounds.width, column_count)
+    }
+  }
+}
+
+///|
+fn table_row_heights(spec : TableSpec, bounds : Bounds) -> Array[@units.Emu] {
+  match spec.row_heights {
+    Some(heights) => double_array_to_emu(heights)
+    None => equal_emu_array(bounds.height, spec.rows.length())
+  }
+}
+
+///|
+fn double_array_to_emu(values : Array[Double]) -> Array[@units.Emu] {
+  let result = []
+  for value in values {
+    result.push(to_emu(value))
+  }
+  result
+}
+
+///|
+fn equal_emu_array(total : Double, count : Int) -> Array[@units.Emu] {
+  let result = []
+  let size = total / count.to_double()
+  for _ in 0..<count {
+    result.push(to_emu(size))
+  }
+  result
 }
 
 ///|

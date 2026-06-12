@@ -15,6 +15,8 @@ test "render minimal deck as pptx bytes" {
   }
   assert_eq(slides.length(), 4)
   assert_true(slides[0].shapes.length() >= 2)
+  assert_slide_xml_contains(prs, 2, "<a:tbl>")
+  assert_slide_xml_contains(prs, 2, "<a:t>Metric</a:t>")
   assert_true(count_pictures(slides[3]) >= 4)
   assert_slide_xml_contains(prs, 1, "<p:bg>")
   assert_slide_xml_contains(prs, 1, "<a:gradFill")
@@ -55,6 +57,24 @@ test "writer renders icon elements" {
 }
 
 ///|
+test "writer renders table elements" {
+  let loaded = unsupported_loaded(
+    page_with_element(TableElement(test_base("table"), test_table_spec())),
+  )
+  let bytes = render_pptx(loaded) catch {
+    err => abort("render failed: \{err}")
+  }
+  let prs = @presentation.Presentation::open(bytes) catch {
+    err => abort("open generated pptx failed: \{err}")
+  }
+  assert_slide_xml_contains(prs, 1, "<a:tbl>")
+  assert_slide_xml_contains(prs, 1, "<a:gridCol")
+  assert_slide_xml_contains(prs, 1, "<a:t>A</a:t>")
+  assert_slide_xml_contains(prs, 1, "<a:solidFill>")
+  assert_slide_xml_contains(prs, 1, "<a:lnL")
+}
+
+///|
 test "writer preserves existing output when render fails" {
   let output = "examples/testdata/out/atomic-demo.pptx"
   let loaded = load_deck("examples/minimal/deck.pptz.toml") catch {
@@ -70,7 +90,7 @@ test "writer preserves existing output when render fails" {
   let failing = unsupported_loaded(Page::{
     page_type: None,
     background: None,
-    elements: [TableElement(test_base("table"), test_table_spec())],
+    elements: [ChartElement(test_base("chart"))],
   })
   ignore(
     write_pptx_file(failing, output) catch {
@@ -201,12 +221,6 @@ test "writer reports capability errors for unsupported schema-valid features" {
       ),
     ),
     "icon 'fas:dragon'",
-  )
-  expect_capability(
-    unsupported_loaded(
-      page_with_element(TableElement(test_base("table"), test_table_spec())),
-    ),
-    "table elements",
   )
   expect_capability(
     unsupported_loaded(page_with_element(ChartElement(test_base("chart")))),
@@ -399,19 +413,28 @@ fn page_with_element(element : Element) -> Page {
 ///|
 fn test_table_spec() -> TableSpec {
   TableSpec::{
-    col_widths: None,
-    row_heights: None,
+    col_widths: Some([120.0]),
+    row_heights: Some([36.0]),
     rows: [
       TableRowSpec::{
         cells: [
           TableCellSpec::{
             text: "A",
-            fill: None,
-            border: None,
+            fill: Some(SolidFill("#F59E0B")),
+            border: Some(Border::{
+              style: "solid",
+              width: 1.0,
+              color: "#F4F6FB",
+            }),
             col_span: 1,
             row_span: 1,
-            align: None,
-            margin: None,
+            align: Some(Align::{ horizontal: "center", vertical: "center" }),
+            margin: Some(TableCellMargin::{
+              left: Some(4.0),
+              right: Some(4.0),
+              top: Some(2.0),
+              bottom: Some(2.0),
+            }),
           },
         ],
       },

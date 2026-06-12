@@ -34,3 +34,17 @@ bounds = [650, 180, 500, 278]
 [elements.content]
 path = "images/diagram.png"
 fit = "stretch"
+
+[[elements]]
+id = "summary_table"
+type = "table"
+bounds = [650, 500, 500, 120]
+
+[elements.content]
+col_widths = [220, 140, 140]
+row_heights = [40, 40, 40]
+data = [
+  ["Metric", "Q1", "Q2"],
+  ["Revenue", "100", "150"],
+  ["Users", "42", "64"],
+]
