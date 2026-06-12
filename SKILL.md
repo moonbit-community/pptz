@@ -71,7 +71,7 @@ Use these features for deliverable decks:
 - explicit deck size and ordered page files;
 - optional solid, gradient, or image page backgrounds;
 - text elements with theme text styles, local overrides, and text wrapping;
-- rectangle, rounded rectangle, ellipse, and common preset shapes;
+- PowerPoint preset auto-shapes, excluding line and connector presets;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
@@ -79,8 +79,8 @@ Use these features for deliverable decks:
 - SVG image elements.
 
 Do not use these in deliverable decks until `pptz` implements them in the
-writer: icon/table/chart elements, `letter_spacing`, or shape names outside
-the documented common preset subset.
+writer: icon/table/chart elements, `letter_spacing`, line/connector shape
+presets, or unsupported shape names.
 
 ## Important Notes
 

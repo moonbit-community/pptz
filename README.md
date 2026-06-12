@@ -69,7 +69,7 @@ The current writer supports:
 - explicit deck size and ordered page files;
 - optional solid, gradient, or image page backgrounds;
 - text elements with theme text styles, local overrides, and text wrapping;
-- rectangle, rounded rectangle, ellipse, and common preset shapes;
+- PowerPoint preset auto-shapes, excluding line and connector presets;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
@@ -79,7 +79,7 @@ The current writer supports:
 
 Schema-valid features outside this scope fail with a writer capability error
 instead of being silently ignored. This includes icon/table/chart elements,
-`letter_spacing`, and shape names outside the documented common preset subset.
+`letter_spacing`, line/connector shape presets, and unsupported shape names.
 
 ## Example
 

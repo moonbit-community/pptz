@@ -296,9 +296,9 @@ Build `pptz` in this order:
    directly.
    Current writer scope:
    deck size, ordered pages, optional solid/gradient/image background, text
-   elements with wrapping, rectangle/round-rectangle/ellipse and common preset
-   shape elements, solid/no-fill/gradient shape fills, alpha colors, solid and
-   dashed shape borders, raster image elements with `stretch`, `cover`, or
+   elements with wrapping, preset auto-shape elements excluding line and
+   connector presets, solid/no-fill/gradient shape fills, alpha colors, solid
+   and dashed shape borders, raster image elements with `stretch`, `cover`, or
    `contain`, SVG image elements, image crop rectangles, and basic theme
    color/text-style resolution with element-local overrides. Valid AST features
    outside this subset may fail as writer capability errors.
@@ -310,8 +310,8 @@ Build `pptz` in this order:
    to `moon-pptx`. Fail with a writer capability error instead.
    Current status: `writer.mbt` generates valid PPTX bytes for deck size,
    ordered pages, optional solid/gradient/image backgrounds, text elements
-   with wrapping, rectangle/round-rectangle/ellipse and common preset shape
-   elements, solid/no-fill/gradient shape fills, alpha colors, solid and dashed
+   with wrapping, preset auto-shape elements excluding line and connector
+   presets, solid/no-fill/gradient shape fills, alpha colors, solid and dashed
    shape borders, image elements with `stretch`, `cover`, `contain`, explicit
    crop, SVG pictures, and basic theme color/text-style resolution including
    `line_height`. It returns capability errors for schema-valid features that
@@ -605,10 +605,15 @@ Allowed element types: `text`, `shape`, `image`, `icon`, `table`, `chart`.
 Allowed background types: `solid`, `gradient`, `image`.
 `icon`, `table`, and `chart` are allowed schema/AST concepts but are outside
 the MVP writer scope unless later implementation work explicitly adds them.
-MVP shape content supports `rect`, `round_rect`, `ellipse`, and this common
-preset subset: `diamond`, `triangle`, `right_triangle`, `parallelogram`,
-`trapezoid`, `pentagon`, `hexagon`, `octagon`, `chevron`, `right_arrow`,
-`left_arrow`, `up_arrow`, `down_arrow`, `plus`, and `star5`.
+MVP shape content supports PowerPoint preset auto-shapes by canonical `pptz`
+snake_case names. Examples include `rect`, `round_rect`, `ellipse`, `diamond`,
+`right_arrow`, `flow_chart_process`, `action_button_home`, `round2_diag_rect`,
+and `math_not_equal`.
+
+Line and connector presets are intentionally excluded from shape content:
+`line`, `line_inv`, `straight_connector1`, `bent_connector2` through
+`bent_connector5`, and `curved_connector2` through `curved_connector5` remain
+outside the writer scope. They belong in the planned connector element family.
 
 ```toml
 [[elements]]

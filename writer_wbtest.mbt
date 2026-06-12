@@ -94,7 +94,7 @@ test "writer renders image page backgrounds behind elements" {
 }
 
 ///|
-test "writer maps common preset shape names" {
+test "writer maps preset shape names" {
   let cases = [
     ("diamond", "diamond"),
     ("triangle", "triangle"),
@@ -111,31 +111,31 @@ test "writer maps common preset shape names" {
     ("down_arrow", "downArrow"),
     ("plus", "plus"),
     ("star5", "star5"),
+    ("flow_chart_process", "flowChartProcess"),
+    ("flow_chart_connector", "flowChartConnector"),
+    ("action_button_home", "actionButtonHome"),
+    ("accent_border_callout2", "accentBorderCallout2"),
+    ("round2_diag_rect", "round2DiagRect"),
+    ("math_not_equal", "mathNotEqual"),
+    ("no_smoking", "noSmoking"),
   ]
-  let elements = []
   for item in cases {
-    let (shape_name, _) = item
-    elements.push(
-      ShapeElement(test_base(shape_name), ShapeSpec::{
-        shape: shape_name,
-        fill: Some(SolidFill("#3B82F6")),
-        border: None,
-      }),
+    let (shape_name, xml_name) = item
+    let loaded = unsupported_loaded(
+      page_with_element(
+        ShapeElement(test_base(shape_name), ShapeSpec::{
+          shape: shape_name,
+          fill: Some(SolidFill("#3B82F6")),
+          border: None,
+        }),
+      ),
     )
-  }
-  let loaded = unsupported_loaded(Page::{
-    page_type: None,
-    background: None,
-    elements,
-  })
-  let bytes = render_pptx(loaded) catch {
-    err => abort("render failed: \{err}")
-  }
-  let prs = @presentation.Presentation::open(bytes) catch {
-    err => abort("open generated pptx failed: \{err}")
-  }
-  for item in cases {
-    let (_, xml_name) = item
+    let bytes = render_pptx(loaded) catch {
+      err => abort("render \{shape_name} failed: \{err}")
+    }
+    let prs = @presentation.Presentation::open(bytes) catch {
+      err => abort("open generated \{shape_name} pptx failed: \{err}")
+    }
     assert_slide_xml_contains(prs, 1, "prst=\"\{xml_name}\"")
   }
 }
@@ -198,6 +198,18 @@ test "writer reports capability errors for unsupported schema-valid features" {
       ),
     ),
     "straightConnector1",
+  )
+  expect_capability(
+    unsupported_loaded(
+      page_with_element(
+        ShapeElement(test_base("connector"), ShapeSpec::{
+          shape: "straight_connector1",
+          fill: None,
+          border: None,
+        }),
+      ),
+    ),
+    "connector or line",
   )
   expect_capability(
     unsupported_loaded(

@@ -395,71 +395,12 @@ fn build_auto_shape(
   shape_id : Int,
 ) -> @slide.AutoShape raise {
   let bounds = base.bounds
-  let mut shape = match spec.shape {
-    "rect" =>
-      @slide.AutoShape::rect(
-        shape_id,
-        base.id,
-        to_emu(bounds.x),
-        to_emu(bounds.y),
-        to_emu(bounds.width),
-        to_emu(bounds.height),
-      )
-    "ellipse" =>
-      @slide.AutoShape::ellipse(
-        shape_id,
-        base.id,
-        to_emu(bounds.x),
-        to_emu(bounds.y),
-        to_emu(bounds.width),
-        to_emu(bounds.height),
-      )
-    "round_rect" =>
-      @slide.AutoShape::round_rect(
-        shape_id,
-        base.id,
-        to_emu(bounds.x),
-        to_emu(bounds.y),
-        to_emu(bounds.width),
-        to_emu(bounds.height),
-      )
-    "diamond" =>
-      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Diamond)
-    "triangle" =>
-      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Triangle)
-    "right_triangle" =>
-      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::RtTriangle)
-    "parallelogram" =>
-      build_preset_shape(
-        base,
-        bounds,
-        shape_id,
-        @slide.PresetShape::Parallelogram,
-      )
-    "trapezoid" =>
-      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Trapezoid)
-    "pentagon" =>
-      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Pentagon)
-    "hexagon" =>
-      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Hexagon)
-    "octagon" =>
-      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Octagon)
-    "chevron" =>
-      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Chevron)
-    "right_arrow" =>
-      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::RightArrow)
-    "left_arrow" =>
-      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::LeftArrow)
-    "up_arrow" =>
-      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::UpArrow)
-    "down_arrow" =>
-      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::DownArrow)
-    "plus" =>
-      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Plus)
-    "star5" =>
-      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Star5)
-    other => raise WriteError::Capability("shape '\{other}' is not implemented")
-  }
+  let mut shape = build_preset_shape(
+    base,
+    bounds,
+    shape_id,
+    preset_shape_from_name(spec.shape),
+  )
   match spec.fill {
     None => ()
     Some(NoFill) => shape = shape.with_no_fill()
@@ -473,6 +414,91 @@ fn build_auto_shape(
     Some(border) => shape = shape.with_stroke(to_stroke(bundle, border))
   }
   shape
+}
+
+///|
+fn preset_shape_from_name(name : String) -> @slide.PresetShape raise {
+  if is_connector_shape_name(name) {
+    raise WriteError::Capability(
+      "shape '\{name}' is a connector or line; connector elements are not implemented",
+    )
+  }
+  let xml_name = preset_shape_xml_name(name)
+  @slide.PresetShape::from_xml(xml_name) catch {
+    _ => raise WriteError::Capability("shape '\{name}' is not implemented")
+  }
+}
+
+///|
+fn is_connector_shape_name(name : String) -> Bool {
+  match name {
+    "line"
+    | "line_inv"
+    | "straight_connector1"
+    | "bent_connector2"
+    | "bent_connector3"
+    | "bent_connector4"
+    | "bent_connector5"
+    | "curved_connector2"
+    | "curved_connector3"
+    | "curved_connector4"
+    | "curved_connector5" => true
+    _ => false
+  }
+}
+
+///|
+fn preset_shape_xml_name(name : String) -> String raise {
+  if name == "right_triangle" {
+    return "rtTriangle"
+  }
+  if name.is_empty() {
+    raise WriteError::Capability("shape name must not be empty")
+  }
+  let chars = []
+  let mut capitalize_next = false
+  let mut first = true
+  for char in name {
+    if char == '_' {
+      if first || capitalize_next {
+        raise WriteError::Capability(
+          "shape '\{name}' must use canonical snake_case",
+        )
+      }
+      capitalize_next = true
+    } else if char.is_ascii_lowercase() {
+      if capitalize_next {
+        chars.push(ascii_upper(char))
+        capitalize_next = false
+      } else {
+        chars.push(char)
+      }
+      first = false
+    } else if char.is_ascii_digit() {
+      if first || capitalize_next {
+        raise WriteError::Capability(
+          "shape '\{name}' must use canonical snake_case",
+        )
+      }
+      chars.push(char)
+      first = false
+    } else {
+      raise WriteError::Capability(
+        "shape '\{name}' must use canonical snake_case",
+      )
+    }
+  }
+  if capitalize_next {
+    raise WriteError::Capability(
+      "shape '\{name}' must use canonical snake_case",
+    )
+  }
+  String::from_iter(chars.iter())
+}
+
+///|
+fn ascii_upper(char : Char) -> Char {
+  (char.to_int() - 32).unsafe_to_char()
 }
 
 ///|
