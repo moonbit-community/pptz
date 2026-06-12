@@ -436,20 +436,32 @@ fn resolve_rgb(bundle : DeckBundle, color : String) -> @units.RgbColor raise {
 
 ///|
 fn to_stroke(bundle : DeckBundle, border : Border) -> @oxml.Stroke raise {
-  if border.style != "solid" {
-    raise WriteError::Capability("only solid borders are implemented")
-  }
   @oxml.Stroke::{
     width: Some(to_emu(border.width)),
     cap: None,
     compound: None,
     alignment: None,
     fill: Some(SolidFill(resolve_color(bundle, border.color))),
-    dash: None,
+    dash: Some(border_dash_style(border.style)),
     join: None,
     head_end: None,
     tail_end: None,
     extension: [],
+  }
+}
+
+///|
+fn border_dash_style(style : String) -> @oxml.DashStyle raise {
+  match style {
+    "solid" => @oxml.DashStyle::DashSolid
+    "dot" => @oxml.DashStyle::DashDot
+    "dash" => @oxml.DashStyle::DashDash
+    "long_dash" => @oxml.DashStyle::DashLgDash
+    "dash_dot" => @oxml.DashStyle::DashDashDot
+    "long_dash_dot" => @oxml.DashStyle::DashLgDashDot
+    "long_dash_dot_dot" => @oxml.DashStyle::DashLgDashDotDot
+    other =>
+      raise WriteError::Capability("border style '\{other}' is not implemented")
   }
 }
 

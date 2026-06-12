@@ -71,7 +71,7 @@ Use these features for deliverable decks:
 - optional solid page backgrounds;
 - text elements with theme text styles and local overrides;
 - rectangle, rounded rectangle, and ellipse shapes;
-- solid fills, no-fill shapes, and solid borders;
+- solid fills, no-fill shapes, and solid or dashed borders;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
 - image crop rectangles;

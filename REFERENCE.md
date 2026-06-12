@@ -296,10 +296,11 @@ Build `pptz` in this order:
    directly.
    Current writer scope:
    deck size, ordered pages, optional solid background, text elements,
-   rectangle/ellipse shape elements, raster image elements with `stretch`,
-   `cover`, or `contain`, SVG image elements, image crop rectangles, and basic
-   theme color/text-style resolution with element-local overrides. Valid AST
-   features outside this subset may fail as writer capability errors.
+   rectangle/round-rectangle/ellipse shape elements, solid and dashed shape
+   borders, raster image elements with `stretch`, `cover`, or `contain`, SVG
+   image elements, image crop rectangles, and basic theme color/text-style
+   resolution with element-local overrides. Valid AST features outside this
+   subset may fail as writer capability errors.
    MVP text styling follows the `moon-pptx@0.4.0` `RunProperties` builder
    surface: `font_size`, `font_family`, `color`, `bold`, and `italic`.
    `letter_spacing` and `line_height` may remain schema/AST concepts but are
@@ -307,9 +308,10 @@ Build `pptz` in this order:
    The MVP writer must not silently ignore declared fields that it cannot map
    to `moon-pptx`. Fail with a writer capability error instead.
    Current status: `writer.mbt` generates valid PPTX bytes for deck size,
-   ordered pages, optional solid backgrounds, text elements, rectangle/ellipse
-   shape elements, image elements with `stretch`, `cover`, `contain`, explicit
-   crop, SVG pictures, and basic theme color/text-style resolution. It returns
+   ordered pages, optional solid backgrounds, text elements,
+   rectangle/round-rectangle/ellipse shape elements, solid and dashed shape
+   borders, image elements with `stretch`, `cover`, `contain`, explicit crop,
+   SVG pictures, and basic theme color/text-style resolution. It returns
    capability errors for schema-valid features that are still outside the
    implemented writer subset.
 
@@ -621,6 +623,9 @@ Shape borders, connector lines, and later table cell borders share a basic
 stroke primitive for color, width, and dash style. Connector arrowheads are
 connector-specific fields such as `start_arrow` and `end_arrow`; they are not
 part of the shared basic stroke model.
+The current writer maps shape `border.style` values `solid`, `dot`, `dash`,
+`long_dash`, `dash_dot`, `long_dash_dot`, and `long_dash_dot_dot` to
+PowerPoint preset dash styles.
 The first v2 effect slice supports shadow only. Opacity/alpha is a shared
 color, fill, stroke, and text capability rather than an effect. `pptz` should
 not expose the full `moon-pptx` `EffectList` surface in the first v2 slice.

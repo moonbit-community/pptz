@@ -55,7 +55,7 @@ shape = "ellipse"
 type = "none"
 
 [elements.content.border]
-style = "solid"
+style = "dash"
 width = 3
 color = "$text"
 
@@ -72,7 +72,7 @@ text = """
 Current writer support:
 rect, round_rect, ellipse,
 solid fills, no-fill shapes,
-and solid borders.
+solid and dash borders.
 """
 
 [[elements]]

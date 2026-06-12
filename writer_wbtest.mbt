@@ -17,6 +17,7 @@ test "render minimal deck as pptx bytes" {
   assert_true(slides[0].shapes.length() >= 2)
   assert_true(count_pictures(slides[3]) >= 4)
   assert_slide_xml_contains(prs, 3, "prst=\"roundRect\"")
+  assert_slide_xml_contains(prs, 3, "prstDash val=\"dash\"")
 }
 
 ///|
@@ -143,6 +144,18 @@ test "writer reports capability errors for unsupported schema-valid features" {
       ),
     ),
     "straightConnector1",
+  )
+  expect_capability(
+    unsupported_loaded(
+      page_with_element(
+        ShapeElement(test_base("zigzag_border"), ShapeSpec::{
+          shape: "rect",
+          fill: None,
+          border: Some(Border::{ style: "zigzag", width: 2.0, color: "#F4F6FB" }),
+        }),
+      ),
+    ),
+    "border style 'zigzag'",
   )
   expect_capability(
     unsupported_loaded(
