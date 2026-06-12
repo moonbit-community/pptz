@@ -43,6 +43,7 @@ fn render_page_mut(
     err =>
       raise WriteError::Backend("cannot update slide \{slide_index}: \{err}")
   }
+  add_page_charts(prs, slide_index, bundle, resolved_page)
   add_page_images(prs, slide_index, bundle, resolved_page)
 }
 
@@ -95,7 +96,7 @@ fn build_slide(
   let shape_bounds = connector_shape_bounds(resolved_page.page.elements)
   for element in resolved_page.page.elements {
     match element {
-      ImageElement(_, _) => ()
+      ImageElement(_, _) | ChartElement(_, _) => ()
       _ => {
         let shape = build_shape(bundle, element, shape_ids, shape_bounds)
         slide = slide.with_shape(shape)
@@ -114,7 +115,7 @@ fn connector_shape_ids(
   let mut shape_id = first_shape_id
   for element in elements {
     match element {
-      ImageElement(_, _) => ()
+      ImageElement(_, _) | ChartElement(_, _) => ()
       _ => {
         result[element_id(element)] = shape_id
         shape_id += 1
@@ -169,6 +170,124 @@ fn add_page_images(
         add_image(prs, slide_index, bundle, base, spec)
       _ => ()
     }
+  }
+}
+
+///|
+fn add_page_charts(
+  prs : @presentation.Presentation,
+  slide_index : Int,
+  bundle : DeckBundle,
+  resolved_page : ResolvedPage,
+) -> Unit raise {
+  for element in resolved_page.page.elements {
+    match element {
+      ChartElement(base, spec) =>
+        add_chart(prs, slide_index, bundle, base, spec)
+      _ => ()
+    }
+  }
+}
+
+///|
+fn add_chart(
+  prs : @presentation.Presentation,
+  slide_index : Int,
+  _bundle : DeckBundle,
+  base : ElementBase,
+  spec : ChartSpec,
+) -> Unit raise {
+  let bounds = base.bounds
+  prs.add_chart_mut(
+    slide_index,
+    chart_from_spec(spec),
+    to_emu(bounds.x),
+    to_emu(bounds.y),
+    to_emu(bounds.width),
+    to_emu(bounds.height),
+  ) catch {
+    err => raise WriteError::Backend("cannot add chart '\{base.id}': \{err}")
+  }
+}
+
+///|
+fn chart_from_spec(spec : ChartSpec) -> @chart.Chart raise {
+  match spec.kind {
+    "bar" => @chart.Chart::of_bar(chart_data(spec))
+    "line" => @chart.Chart::of_line(chart_data(spec))
+    "pie" => @chart.Chart::of_pie(chart_data(spec))
+    "doughnut" => @chart.Chart::of_doughnut(chart_data(spec))
+    "area" => @chart.Chart::of_area(chart_data(spec))
+    "radar" => @chart.Chart::of_radar(chart_data(spec))
+    "scatter" => @chart.Chart::of_scatter(scatter_data(spec))
+    "bubble" => @chart.Chart::of_bubble(bubble_data(spec))
+    other =>
+      raise WriteError::Capability("chart kind '\{other}' is not implemented")
+  }
+}
+
+///|
+fn chart_data(spec : ChartSpec) -> @chart.ChartData raise {
+  let mut data = @chart.ChartData::new()
+  match spec.categories {
+    Some(categories) =>
+      for category in categories {
+        data = data.with_category(category)
+      }
+    None =>
+      raise WriteError::Capability(
+        "chart categories are required for kind '\{spec.kind}'",
+      )
+  }
+  for series in spec.series {
+    data = data.with_series(series.name, series.values)
+  }
+  data.validate() catch {
+    err => raise WriteError::Backend("invalid chart data: \{err}")
+  }
+}
+
+///|
+fn scatter_data(spec : ChartSpec) -> @chart.ScatterData raise {
+  let mut data = @chart.ScatterData::new()
+  for series in spec.series {
+    data = data.with_series(
+      series.name,
+      required_chart_values(series.x_values, spec.kind, "x_values"),
+      series.values,
+    )
+  }
+  data.validate() catch {
+    err => raise WriteError::Backend("invalid scatter chart data: \{err}")
+  }
+}
+
+///|
+fn bubble_data(spec : ChartSpec) -> @chart.BubbleData raise {
+  let mut data = @chart.BubbleData::new()
+  for series in spec.series {
+    data = data.with_series(
+      series.name,
+      required_chart_values(series.x_values, spec.kind, "x_values"),
+      series.values,
+      required_chart_values(series.bubble_sizes, spec.kind, "bubble_sizes"),
+    )
+  }
+  data.validate() catch {
+    err => raise WriteError::Backend("invalid bubble chart data: \{err}")
+  }
+}
+
+///|
+fn required_chart_values(
+  values : Array[Double]?,
+  kind : String,
+  field : String,
+) -> Array[Double] raise {
+  match values {
+    Some(values) => values
+    None =>
+      raise WriteError::Capability("chart kind '\{kind}' requires \{field}")
   }
 }
 
@@ -230,7 +349,7 @@ fn build_shape(
         ),
       )
     ChartElement(_, _) =>
-      raise WriteError::Capability("chart elements are not implemented")
+      raise WriteError::Capability("internal chart dispatch error")
   }
 }
 

@@ -224,7 +224,7 @@ test "parse minimal agenda page multiline text" {
     Some(kind) => assert_eq(kind, "content")
     None => abort("expected page_type")
   }
-  assert_eq(page.elements.length(), 4)
+  assert_eq(page.elements.length(), 5)
   match page.elements[1] {
     TextElement(base, content) => {
       assert_eq(base.id, "items")
@@ -249,6 +249,13 @@ test "parse minimal agenda page multiline text" {
       assert_eq(spec.rows[0].cells[0].text, "Metric")
     }
     _ => abort("expected table element")
+  }
+  match page.elements[4] {
+    ChartElement(base, spec) => {
+      assert_eq(base.id, "revenue_chart")
+      assert_eq(spec.kind, "bar")
+    }
+    _ => abort("expected chart element")
   }
 }
 

@@ -81,15 +81,17 @@ Use these features for deliverable decks:
   `plus`, with optional `fas:`-style prefixes;
 - table elements with explicit or evenly distributed column widths and row
   heights;
+- inline chart elements for `bar`, `line`, `pie`, `doughnut`, `area`,
+  `scatter`, `bubble`, and `radar`;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
 - image crop rectangles;
 - SVG image elements.
 
 Do not use these in deliverable decks until `pptz` implements them in the
-writer: chart elements, `letter_spacing`, table merge spans, unsupported icon
-names, line/connector shape presets, unsupported connector kinds, or
-unsupported shape names.
+writer: `letter_spacing`, table merge spans, unsupported icon names,
+line/connector shape presets, unsupported connector kinds, or unsupported
+shape names.
 
 ## Important Notes
 

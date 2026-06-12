@@ -243,8 +243,7 @@ Weight-based sizing is outside the v2 shorthand scope.
 
 ## Chart Element
 
-The parser and loader accept the first chart schema. Chart elements remain
-writer capability errors until the chart writer slice.
+The current writer renders the first chart schema.
 
 The first chart slice covers these chart families:
 

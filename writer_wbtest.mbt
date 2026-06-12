@@ -17,6 +17,10 @@ test "render minimal deck as pptx bytes" {
   assert_true(slides[0].shapes.length() >= 2)
   assert_slide_xml_contains(prs, 2, "<a:tbl>")
   assert_slide_xml_contains(prs, 2, "<a:t>Metric</a:t>")
+  let charts = prs.charts() catch {
+    err => abort("read generated charts failed: \{err}")
+  }
+  assert_true(charts.length() >= 1)
   assert_true(count_pictures(slides[3]) >= 4)
   assert_slide_xml_contains(prs, 1, "<p:bg>")
   assert_slide_xml_contains(prs, 1, "<a:gradFill")
@@ -75,6 +79,24 @@ test "writer renders table elements" {
 }
 
 ///|
+test "writer renders chart elements" {
+  let loaded = unsupported_loaded(
+    page_with_element(ChartElement(test_base("chart"), test_chart_spec())),
+  )
+  let bytes = render_pptx(loaded) catch {
+    err => abort("render failed: \{err}")
+  }
+  let prs = @presentation.Presentation::open(bytes) catch {
+    err => abort("open generated pptx failed: \{err}")
+  }
+  let charts = prs.charts() catch {
+    err => abort("read generated charts failed: \{err}")
+  }
+  assert_eq(charts.length(), 1)
+  assert_slide_xml_contains(prs, 1, "<c:chart")
+}
+
+///|
 test "writer preserves existing output when render fails" {
   let output = "examples/testdata/out/atomic-demo.pptx"
   let loaded = load_deck("examples/minimal/deck.pptz.toml") catch {
@@ -90,7 +112,12 @@ test "writer preserves existing output when render fails" {
   let failing = unsupported_loaded(Page::{
     page_type: None,
     background: None,
-    elements: [ChartElement(test_base("chart"), test_chart_spec())],
+    elements: [
+      IconElement(test_base("icon"), IconSpec::{
+        name: "fas:dragon",
+        fill: Some(SolidFill("#F59E0B")),
+      }),
+    ],
   })
   ignore(
     write_pptx_file(failing, output) catch {
@@ -221,12 +248,6 @@ test "writer reports capability errors for unsupported schema-valid features" {
       ),
     ),
     "icon 'fas:dragon'",
-  )
-  expect_capability(
-    unsupported_loaded(
-      page_with_element(ChartElement(test_base("chart"), test_chart_spec())),
-    ),
-    "chart elements",
   )
   expect_capability(
     unsupported_loaded(

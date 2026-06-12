@@ -79,6 +79,8 @@ The current writer supports:
   `plus`, with optional `fas:`-style prefixes;
 - table elements with explicit or evenly distributed column widths and row
   heights;
+- inline chart elements for `bar`, `line`, `pie`, `doughnut`, `area`,
+  `scatter`, `bubble`, and `radar`;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
 - image crop rectangles;
@@ -86,9 +88,9 @@ The current writer supports:
   `moon-pptx`.
 
 Schema-valid features outside this scope fail with a writer capability error
-instead of being silently ignored. This includes chart elements,
-`letter_spacing`, table merge spans, unsupported icon names, unsupported
-connector kinds, line/connector shape presets, and unsupported shape names.
+instead of being silently ignored. This includes `letter_spacing`, table merge
+spans, unsupported icon names, unsupported connector kinds, line/connector
+shape presets, and unsupported shape names.
 
 ## Example
 

@@ -48,3 +48,16 @@ data = [
   ["Revenue", "100", "150"],
   ["Users", "42", "64"],
 ]
+
+[[elements]]
+id = "revenue_chart"
+type = "chart"
+bounds = [110, 480, 440, 160]
+
+[elements.content]
+kind = "bar"
+categories = ["Q1", "Q2", "Q3"]
+
+[[elements.content.series]]
+name = "Revenue"
+values = [100.0, 150.0, 125.0]

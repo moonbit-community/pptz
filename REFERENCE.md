@@ -317,12 +317,11 @@ Build `pptz` in this order:
    solid/no-fill/gradient shape fills, alpha colors, solid and dashed shape
    borders, outer shadows for shape and connector elements, built-in icon
    elements, table elements with explicit or evenly distributed column widths
-   and row heights, image elements with `stretch`, `cover`, `contain`,
-   explicit crop, SVG pictures, and basic theme color/text-style resolution
-   including `line_height`. It returns capability errors for schema-valid
-   features that are still outside the implemented writer subset.
-   Chart schema parsing and loader validation are implemented, but chart
-   elements remain outside the writer subset until the chart writer slice.
+   and row heights, inline chart elements, image elements with `stretch`,
+   `cover`, `contain`, explicit crop, SVG pictures, and basic theme
+   color/text-style resolution including `line_height`. It returns capability
+   errors for schema-valid features that are still outside the implemented
+   writer subset.
 
 Compiler Reliability status:
 
@@ -681,10 +680,10 @@ Weight-based table sizing is outside the v2 shorthand scope. The current
 writer renders rectangular tables and treats merge spans as writer capability
 errors.
 
-Current chart schema covers bar, line, pie, doughnut, area, scatter, bubble,
-and radar chart families. 3D charts, stock charts, surface charts, of-pie
-charts, and chartEx families are outside the first v2 chart slice. The first
-chart slice uses inline chart data in page TOML. External CSV, TOML, or
+Current chart writer support covers bar, line, pie, doughnut, area, scatter,
+bubble, and radar chart families. 3D charts, stock charts, surface charts,
+of-pie charts, and chartEx families are outside the first v2 chart slice. The
+first chart slice uses inline chart data in page TOML. External CSV, TOML, or
 spreadsheet-backed chart data is outside the first v2 chart slice.
 
 Image `fit` values are `stretch`, `cover`, or `contain`. Omitted `fit` defaults
