@@ -89,6 +89,7 @@ pub(all) enum Element {
   TextElement(ElementBase, TextContent)
   ShapeElement(ElementBase, ShapeSpec)
   ImageElement(ElementBase, ImageSpec)
+  ConnectorElement(String, ConnectorSpec)
   IconElement(ElementBase, IconSpec)
   TableElement(ElementBase)
   ChartElement(ElementBase)
@@ -153,6 +154,22 @@ pub(all) struct ImageSpec {
   path : String
   fit : ImageFit
   crop : CropRect?
+} derive(Eq, Debug)
+
+///|
+pub(all) struct ConnectorSpec {
+  kind : String
+  start : ConnectorEndpoint
+  end : ConnectorEndpoint
+  stroke : Border?
+  start_arrow : String?
+  end_arrow : String?
+} derive(Eq, Debug)
+
+///|
+pub(all) enum ConnectorEndpoint {
+  CoordinateEndpoint(Double, Double)
+  ElementEndpoint(String)
 } derive(Eq, Debug)
 
 ///|

@@ -88,18 +88,53 @@ fn build_slide(
       slide = slide.with_background(to_gradient_fill(bundle, gradient))
     Some(ImageBackground(_)) => ()
   }
-  let mut shape_id = slide.shapes.length() + 2
+  let shape_ids = connector_shape_ids(
+    slide.shapes.length() + 2,
+    resolved_page.page.elements,
+  )
+  let shape_bounds = connector_shape_bounds(resolved_page.page.elements)
   for element in resolved_page.page.elements {
     match element {
       ImageElement(_, _) => ()
       _ => {
-        let shape = build_shape(bundle, element, shape_id)
-        shape_id += 1
+        let shape = build_shape(bundle, element, shape_ids, shape_bounds)
         slide = slide.with_shape(shape)
       }
     }
   }
   slide
+}
+
+///|
+fn connector_shape_ids(
+  first_shape_id : Int,
+  elements : Array[Element],
+) -> Map[String, Int] {
+  let result = Map([], capacity=elements.length())
+  let mut shape_id = first_shape_id
+  for element in elements {
+    match element {
+      ImageElement(_, _) => ()
+      _ => {
+        result[element_id(element)] = shape_id
+        shape_id += 1
+      }
+    }
+  }
+  result
+}
+
+///|
+fn connector_shape_bounds(elements : Array[Element]) -> Map[String, Bounds] {
+  let result = Map([], capacity=elements.length())
+  for element in elements {
+    match element {
+      TextElement(base, _) | ShapeElement(base, _) =>
+        result[base.id] = base.bounds
+      _ => ()
+    }
+  }
+  result
 }
 
 ///|
@@ -141,13 +176,39 @@ fn add_page_images(
 fn build_shape(
   bundle : DeckBundle,
   element : Element,
-  shape_id : Int,
+  shape_ids : Map[String, Int],
+  shape_bounds : Map[String, Bounds],
 ) -> @slide.Shape raise {
   match element {
     TextElement(base, content) =>
-      @slide.AutoShape(build_textbox(bundle, base, content, shape_id))
+      @slide.AutoShape(
+        build_textbox(
+          bundle,
+          base,
+          content,
+          require_shape_id(shape_ids, base.id),
+        ),
+      )
     ShapeElement(base, spec) =>
-      @slide.AutoShape(build_auto_shape(bundle, base, spec, shape_id))
+      @slide.AutoShape(
+        build_auto_shape(
+          bundle,
+          base,
+          spec,
+          require_shape_id(shape_ids, base.id),
+        ),
+      )
+    ConnectorElement(id, spec) =>
+      @slide.Connector(
+        build_connector(
+          bundle,
+          id,
+          spec,
+          require_shape_id(shape_ids, id),
+          shape_ids,
+          shape_bounds,
+        ),
+      )
     ImageElement(_, _) =>
       raise WriteError::Capability("internal image dispatch error")
     IconElement(_, _) =>
@@ -156,6 +217,15 @@ fn build_shape(
       raise WriteError::Capability("table elements are not implemented")
     ChartElement(_) =>
       raise WriteError::Capability("chart elements are not implemented")
+  }
+}
+
+///|
+fn require_shape_id(shape_ids : Map[String, Int], id : String) -> Int raise {
+  match shape_ids.get(id) {
+    Some(shape_id) => shape_id
+    None =>
+      raise WriteError::Backend("internal error: missing shape id for '\{id}'")
   }
 }
 
@@ -557,6 +627,161 @@ fn build_preset_shape(
     to_emu(bounds.width),
     to_emu(bounds.height),
   )
+}
+
+///|
+fn build_connector(
+  bundle : DeckBundle,
+  id : String,
+  spec : ConnectorSpec,
+  shape_id : Int,
+  shape_ids : Map[String, Int],
+  shape_bounds : Map[String, Bounds],
+) -> @slide.Connector raise {
+  let start = connector_endpoint_point(spec.start, shape_bounds)
+  let end = connector_endpoint_point(spec.end, shape_bounds)
+  @slide.Connector::{
+    id: shape_id,
+    name: id,
+    start: connector_connection_end(spec.start, shape_ids),
+    end: connector_connection_end(spec.end, shape_ids),
+    transform: Some(connector_transform(start, end)),
+    geometry: Some(@slide.Geometry::Preset(connector_geometry(spec.kind), [])),
+    stroke: Some(to_connector_stroke(bundle, spec)),
+    effects: None,
+    extension: [],
+  }
+}
+
+///|
+fn connector_geometry(kind : String) -> @slide.PresetShape raise {
+  match kind {
+    "straight" => @slide.PresetShape::StraightConnector1
+    other =>
+      raise WriteError::Capability(
+        "connector kind '\{other}' is not implemented",
+      )
+  }
+}
+
+///|
+fn connector_endpoint_point(
+  endpoint : ConnectorEndpoint,
+  shape_bounds : Map[String, Bounds],
+) -> Point2 raise {
+  match endpoint {
+    CoordinateEndpoint(x, y) => Point2::{ x, y }
+    ElementEndpoint(id) =>
+      match shape_bounds.get(id) {
+        Some(bounds) =>
+          Point2::{
+            x: bounds.x + bounds.width / 2.0,
+            y: bounds.y + bounds.height / 2.0,
+          }
+        None =>
+          raise WriteError::Capability(
+            "connector endpoint '\{id}' is not a supported connectable element",
+          )
+      }
+  }
+}
+
+///|
+fn connector_connection_end(
+  endpoint : ConnectorEndpoint,
+  shape_ids : Map[String, Int],
+) -> @slide.ConnectionEnd? raise {
+  match endpoint {
+    CoordinateEndpoint(_, _) => None
+    ElementEndpoint(id) =>
+      match shape_ids.get(id) {
+        Some(shape_id) => Some(@slide.ConnectionEnd::{ shape_id, idx: 0 })
+        None =>
+          raise WriteError::Capability(
+            "connector endpoint '\{id}' is not a supported connectable element",
+          )
+      }
+  }
+}
+
+///|
+priv struct Point2 {
+  x : Double
+  y : Double
+}
+
+///|
+fn connector_transform(start : Point2, end : Point2) -> @slide.Transform {
+  @slide.Transform::{
+    offset: @slide.Point::{
+      x: to_emu(start.x.min(end.x)),
+      y: to_emu(start.y.min(end.y)),
+    },
+    extent: @slide.Size::{
+      cx: to_emu((end.x - start.x).abs()),
+      cy: to_emu((end.y - start.y).abs()),
+    },
+  }
+}
+
+///|
+fn to_connector_stroke(
+  bundle : DeckBundle,
+  spec : ConnectorSpec,
+) -> @oxml.Stroke raise {
+  let mut stroke = match spec.stroke {
+    Some(stroke) => to_stroke(bundle, stroke)
+    None =>
+      @oxml.Stroke::{
+        width: Some(to_emu(2.0)),
+        cap: None,
+        compound: None,
+        alignment: None,
+        fill: Some(SolidFill(resolve_color(bundle, "#000000"))),
+        dash: Some(@oxml.DashStyle::DashSolid),
+        join: None,
+        head_end: None,
+        tail_end: None,
+        extension: [],
+      }
+  }
+  match spec.start_arrow {
+    None => ()
+    Some(arrow) =>
+      stroke = @oxml.Stroke::{
+        ..stroke,
+        head_end: Some(connector_arrow(arrow)),
+      }
+  }
+  match spec.end_arrow {
+    None => ()
+    Some(arrow) =>
+      stroke = @oxml.Stroke::{
+        ..stroke,
+        tail_end: Some(connector_arrow(arrow)),
+      }
+  }
+  stroke
+}
+
+///|
+fn connector_arrow(arrow : String) -> @oxml.ArrowEnd raise {
+  @oxml.ArrowEnd::{
+    arrow_type: match arrow {
+      "none" => @oxml.ArrowType::ArrowNone
+      "triangle" => @oxml.ArrowType::ArrowTriangle
+      "arrow" => @oxml.ArrowType::ArrowArrow
+      "stealth" => @oxml.ArrowType::ArrowStealth
+      "diamond" => @oxml.ArrowType::ArrowDiamond
+      "oval" => @oxml.ArrowType::ArrowOval
+      other =>
+        raise WriteError::Capability(
+          "connector arrow '\{other}' is not implemented",
+        )
+    },
+    width: None,
+    length: None,
+  }
 }
 
 ///|

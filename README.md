@@ -71,6 +71,8 @@ The current writer supports:
 - text elements with theme text styles, local overrides, text wrapping, and
   line breaks;
 - PowerPoint preset auto-shapes, excluding line and connector presets;
+- straight connectors with coordinate or element endpoints, stroke, dash, and
+  arrowheads;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
@@ -80,7 +82,8 @@ The current writer supports:
 
 Schema-valid features outside this scope fail with a writer capability error
 instead of being silently ignored. This includes icon/table/chart elements,
-`letter_spacing`, line/connector shape presets, and unsupported shape names.
+`letter_spacing`, unsupported connector kinds, line/connector shape presets,
+and unsupported shape names.
 
 ## Example
 

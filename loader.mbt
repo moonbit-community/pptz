@@ -266,33 +266,47 @@ fn validate_page(
   }
   let ids = Map([], capacity=resolved_page.page.elements.length())
   for element in resolved_page.page.elements {
-    let base = element_base(element)
-    if !is_identifier(base.id) {
+    let id = element_id(element)
+    if !is_identifier(id) {
       errors.push(
         error_diagnostic(
           "PZ021",
           "element id is invalid",
           path=resolved_page.path,
-          element_id=base.id,
+          element_id=id,
           field="elements.id",
         ),
       )
     }
-    if ids.contains(base.id) {
+    if ids.contains(id) {
       errors.push(
         error_diagnostic(
           "PZ020",
           "duplicate element id",
           path=resolved_page.path,
-          element_id=base.id,
+          element_id=id,
           field="elements.id",
         ),
       )
     } else {
-      ids[base.id] = true
+      ids[id] = true
     }
-    validate_bounds(bundle, resolved_page.path, base, errors, warnings)
+    match element_base(element) {
+      None => ()
+      Some(base) =>
+        validate_bounds(bundle, resolved_page.path, base, errors, warnings)
+    }
+  }
+  for element in resolved_page.page.elements {
     validate_element(bundle, resolved_page.path, element, errors, warnings)
+    validate_connector_refs(
+      resolved_page.path,
+      element,
+      ids,
+      errors,
+      warnings,
+      bundle,
+    )
   }
 }
 
@@ -443,7 +457,98 @@ fn validate_element(
             errors,
           )
       }
+    ConnectorElement(id, spec) =>
+      match spec.stroke {
+        None => ()
+        Some(stroke) =>
+          validate_page_color(
+            bundle,
+            page_path,
+            Some(id),
+            "elements.content.stroke.color",
+            stroke.color,
+            errors,
+          )
+      }
     TableElement(_) | ChartElement(_) => ()
+  }
+}
+
+///|
+fn validate_connector_refs(
+  page_path : String,
+  element : Element,
+  ids : Map[String, Bool],
+  errors : Array[Diagnostic],
+  warnings : Array[Diagnostic],
+  bundle : DeckBundle,
+) -> Unit {
+  match element {
+    ConnectorElement(id, spec) => {
+      validate_connector_endpoint(
+        page_path,
+        id,
+        "elements.content.start",
+        spec.start,
+        ids,
+        errors,
+        warnings,
+        bundle,
+      )
+      validate_connector_endpoint(
+        page_path,
+        id,
+        "elements.content.end",
+        spec.end,
+        ids,
+        errors,
+        warnings,
+        bundle,
+      )
+    }
+    _ => ()
+  }
+}
+
+///|
+fn validate_connector_endpoint(
+  page_path : String,
+  element_id : String,
+  field : String,
+  endpoint : ConnectorEndpoint,
+  ids : Map[String, Bool],
+  errors : Array[Diagnostic],
+  warnings : Array[Diagnostic],
+  bundle : DeckBundle,
+) -> Unit {
+  match endpoint {
+    ElementEndpoint(target) =>
+      if !ids.contains(target) {
+        errors.push(
+          error_diagnostic(
+            "PZ050",
+            "connector endpoint references unknown element",
+            path=page_path,
+            element_id~,
+            field~,
+          ),
+        )
+      }
+    CoordinateEndpoint(x, y) =>
+      if x < 0.0 ||
+        y < 0.0 ||
+        x > bundle.deck.size.width ||
+        y > bundle.deck.size.height {
+        warnings.push(
+          warning_diagnostic(
+            "PZ100",
+            "connector endpoint extends outside canvas",
+            path=page_path,
+            element_id~,
+            field~,
+          ),
+        )
+      }
   }
 }
 
@@ -860,13 +965,27 @@ fn resolve_existing_asset_path(
 }
 
 ///|
-fn element_base(element : Element) -> ElementBase {
+fn element_id(element : Element) -> String {
   match element {
-    TextElement(base, _) => base
-    ShapeElement(base, _) => base
-    ImageElement(base, _) => base
-    IconElement(base, _) => base
-    TableElement(base) => base
-    ChartElement(base) => base
+    TextElement(base, _) => base.id
+    ShapeElement(base, _) => base.id
+    ImageElement(base, _) => base.id
+    ConnectorElement(id, _) => id
+    IconElement(base, _) => base.id
+    TableElement(base) => base.id
+    ChartElement(base) => base.id
+  }
+}
+
+///|
+fn element_base(element : Element) -> ElementBase? {
+  match element {
+    TextElement(base, _) => Some(base)
+    ShapeElement(base, _) => Some(base)
+    ImageElement(base, _) => Some(base)
+    ConnectorElement(_, _) => None
+    IconElement(base, _) => Some(base)
+    TableElement(base) => Some(base)
+    ChartElement(base) => Some(base)
   }
 }

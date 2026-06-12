@@ -23,6 +23,8 @@ test "render minimal deck as pptx bytes" {
   assert_slide_xml_contains(prs, 3, "<a:gradFill")
   assert_slide_xml_contains(prs, 3, "alpha val=\"80000\"")
   assert_slide_xml_contains(prs, 3, "prstDash val=\"dash\"")
+  assert_slide_xml_contains(prs, 3, "<p:cxnSp>")
+  assert_slide_xml_contains(prs, 3, "<a:tailEnd type=\"triangle\"")
   assert_slide_xml_contains(prs, 3, "spcPct val=\"115000\"")
   assert_slide_xml_contains(prs, 3, "wrap=\"square\"")
   assert_slide_xml_contains(prs, 3, "<a:br>")

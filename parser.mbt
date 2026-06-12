@@ -276,14 +276,19 @@ fn parse_element_table(
 ) -> Element raise {
   let kind = required_string(table, "\{path}.type", key="type")
   reject_unknown_element_fields(table, path, kind)
-  let base = ElementBase::{
-    id: required_string(table, "\{path}.id", key="id"),
-    bounds: parse_bounds(
-      required_array(table, "\{path}.bounds", key="bounds"),
-      "\{path}.bounds",
-    ),
+  let id = required_string(table, "\{path}.id", key="id")
+  if kind == "connector" {
+    ConnectorElement(id, parse_required_connector_spec(table, path))
+  } else {
+    let base = ElementBase::{
+      id,
+      bounds: parse_bounds(
+        required_array(table, "\{path}.bounds", key="bounds"),
+        "\{path}.bounds",
+      ),
+    }
+    parse_element_content(kind, base, table, path)
   }
-  parse_element_content(kind, base, table, path)
 }
 
 ///|
@@ -295,6 +300,7 @@ fn reject_unknown_element_fields(
   match kind {
     "text" | "shape" | "image" | "icon" =>
       reject_unknown_fields(table, path, ["id", "type", "bounds", "content"])
+    "connector" => reject_unknown_fields(table, path, ["id", "type", "content"])
     "table" | "chart" =>
       reject_unknown_fields(table, path, ["id", "type", "bounds"])
     _ => fail("\{path}.type: unsupported element type '\{kind}'")
@@ -317,6 +323,17 @@ fn parse_element_content(
     "chart" => ChartElement(base)
     kind => fail("\{path}.type: unsupported element type '\{kind}'")
   }
+}
+
+///|
+fn parse_required_connector_spec(
+  table : Map[String, @toml.TomlValue],
+  path : String,
+) -> ConnectorSpec raise {
+  parse_connector_spec(
+    required_table(table, "\{path}.content", key="content"),
+    "\{path}.content",
+  )
 }
 
 ///|
@@ -414,6 +431,65 @@ fn parse_image_spec(
       "\{path}.fit",
     ),
     crop: parse_optional_crop_rect(table.get("crop"), "\{path}.crop"),
+  }
+}
+
+///|
+fn parse_connector_spec(
+  table : Map[String, @toml.TomlValue],
+  path : String,
+) -> ConnectorSpec raise {
+  reject_unknown_fields(table, path, [
+    "kind", "start", "end", "stroke", "start_arrow", "end_arrow",
+  ])
+  ConnectorSpec::{
+    kind: required_string(table, "\{path}.kind", key="kind"),
+    start: parse_connector_endpoint(table.get("start"), "\{path}.start"),
+    end: parse_connector_endpoint(table.get("end"), "\{path}.end"),
+    stroke: parse_optional_stroke(table.get("stroke"), "\{path}.stroke"),
+    start_arrow: optional_string(
+      table.get("start_arrow"),
+      "\{path}.start_arrow",
+    ),
+    end_arrow: optional_string(table.get("end_arrow"), "\{path}.end_arrow"),
+  }
+}
+
+///|
+fn parse_connector_endpoint(
+  value : @toml.TomlValue?,
+  path : String,
+) -> ConnectorEndpoint raise {
+  match value {
+    None => fail("\{path}: missing required value")
+    Some(@toml.TomlArray(items)) => {
+      let values = parse_size(items, path)
+      CoordinateEndpoint(values.width, values.height)
+    }
+    Some(value) => {
+      let table = expect_table(value, path)
+      reject_unknown_fields(table, path, ["element"])
+      ElementEndpoint(required_string(table, "\{path}.element", key="element"))
+    }
+  }
+}
+
+///|
+fn parse_optional_stroke(
+  value : @toml.TomlValue?,
+  path : String,
+) -> Border? raise {
+  match value {
+    None => None
+    Some(value) => {
+      let table = expect_table(value, path)
+      reject_unknown_fields(table, path, ["dash", "width", "color"])
+      Some(Border::{
+        style: required_string(table, "\{path}.dash", key="dash"),
+        width: required_double(table, "\{path}.width", key="width"),
+        color: required_string(table, "\{path}.color", key="color"),
+      })
+    }
   }
 }
 

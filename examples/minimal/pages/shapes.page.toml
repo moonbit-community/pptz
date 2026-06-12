@@ -76,6 +76,21 @@ type = "solid"
 color = "$primary"
 
 [[elements]]
+id = "flow"
+type = "connector"
+
+[elements.content]
+kind = "straight"
+start = { element = "panel" }
+end = { element = "circle" }
+end_arrow = "triangle"
+
+[elements.content.stroke]
+dash = "dash"
+width = 2
+color = "$primary"
+
+[[elements]]
 id = "body"
 type = "text"
 bounds = [130, 215, 420, 210]

@@ -297,11 +297,12 @@ Build `pptz` in this order:
    Current writer scope:
    deck size, ordered pages, optional solid/gradient/image background, text
    elements with wrapping and line breaks, preset auto-shape elements excluding
-   line and connector presets, solid/no-fill/gradient shape fills, alpha
-   colors, solid and dashed shape borders, raster image elements with
-   `stretch`, `cover`, or `contain`, SVG image elements, image crop rectangles,
-   and basic theme color/text-style resolution with element-local overrides.
-   Valid AST features outside this subset may fail as writer capability errors.
+   line and connector presets, straight connector elements, solid/no-fill/
+   gradient shape fills, alpha colors, solid and dashed shape borders, raster
+   image elements with `stretch`, `cover`, or `contain`, SVG image elements,
+   image crop rectangles, and basic theme color/text-style resolution with
+   element-local overrides. Valid AST features outside this subset may fail as
+   writer capability errors.
    MVP text styling follows the `moon-pptx@0.4.0` text builder surface:
    `font_size`, `font_family`, `color`, `bold`, `italic`, `line_height`, and
    `wrap`. `letter_spacing` may remain a schema/AST concept but is outside the
@@ -311,11 +312,12 @@ Build `pptz` in this order:
    Current status: `writer.mbt` generates valid PPTX bytes for deck size,
    ordered pages, optional solid/gradient/image backgrounds, text elements
    with wrapping and line breaks, preset auto-shape elements excluding line and
-   connector presets, solid/no-fill/gradient shape fills, alpha colors, solid
-   and dashed shape borders, image elements with `stretch`, `cover`, `contain`,
-   explicit crop, SVG pictures, and basic theme color/text-style resolution
-   including `line_height`. It returns capability errors for schema-valid
-   features that are still outside the implemented writer subset.
+   connector presets, straight connectors with coordinate or element endpoints,
+   solid/no-fill/gradient shape fills, alpha colors, solid and dashed shape
+   borders, image elements with `stretch`, `cover`, `contain`, explicit crop,
+   SVG pictures, and basic theme color/text-style resolution including
+   `line_height`. It returns capability errors for schema-valid features that
+   are still outside the implemented writer subset.
 
 Compiler Reliability status:
 
@@ -638,11 +640,11 @@ it should not accept both naming styles for the same shape.
 Lines and connectors are not shape subtypes in v2. They are represented by a
 separate `connector` element family so connector-specific semantics can grow
 without overloading preset auto shapes.
-The first connector slice supports both coordinate endpoints and element
-endpoints. Coordinate endpoints use explicit slide coordinates. Element
-endpoints refer to another element by id and let `pptz` choose the backend
-connection site; the first v2 connector schema should not expose raw PowerPoint
-connection site indices.
+The current writer supports straight connectors with both coordinate endpoints
+and element endpoints. Coordinate endpoints use explicit slide coordinates.
+Element endpoints refer to another text or shape element by id and let `pptz`
+choose the backend connection site; the connector schema does not expose raw
+PowerPoint connection site indices.
 Shape borders, connector lines, and later table cell borders share a basic
 stroke primitive for color, width, and dash style. Connector arrowheads are
 connector-specific fields such as `start_arrow` and `end_arrow`; they are not

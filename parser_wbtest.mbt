@@ -253,7 +253,7 @@ test "parse minimal shapes page" {
   let page = parse_page_toml(source) catch {
     err => abort("parse page failed: \{err}")
   }
-  assert_eq(page.elements.length(), 7)
+  assert_eq(page.elements.length(), 8)
   match page.elements[1] {
     ShapeElement(base, spec) => {
       assert_eq(base.id, "panel")
@@ -277,6 +277,21 @@ test "parse minimal shapes page" {
       assert_eq(spec.shape, "diamond")
     }
     _ => abort("expected diamond element")
+  }
+  match page.elements[5] {
+    ConnectorElement(id, spec) => {
+      assert_eq(id, "flow")
+      assert_eq(spec.kind, "straight")
+      match spec.start {
+        ElementEndpoint(target) => assert_eq(target, "panel")
+        _ => abort("expected element start endpoint")
+      }
+      match spec.end_arrow {
+        Some(arrow) => assert_eq(arrow, "triangle")
+        None => abort("expected end arrow")
+      }
+    }
+    _ => abort("expected connector element")
   }
 }
 

@@ -73,6 +73,8 @@ Use these features for deliverable decks:
 - text elements with theme text styles, local overrides, text wrapping, and
   line breaks;
 - PowerPoint preset auto-shapes, excluding line and connector presets;
+- straight connectors with coordinate or element endpoints, stroke, dash, and
+  arrowheads;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
@@ -81,7 +83,7 @@ Use these features for deliverable decks:
 
 Do not use these in deliverable decks until `pptz` implements them in the
 writer: icon/table/chart elements, `letter_spacing`, line/connector shape
-presets, or unsupported shape names.
+presets, unsupported connector kinds, or unsupported shape names.
 
 ## Important Notes
 
