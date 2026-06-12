@@ -320,6 +320,8 @@ Build `pptz` in this order:
    SVG pictures, and basic theme color/text-style resolution including
    `line_height`. It returns capability errors for schema-valid features that
    are still outside the implemented writer subset.
+   Table schema parsing and loader validation are implemented, but table
+   elements remain outside the writer subset until the table writer slice.
 
 Compiler Reliability status:
 
@@ -489,6 +491,7 @@ text. Messages may change; codes should not. Initial code ranges:
 - `PZ030`: unresolved theme token.
 - `PZ032`: invalid color value.
 - `PZ040`: invalid or empty asset path.
+- `PZ060`: invalid table structure.
 - `PZ100`: element bounds outside canvas.
 - `PZ101`: invalid or zero-size element bounds. Negative width or height is an
   error; zero width or height is a warning.
@@ -665,15 +668,14 @@ small set of PowerPoint preset shapes. Supported names are `cube`, `circle`,
 `square`, `star`, `heart`, and `plus`; names may also use a prefix such as
 `fas:cube`. Unknown icon names are writer capability errors.
 
-Planned v2 table semantics have a canonical table form based on PowerPoint
-table concepts: rows, cells, merge spans, cell fills, cell borders, cell
-margins, and cell anchors. A compact `data` shorthand may be accepted for
-simple tables, but the loader should normalize shorthand input into the
-canonical rows/cells model before validation and writing. Table shorthand may
-omit column widths and row heights; omitted sizes are evenly distributed inside
-the table element bounds. Explicit `col_widths` and `row_heights` may override
-the equal distribution. Weight-based table sizing is outside the v2 shorthand
-scope.
+Current table schema has a canonical table form based on PowerPoint table
+concepts: rows, cells, merge spans, cell fills, cell borders, cell margins, and
+cell anchors. A compact `data` shorthand is accepted for simple tables and is
+normalized into the canonical rows/cells model before validation. Table
+shorthand may omit column widths and row heights; omitted sizes are evenly
+distributed inside the table element bounds by the writer. Explicit
+`col_widths` and `row_heights` may override the equal distribution.
+Weight-based table sizing is outside the v2 shorthand scope.
 
 Planned v2 chart semantics start with bar, line, pie, doughnut, area, scatter,
 bubble, and radar chart families. 3D charts, stock charts, surface charts,

@@ -311,6 +311,71 @@ test "parse minimal shapes page" {
 }
 
 ///|
+test "parse table content rows and data shorthand" {
+  let page = parse_page_toml(
+    (
+      #|[[elements]]
+      #|id = "summary"
+      #|type = "table"
+      #|bounds = [80, 120, 720, 300]
+      #|
+      #|[elements.content]
+      #|col_widths = [240, 240]
+      #|row_heights = [48, 48]
+      #|rows = [
+      #|  { cells = [
+      #|    { text = "Metric", fill = { type = "solid", color = "$surface" }, border = { style = "solid", width = 1, color = "$text" }, align = ["center", "center"], margin = { left = 4, right = 4 } },
+      #|    "Q1",
+      #|  ] },
+      #|  { cells = ["Revenue", "100"] },
+      #|]
+    ),
+  ) catch {
+    err => abort("parse table page failed: \{err}")
+  }
+  match page.elements[0] {
+    TableElement(base, spec) => {
+      assert_eq(base.id, "summary")
+      assert_eq(spec.rows.length(), 2)
+      assert_eq(spec.rows[0].cells[0].text, "Metric")
+      match spec.rows[0].cells[0].fill {
+        Some(SolidFill(color)) => assert_eq(color, "$surface")
+        _ => abort("expected cell fill")
+      }
+      match spec.rows[0].cells[0].margin {
+        Some(margin) =>
+          match margin.left {
+            Some(left) => assert_eq(left, 4.0)
+            None => abort("expected left margin")
+          }
+        None => abort("expected margin")
+      }
+    }
+    _ => abort("expected table element")
+  }
+  let shorthand = parse_page_toml(
+    (
+      #|[[elements]]
+      #|id = "shorthand"
+      #|type = "table"
+      #|bounds = [0, 0, 300, 120]
+      #|
+      #|[elements.content]
+      #|data = [
+      #|  ["Metric", "Q1"],
+      #|  ["Revenue", "100"],
+      #|]
+    ),
+  ) catch {
+    err => abort("parse shorthand table failed: \{err}")
+  }
+  match shorthand.elements[0] {
+    TableElement(_, spec) => assert_eq(spec.rows[1].cells[0].text, "Revenue")
+    _ => abort("expected shorthand table element")
+  }
+}
+
+///|
 fn deck_parse_error(source : String) -> String {
   ignore(parse_deck_toml(source) catch { err => return "\{err}" })
   abort("expected parse failure")

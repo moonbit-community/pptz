@@ -198,7 +198,9 @@ backend connection site.
 
 ## Table Element
 
-Tables have a canonical PowerPoint table form and an optional shorthand.
+Tables have a canonical PowerPoint table form and an optional shorthand. The
+parser and loader accept this schema now; table elements remain writer
+capability errors until the table writer slice.
 
 Canonical form:
 
@@ -214,7 +216,7 @@ row_heights = [48, 48]
 
 [[elements.content.rows]]
 cells = [
-  { text = "Metric", fill = "$surface" },
+  { text = "Metric", fill = { type = "solid", color = "$surface" } },
   { text = "Q1" },
   { text = "Q2" },
 ]
@@ -233,8 +235,9 @@ data = [
 ]
 ```
 
-The loader normalizes shorthand into the canonical rows/cells model. Omitted
-column widths and row heights are evenly distributed inside the table bounds.
+The parser normalizes shorthand into the canonical rows/cells model. Omitted
+column widths and row heights are evenly distributed inside the table bounds by
+the writer.
 Explicit `col_widths` and `row_heights` may override equal distribution.
 Weight-based sizing is outside the v2 shorthand scope.
 

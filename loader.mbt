@@ -485,7 +485,303 @@ fn validate_element(
       }
       validate_shadow(bundle, page_path, id, spec.shadow, errors)
     }
-    TableElement(_) | ChartElement(_) => ()
+    TableElement(base, spec) =>
+      validate_table(bundle, page_path, base, spec, errors)
+    ChartElement(_) => ()
+  }
+}
+
+///|
+fn validate_table(
+  bundle : DeckBundle,
+  page_path : String,
+  base : ElementBase,
+  spec : TableSpec,
+  errors : Array[Diagnostic],
+) -> Unit {
+  if spec.rows.is_empty() {
+    errors.push(
+      error_diagnostic(
+        "PZ060",
+        "table must have at least one row",
+        path=page_path,
+        element_id=base.id,
+        field="elements.content.rows",
+      ),
+    )
+    return
+  }
+  let mut expected_columns = 0
+  for row_index, row in spec.rows {
+    if row.cells.is_empty() {
+      errors.push(
+        error_diagnostic(
+          "PZ060",
+          "table row must have at least one cell",
+          path=page_path,
+          element_id=base.id,
+          field="elements.content.rows[\{row_index}].cells",
+        ),
+      )
+    }
+    let columns = table_row_columns(row)
+    if row_index == 0 {
+      expected_columns = columns
+    } else if columns != expected_columns {
+      errors.push(
+        error_diagnostic(
+          "PZ060",
+          "table rows must have the same column span",
+          path=page_path,
+          element_id=base.id,
+          field="elements.content.rows[\{row_index}].cells",
+        ),
+      )
+    }
+    for cell_index, cell in row.cells {
+      validate_table_cell(
+        bundle,
+        page_path,
+        base.id,
+        row_index,
+        cell_index,
+        cell,
+        spec.rows.length(),
+        errors,
+      )
+    }
+  }
+  validate_table_sizes(
+    page_path,
+    base.id,
+    "elements.content.col_widths",
+    spec.col_widths,
+    expected_columns,
+    errors,
+  )
+  validate_table_sizes(
+    page_path,
+    base.id,
+    "elements.content.row_heights",
+    spec.row_heights,
+    spec.rows.length(),
+    errors,
+  )
+}
+
+///|
+fn table_row_columns(row : TableRowSpec) -> Int {
+  let mut columns = 0
+  for cell in row.cells {
+    columns += cell.col_span
+  }
+  columns
+}
+
+///|
+fn validate_table_cell(
+  bundle : DeckBundle,
+  page_path : String,
+  element_id : String,
+  row_index : Int,
+  cell_index : Int,
+  cell : TableCellSpec,
+  row_count : Int,
+  errors : Array[Diagnostic],
+) -> Unit {
+  let field = "elements.content.rows[\{row_index}].cells[\{cell_index}]"
+  if cell.col_span < 1 {
+    errors.push(
+      error_diagnostic(
+        "PZ060",
+        "table cell col_span must be greater than zero",
+        path=page_path,
+        element_id~,
+        field="\{field}.col_span",
+      ),
+    )
+  }
+  if cell.row_span < 1 {
+    errors.push(
+      error_diagnostic(
+        "PZ060",
+        "table cell row_span must be greater than zero",
+        path=page_path,
+        element_id~,
+        field="\{field}.row_span",
+      ),
+    )
+  } else if row_index + cell.row_span > row_count {
+    errors.push(
+      error_diagnostic(
+        "PZ060",
+        "table cell row_span extends beyond the table",
+        path=page_path,
+        element_id~,
+        field="\{field}.row_span",
+      ),
+    )
+  }
+  validate_table_cell_fill(
+    bundle,
+    page_path,
+    element_id,
+    "\{field}.fill",
+    cell.fill,
+    errors,
+  )
+  match cell.border {
+    None => ()
+    Some(border) =>
+      validate_page_color(
+        bundle,
+        page_path,
+        Some(element_id),
+        "\{field}.border.color",
+        border.color,
+        errors,
+      )
+  }
+  validate_table_cell_margin(page_path, element_id, field, cell.margin, errors)
+}
+
+///|
+fn validate_table_cell_fill(
+  bundle : DeckBundle,
+  page_path : String,
+  element_id : String,
+  field : String,
+  fill : Fill?,
+  errors : Array[Diagnostic],
+) -> Unit {
+  match fill {
+    None | Some(NoFill) => ()
+    Some(SolidFill(color)) =>
+      validate_page_color(
+        bundle,
+        page_path,
+        Some(element_id),
+        "\{field}.color",
+        color,
+        errors,
+      )
+    Some(GradientFill(gradient)) =>
+      validate_gradient(
+        bundle,
+        page_path,
+        Some(element_id),
+        field,
+        gradient,
+        errors,
+      )
+  }
+}
+
+///|
+fn validate_table_cell_margin(
+  page_path : String,
+  element_id : String,
+  field : String,
+  margin : TableCellMargin?,
+  errors : Array[Diagnostic],
+) -> Unit {
+  match margin {
+    None => ()
+    Some(margin) => {
+      validate_optional_non_negative(
+        page_path,
+        element_id,
+        "\{field}.margin.left",
+        margin.left,
+        errors,
+      )
+      validate_optional_non_negative(
+        page_path,
+        element_id,
+        "\{field}.margin.right",
+        margin.right,
+        errors,
+      )
+      validate_optional_non_negative(
+        page_path,
+        element_id,
+        "\{field}.margin.top",
+        margin.top,
+        errors,
+      )
+      validate_optional_non_negative(
+        page_path,
+        element_id,
+        "\{field}.margin.bottom",
+        margin.bottom,
+        errors,
+      )
+    }
+  }
+}
+
+///|
+fn validate_optional_non_negative(
+  page_path : String,
+  element_id : String,
+  field : String,
+  value : Double?,
+  errors : Array[Diagnostic],
+) -> Unit {
+  match value {
+    None => ()
+    Some(value) =>
+      if value < 0.0 {
+        errors.push(
+          error_diagnostic(
+            "PZ060",
+            "table cell margin must not be negative",
+            path=page_path,
+            element_id~,
+            field~,
+          ),
+        )
+      }
+  }
+}
+
+///|
+fn validate_table_sizes(
+  page_path : String,
+  element_id : String,
+  field : String,
+  sizes : Array[Double]?,
+  expected_length : Int,
+  errors : Array[Diagnostic],
+) -> Unit {
+  match sizes {
+    None => ()
+    Some(sizes) => {
+      if sizes.length() != expected_length {
+        errors.push(
+          error_diagnostic(
+            "PZ060",
+            "table size array length must match the table grid",
+            path=page_path,
+            element_id~,
+            field~,
+          ),
+        )
+      }
+      for index, size in sizes {
+        if size <= 0.0 {
+          errors.push(
+            error_diagnostic(
+              "PZ060",
+              "table sizes must be greater than zero",
+              path=page_path,
+              element_id~,
+              field="\{field}[\{index}]",
+            ),
+          )
+        }
+      }
+    }
   }
 }
 
@@ -1009,7 +1305,7 @@ fn element_id(element : Element) -> String {
     ImageElement(base, _) => base.id
     ConnectorElement(id, _) => id
     IconElement(base, _) => base.id
-    TableElement(base) => base.id
+    TableElement(base, _) => base.id
     ChartElement(base) => base.id
   }
 }
@@ -1022,7 +1318,7 @@ fn element_base(element : Element) -> ElementBase? {
     ImageElement(base, _) => Some(base)
     ConnectorElement(_, _) => None
     IconElement(base, _) => Some(base)
-    TableElement(base) => Some(base)
+    TableElement(base, _) => Some(base)
     ChartElement(base) => Some(base)
   }
 }

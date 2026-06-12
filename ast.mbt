@@ -91,7 +91,7 @@ pub(all) enum Element {
   ImageElement(ElementBase, ImageSpec)
   ConnectorElement(String, ConnectorSpec)
   IconElement(ElementBase, IconSpec)
-  TableElement(ElementBase)
+  TableElement(ElementBase, TableSpec)
   ChartElement(ElementBase)
 } derive(Eq, Debug)
 
@@ -194,4 +194,35 @@ pub(all) struct CropRect {
 pub(all) struct IconSpec {
   name : String
   fill : Fill?
+} derive(Eq, Debug)
+
+///|
+pub(all) struct TableSpec {
+  col_widths : Array[Double]?
+  row_heights : Array[Double]?
+  rows : Array[TableRowSpec]
+} derive(Eq, Debug)
+
+///|
+pub(all) struct TableRowSpec {
+  cells : Array[TableCellSpec]
+} derive(Eq, Debug)
+
+///|
+pub(all) struct TableCellSpec {
+  text : String
+  fill : Fill?
+  border : Border?
+  col_span : Int
+  row_span : Int
+  align : Align?
+  margin : TableCellMargin?
+} derive(Eq, Debug)
+
+///|
+pub(all) struct TableCellMargin {
+  left : Double?
+  right : Double?
+  top : Double?
+  bottom : Double?
 } derive(Eq, Debug)

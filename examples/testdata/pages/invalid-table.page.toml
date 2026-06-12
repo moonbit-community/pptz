@@ -1,0 +1,11 @@
+[[elements]]
+id = "bad_table"
+type = "table"
+bounds = [80, 120, 720, 300]
+
+[elements.content]
+col_widths = [240]
+data = [
+  ["Metric", "Q1"],
+  ["Revenue"],
+]

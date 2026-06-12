@@ -70,7 +70,7 @@ test "writer preserves existing output when render fails" {
   let failing = unsupported_loaded(Page::{
     page_type: None,
     background: None,
-    elements: [TableElement(test_base("table"))],
+    elements: [TableElement(test_base("table"), test_table_spec())],
   })
   ignore(
     write_pptx_file(failing, output) catch {
@@ -203,7 +203,9 @@ test "writer reports capability errors for unsupported schema-valid features" {
     "icon 'fas:dragon'",
   )
   expect_capability(
-    unsupported_loaded(page_with_element(TableElement(test_base("table")))),
+    unsupported_loaded(
+      page_with_element(TableElement(test_base("table"), test_table_spec())),
+    ),
     "table elements",
   )
   expect_capability(
@@ -392,6 +394,29 @@ fn unsupported_loaded(page : Page) -> LoadedDeck {
 ///|
 fn page_with_element(element : Element) -> Page {
   Page::{ page_type: None, background: None, elements: [element] }
+}
+
+///|
+fn test_table_spec() -> TableSpec {
+  TableSpec::{
+    col_widths: None,
+    row_heights: None,
+    rows: [
+      TableRowSpec::{
+        cells: [
+          TableCellSpec::{
+            text: "A",
+            fill: None,
+            border: None,
+            col_span: 1,
+            row_span: 1,
+            align: None,
+            margin: None,
+          },
+        ],
+      },
+    ],
+  }
 }
 
 ///|

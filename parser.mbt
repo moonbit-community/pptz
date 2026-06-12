@@ -298,11 +298,10 @@ fn reject_unknown_element_fields(
   kind : String,
 ) -> Unit raise {
   match kind {
-    "text" | "shape" | "image" | "icon" =>
+    "text" | "shape" | "image" | "icon" | "table" =>
       reject_unknown_fields(table, path, ["id", "type", "bounds", "content"])
     "connector" => reject_unknown_fields(table, path, ["id", "type", "content"])
-    "table" | "chart" =>
-      reject_unknown_fields(table, path, ["id", "type", "bounds"])
+    "chart" => reject_unknown_fields(table, path, ["id", "type", "bounds"])
     _ => fail("\{path}.type: unsupported element type '\{kind}'")
   }
 }
@@ -319,7 +318,7 @@ fn parse_element_content(
     "shape" => ShapeElement(base, parse_required_shape_spec(table, path))
     "image" => ImageElement(base, parse_required_image_spec(table, path))
     "icon" => IconElement(base, parse_required_icon_spec(table, path))
-    "table" => TableElement(base)
+    "table" => TableElement(base, parse_required_table_spec(table, path))
     "chart" => ChartElement(base)
     kind => fail("\{path}.type: unsupported element type '\{kind}'")
   }
@@ -375,6 +374,17 @@ fn parse_required_icon_spec(
   path : String,
 ) -> IconSpec raise {
   parse_icon_spec(
+    required_table(table, "\{path}.content", key="content"),
+    "\{path}.content",
+  )
+}
+
+///|
+fn parse_required_table_spec(
+  table : Map[String, @toml.TomlValue],
+  path : String,
+) -> TableSpec raise {
+  parse_table_spec(
     required_table(table, "\{path}.content", key="content"),
     "\{path}.content",
   )
@@ -550,6 +560,172 @@ fn parse_icon_spec(
 }
 
 ///|
+fn parse_table_spec(
+  table : Map[String, @toml.TomlValue],
+  path : String,
+) -> TableSpec raise {
+  reject_unknown_fields(table, path, [
+    "col_widths", "row_heights", "rows", "data",
+  ])
+  let rows = match (table.get("rows"), table.get("data")) {
+    (Some(_), Some(_)) => fail("\{path}: use either rows or data, not both")
+    (Some(rows), None) => parse_table_rows(rows, "\{path}.rows")
+    (None, Some(data)) => parse_table_data(data, "\{path}.data")
+    (None, None) => fail("\{path}: missing rows or data")
+  }
+  TableSpec::{
+    col_widths: parse_optional_double_array(
+      table.get("col_widths"),
+      "\{path}.col_widths",
+    ),
+    row_heights: parse_optional_double_array(
+      table.get("row_heights"),
+      "\{path}.row_heights",
+    ),
+    rows,
+  }
+}
+
+///|
+fn parse_table_rows(
+  value : @toml.TomlValue,
+  path : String,
+) -> Array[TableRowSpec] raise {
+  match value {
+    @toml.TomlArray(items) => {
+      let rows = []
+      for index, item in items {
+        let row_path = "\{path}[\{index}]"
+        let table = expect_table(item, row_path)
+        reject_unknown_fields(table, row_path, ["cells"])
+        rows.push(TableRowSpec::{
+          cells: parse_table_cells(
+            required_array(table, "\{row_path}.cells", key="cells"),
+            "\{row_path}.cells",
+          ),
+        })
+      }
+      rows
+    }
+    _ => fail("\{path}: expected array")
+  }
+}
+
+///|
+fn parse_table_data(
+  value : @toml.TomlValue,
+  path : String,
+) -> Array[TableRowSpec] raise {
+  match value {
+    @toml.TomlArray(rows) => {
+      let result = []
+      for row_index, row_value in rows {
+        match row_value {
+          @toml.TomlArray(cells) => {
+            let parsed_cells = []
+            for cell_index, cell_value in cells {
+              parsed_cells.push(TableCellSpec::{
+                text: expect_string(
+                  cell_value,
+                  "\{path}[\{row_index}][\{cell_index}]",
+                ),
+                fill: None,
+                border: None,
+                col_span: 1,
+                row_span: 1,
+                align: None,
+                margin: None,
+              })
+            }
+            result.push(TableRowSpec::{ cells: parsed_cells })
+          }
+          _ => fail("\{path}[\{row_index}]: expected array")
+        }
+      }
+      result
+    }
+    _ => fail("\{path}: expected array")
+  }
+}
+
+///|
+fn parse_table_cells(
+  values : Array[@toml.TomlValue],
+  path : String,
+) -> Array[TableCellSpec] raise {
+  let cells = []
+  for index, value in values {
+    cells.push(parse_table_cell(value, "\{path}[\{index}]"))
+  }
+  cells
+}
+
+///|
+fn parse_table_cell(
+  value : @toml.TomlValue,
+  path : String,
+) -> TableCellSpec raise {
+  match value {
+    @toml.TomlString(text) =>
+      TableCellSpec::{
+        text,
+        fill: None,
+        border: None,
+        col_span: 1,
+        row_span: 1,
+        align: None,
+        margin: None,
+      }
+    @toml.TomlTable(table) => {
+      reject_unknown_fields(table, path, [
+        "text", "fill", "border", "col_span", "row_span", "align", "margin",
+      ])
+      TableCellSpec::{
+        text: required_string(table, "\{path}.text", key="text"),
+        fill: parse_optional_fill(table.get("fill"), "\{path}.fill"),
+        border: parse_optional_border(table.get("border"), "\{path}.border"),
+        col_span: optional_int(
+          table.get("col_span"),
+          "\{path}.col_span",
+          default=1,
+        ),
+        row_span: optional_int(
+          table.get("row_span"),
+          "\{path}.row_span",
+          default=1,
+        ),
+        align: parse_optional_align(table.get("align"), "\{path}.align"),
+        margin: parse_optional_table_cell_margin(
+          table.get("margin"),
+          "\{path}.margin",
+        ),
+      }
+    }
+    _ => fail("\{path}: expected string or table")
+  }
+}
+
+///|
+fn parse_optional_table_cell_margin(
+  value : @toml.TomlValue?,
+  path : String,
+) -> TableCellMargin? raise {
+  match value {
+    None => None
+    Some(value) => {
+      let table = expect_table(value, path)
+      reject_unknown_fields(table, path, ["left", "right", "top", "bottom"])
+      Some(TableCellMargin::{
+        left: optional_double(table.get("left"), "\{path}.left"),
+        right: optional_double(table.get("right"), "\{path}.right"),
+        top: optional_double(table.get("top"), "\{path}.top"),
+        bottom: optional_double(table.get("bottom"), "\{path}.bottom"),
+      })
+    }
+  }
+}
+
+///|
 fn parse_optional_align(
   value : @toml.TomlValue?,
   path : String,
@@ -680,6 +856,24 @@ fn required_array(
 }
 
 ///|
+fn parse_optional_double_array(
+  value : @toml.TomlValue?,
+  path : String,
+) -> Array[Double]? raise {
+  match value {
+    None => None
+    Some(@toml.TomlArray(values)) => {
+      let result = []
+      for index, item in values {
+        result.push(expect_double(item, "\{path}[\{index}]"))
+      }
+      Some(result)
+    }
+    Some(_) => fail("\{path}: expected array")
+  }
+}
+
+///|
 fn required_table(
   table : Map[String, @toml.TomlValue],
   path : String,
@@ -708,6 +902,18 @@ fn optional_double(value : @toml.TomlValue?, path : String) -> Double? raise {
 }
 
 ///|
+fn optional_int(
+  value : @toml.TomlValue?,
+  path : String,
+  default~ : Int,
+) -> Int raise {
+  match value {
+    None => default
+    Some(value) => expect_int(value, path)
+  }
+}
+
+///|
 fn optional_bool(value : @toml.TomlValue?, path : String) -> Bool? raise {
   match value {
     None => None
@@ -730,6 +936,14 @@ fn expect_double(value : @toml.TomlValue, path : String) -> Double raise {
     @toml.TomlInteger(number) => number.to_double()
     @toml.TomlFloat(number) => number
     _ => fail("\{path}: expected number")
+  }
+}
+
+///|
+fn expect_int(value : @toml.TomlValue, path : String) -> Int raise {
+  match value {
+    @toml.TomlInteger(number) => number.to_int()
+    _ => fail("\{path}: expected integer")
   }
 }
 

@@ -65,6 +65,14 @@ test "loader rejects invalid image crop" {
 }
 
 ///|
+test "loader rejects invalid table structure" {
+  let diagnostics = load_error_diagnostics(
+    "examples/testdata/invalid-table.pptz.toml",
+  )
+  assert_true(has_diagnostic_code(diagnostics, "PZ060"))
+}
+
+///|
 fn load_error_diagnostics(path : String) -> Array[Diagnostic] {
   ignore(
     load_deck(path) catch {
