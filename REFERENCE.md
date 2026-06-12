@@ -295,22 +295,22 @@ Build `pptz` in this order:
    builder API. Keep MVP source features close to what that API can express
    directly.
    Current writer scope:
-   deck size, ordered pages, optional solid/gradient background, text elements,
-   rectangle/round-rectangle/ellipse and common preset shape elements,
-   solid/no-fill/gradient shape fills, alpha colors, solid and dashed shape
-   borders, raster image elements with `stretch`, `cover`, or `contain`, SVG
-   image elements, image crop rectangles, and basic theme color/text-style
+   deck size, ordered pages, optional solid/gradient background, text elements
+   with wrapping, rectangle/round-rectangle/ellipse and common preset shape
+   elements, solid/no-fill/gradient shape fills, alpha colors, solid and dashed
+   shape borders, raster image elements with `stretch`, `cover`, or `contain`,
+   SVG image elements, image crop rectangles, and basic theme color/text-style
    resolution with element-local overrides. Valid AST features outside this
    subset may fail as writer capability errors.
    MVP text styling follows the `moon-pptx@0.4.0` text builder surface:
-   `font_size`, `font_family`, `color`, `bold`, `italic`, and `line_height`.
-   `letter_spacing` may remain a schema/AST concept but is outside the MVP
-   writer scope.
+   `font_size`, `font_family`, `color`, `bold`, `italic`, `line_height`, and
+   `wrap`. `letter_spacing` may remain a schema/AST concept but is outside the
+   MVP writer scope.
    The MVP writer must not silently ignore declared fields that it cannot map
    to `moon-pptx`. Fail with a writer capability error instead.
    Current status: `writer.mbt` generates valid PPTX bytes for deck size,
-   ordered pages, optional solid/gradient backgrounds, text elements,
-   rectangle/round-rectangle/ellipse and common preset shape elements,
+   ordered pages, optional solid/gradient backgrounds, text elements with
+   wrapping, rectangle/round-rectangle/ellipse and common preset shape elements,
    solid/no-fill/gradient shape fills, alpha colors, solid and dashed shape
    borders, image elements with `stretch`, `cover`, `contain`, explicit crop,
    SVG pictures, and basic theme color/text-style resolution including
@@ -704,6 +704,9 @@ directly to `moon-pptx` text alignment and body anchor enums:
 - horizontal: `left`, `center`, `right`, `justify`, `justify_low`,
   `distributed`, `thai_distributed`
 - vertical: `top`, `center`, `bottom`, `justify`, `distributed`
+
+Text `wrap = true` maps to PowerPoint square wrapping, and `wrap = false` maps
+to no wrapping.
 
 `page_type` is optional non-semantic metadata for agents, templates, or humans.
 If present, it must be a string, but `pptz` does not restrict or warn on its

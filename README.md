@@ -68,7 +68,7 @@ The current writer supports:
 
 - explicit deck size and ordered page files;
 - optional solid or gradient page backgrounds;
-- text elements with theme text styles and local overrides;
+- text elements with theme text styles, local overrides, and text wrapping;
 - rectangle, rounded rectangle, ellipse, and common preset shapes;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or

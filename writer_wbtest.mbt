@@ -24,6 +24,7 @@ test "render minimal deck as pptx bytes" {
   assert_slide_xml_contains(prs, 3, "alpha val=\"80000\"")
   assert_slide_xml_contains(prs, 3, "prstDash val=\"dash\"")
   assert_slide_xml_contains(prs, 3, "spcPct val=\"115000\"")
+  assert_slide_xml_contains(prs, 3, "wrap=\"square\"")
 }
 
 ///|
@@ -111,6 +112,32 @@ test "writer maps common preset shape names" {
     let (_, xml_name) = item
     assert_slide_xml_contains(prs, 1, "prst=\"\{xml_name}\"")
   }
+}
+
+///|
+test "writer maps text wrap false" {
+  let loaded = unsupported_loaded(
+    page_with_element(
+      TextElement(test_base("nowrap"), TextContent::{
+        text: "No wrap",
+        style: None,
+        align: None,
+        wrap: Some(false),
+        font_size: None,
+        font_family: None,
+        color: None,
+        bold: None,
+        italic: None,
+      }),
+    ),
+  )
+  let bytes = render_pptx(loaded) catch {
+    err => abort("render failed: \{err}")
+  }
+  let prs = @presentation.Presentation::open(bytes) catch {
+    err => abort("open generated pptx failed: \{err}")
+  }
+  assert_slide_xml_contains(prs, 1, "wrap=\"none\"")
 }
 
 ///|

@@ -297,14 +297,38 @@ fn build_textbox(
     text_paragraph_properties(bundle, content, paragraph.properties),
   )
   let mut text_body = @slide.TextBody::of_paragraphs([paragraph])
+  let mut body_props = @slide.BodyProperties::default()
+  let mut has_body_props = false
   match content.align {
     None => ()
     Some(align) => {
-      let props = @slide.BodyProperties::{
-        ..@slide.BodyProperties::default(),
+      body_props = @slide.BodyProperties::{
+        ..body_props,
         anchor: Some(vertical_anchor(align.vertical)),
       }
-      text_body = @slide.TextBody::{ ..text_body, body_properties: Some(props) }
+      has_body_props = true
+    }
+  }
+  match content.wrap {
+    None => ()
+    Some(wrap) => {
+      body_props = @slide.BodyProperties::{
+        ..body_props,
+        wrap: Some(
+          if wrap {
+            @slide.WrapKind::WrapSquare
+          } else {
+            @slide.WrapKind::WrapNone
+          },
+        ),
+      }
+      has_body_props = true
+    }
+  }
+  if has_body_props {
+    text_body = @slide.TextBody::{
+      ..text_body,
+      body_properties: Some(body_props),
     }
   }
   @slide.AutoShape::textbox(

@@ -84,6 +84,7 @@ bounds = [130, 215, 420, 210]
 style = "$body"
 font_size = 22
 color = "$muted"
+wrap = true
 text = """
 Current writer support:
 rect, round_rect, ellipse,
