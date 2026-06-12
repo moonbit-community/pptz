@@ -70,7 +70,8 @@ Use these features for deliverable decks:
 
 - explicit deck size and ordered page files;
 - optional solid, gradient, or image page backgrounds;
-- text elements with theme text styles, local overrides, and text wrapping;
+- text elements with theme text styles, local overrides, text wrapping, and
+  line breaks;
 - PowerPoint preset auto-shapes, excluding line and connector presets;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or

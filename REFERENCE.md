@@ -296,12 +296,12 @@ Build `pptz` in this order:
    directly.
    Current writer scope:
    deck size, ordered pages, optional solid/gradient/image background, text
-   elements with wrapping, preset auto-shape elements excluding line and
-   connector presets, solid/no-fill/gradient shape fills, alpha colors, solid
-   and dashed shape borders, raster image elements with `stretch`, `cover`, or
-   `contain`, SVG image elements, image crop rectangles, and basic theme
-   color/text-style resolution with element-local overrides. Valid AST features
-   outside this subset may fail as writer capability errors.
+   elements with wrapping and line breaks, preset auto-shape elements excluding
+   line and connector presets, solid/no-fill/gradient shape fills, alpha
+   colors, solid and dashed shape borders, raster image elements with
+   `stretch`, `cover`, or `contain`, SVG image elements, image crop rectangles,
+   and basic theme color/text-style resolution with element-local overrides.
+   Valid AST features outside this subset may fail as writer capability errors.
    MVP text styling follows the `moon-pptx@0.4.0` text builder surface:
    `font_size`, `font_family`, `color`, `bold`, `italic`, `line_height`, and
    `wrap`. `letter_spacing` may remain a schema/AST concept but is outside the
@@ -310,12 +310,12 @@ Build `pptz` in this order:
    to `moon-pptx`. Fail with a writer capability error instead.
    Current status: `writer.mbt` generates valid PPTX bytes for deck size,
    ordered pages, optional solid/gradient/image backgrounds, text elements
-   with wrapping, preset auto-shape elements excluding line and connector
-   presets, solid/no-fill/gradient shape fills, alpha colors, solid and dashed
-   shape borders, image elements with `stretch`, `cover`, `contain`, explicit
-   crop, SVG pictures, and basic theme color/text-style resolution including
-   `line_height`. It returns capability errors for schema-valid features that
-   are still outside the implemented writer subset.
+   with wrapping and line breaks, preset auto-shape elements excluding line and
+   connector presets, solid/no-fill/gradient shape fills, alpha colors, solid
+   and dashed shape borders, image elements with `stretch`, `cover`, `contain`,
+   explicit crop, SVG pictures, and basic theme color/text-style resolution
+   including `line_height`. It returns capability errors for schema-valid
+   features that are still outside the implemented writer subset.
 
 Compiler Reliability status:
 

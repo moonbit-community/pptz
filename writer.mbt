@@ -327,7 +327,7 @@ fn build_textbox(
 ) -> @slide.AutoShape raise {
   let bounds = base.bounds
   let run_props = text_run_properties(bundle, content)
-  let mut paragraph = @slide.Paragraph::of_styled_text(content.text, run_props)
+  let mut paragraph = text_paragraph(content.text, run_props)
   match content.align {
     None => ()
     Some(align) =>
@@ -385,6 +385,46 @@ fn build_textbox(
   .with_text_body(text_body)
   .with_no_fill()
   .with_no_stroke()
+}
+
+///|
+fn text_paragraph(
+  text : String,
+  run_props : @slide.RunProperties,
+) -> @slide.Paragraph {
+  let paragraph_content = []
+  let mut first_line = true
+  for part in text.split("\n") {
+    if first_line {
+      first_line = false
+    } else {
+      paragraph_content.push(@slide.ParagraphContent::Break(run_props))
+    }
+    let line = part.to_owned()
+    if !line.is_empty() {
+      paragraph_content.push(
+        @slide.ParagraphContent::RunContent(@slide.Run::{
+          text: line,
+          properties: run_props,
+          extension: [],
+        }),
+      )
+    }
+  }
+  if paragraph_content.is_empty() {
+    paragraph_content.push(
+      @slide.ParagraphContent::RunContent(@slide.Run::{
+        text,
+        properties: run_props,
+        extension: [],
+      }),
+    )
+  }
+  @slide.Paragraph::{
+    content: paragraph_content,
+    properties: @slide.ParagraphProperties::default(),
+    extension: [],
+  }
 }
 
 ///|
