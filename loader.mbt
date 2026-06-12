@@ -436,7 +436,18 @@ fn validate_element(
       validate_image_crop(page_path, base.id, spec.crop, errors)
       validate_image_source_size(bundle, page_path, base.id, spec, errors)
     }
-    IconElement(base, spec) =>
+    IconElement(base, spec) => {
+      if spec.name.is_blank() {
+        errors.push(
+          error_diagnostic(
+            "PZ040",
+            "icon name must not be empty",
+            path=page_path,
+            element_id=base.id,
+            field="elements.content.name",
+          ),
+        )
+      }
       match spec.fill {
         None | Some(NoFill) => ()
         Some(SolidFill(color)) =>
@@ -458,6 +469,7 @@ fn validate_element(
             errors,
           )
       }
+    }
     ConnectorElement(id, spec) => {
       match spec.stroke {
         None => ()

@@ -75,6 +75,8 @@ The current writer supports:
   arrowheads;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
 - outer shadows for shape and connector elements;
+- built-in icon elements for `cube`, `circle`, `square`, `star`, `heart`, and
+  `plus`, with optional `fas:`-style prefixes;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
 - image crop rectangles;
@@ -82,9 +84,9 @@ The current writer supports:
   `moon-pptx`.
 
 Schema-valid features outside this scope fail with a writer capability error
-instead of being silently ignored. This includes icon/table/chart elements,
-`letter_spacing`, unsupported connector kinds, line/connector shape presets,
-and unsupported shape names.
+instead of being silently ignored. This includes table/chart elements,
+`letter_spacing`, unsupported icon names, unsupported connector kinds,
+line/connector shape presets, and unsupported shape names.
 
 ## Example
 

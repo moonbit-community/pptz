@@ -253,7 +253,7 @@ test "parse minimal shapes page" {
   let page = parse_page_toml(source) catch {
     err => abort("parse page failed: \{err}")
   }
-  assert_eq(page.elements.length(), 8)
+  assert_eq(page.elements.length(), 9)
   match page.elements[1] {
     ShapeElement(base, spec) => {
       assert_eq(base.id, "panel")
@@ -300,6 +300,13 @@ test "parse minimal shapes page" {
       }
     }
     _ => abort("expected connector element")
+  }
+  match page.elements[6] {
+    IconElement(base, spec) => {
+      assert_eq(base.id, "cube_icon")
+      assert_eq(spec.name, "fas:cube")
+    }
+    _ => abort("expected icon element")
   }
 }
 

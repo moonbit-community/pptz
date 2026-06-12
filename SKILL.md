@@ -77,14 +77,17 @@ Use these features for deliverable decks:
   arrowheads;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
 - outer shadows for shape and connector elements;
+- built-in icon elements for `cube`, `circle`, `square`, `star`, `heart`, and
+  `plus`, with optional `fas:`-style prefixes;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
 - image crop rectangles;
 - SVG image elements.
 
 Do not use these in deliverable decks until `pptz` implements them in the
-writer: icon/table/chart elements, `letter_spacing`, line/connector shape
-presets, unsupported connector kinds, or unsupported shape names.
+writer: table/chart elements, `letter_spacing`, unsupported icon names,
+line/connector shape presets, unsupported connector kinds, or unsupported
+shape names.
 
 ## Important Notes
 

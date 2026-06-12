@@ -299,10 +299,11 @@ Build `pptz` in this order:
    elements with wrapping and line breaks, preset auto-shape elements excluding
    line and connector presets, straight connector elements, solid/no-fill/
    gradient shape fills, alpha colors, solid and dashed shape borders, outer
-   shadows for shape and connector elements, raster image elements with
-   `stretch`, `cover`, or `contain`, SVG image elements, image crop rectangles,
-   and basic theme color/text-style resolution with element-local overrides.
-   Valid AST features outside this subset may fail as writer capability errors.
+   shadows for shape and connector elements, built-in icon elements, raster
+   image elements with `stretch`, `cover`, or `contain`, SVG image elements,
+   image crop rectangles, and basic theme color/text-style resolution with
+   element-local overrides. Valid AST features outside this subset may fail as
+   writer capability errors.
    MVP text styling follows the `moon-pptx@0.4.0` text builder surface:
    `font_size`, `font_family`, `color`, `bold`, `italic`, `line_height`, and
    `wrap`. `letter_spacing` may remain a schema/AST concept but is outside the
@@ -314,11 +315,11 @@ Build `pptz` in this order:
    with wrapping and line breaks, preset auto-shape elements excluding line and
    connector presets, straight connectors with coordinate or element endpoints,
    solid/no-fill/gradient shape fills, alpha colors, solid and dashed shape
-   borders, outer shadows for shape and connector elements, image elements with
-   `stretch`, `cover`, `contain`, explicit crop, SVG pictures, and basic theme
-   color/text-style resolution including `line_height`. It returns capability
-   errors for schema-valid features that are still outside the implemented
-   writer subset.
+   borders, outer shadows for shape and connector elements, built-in icon
+   elements, image elements with `stretch`, `cover`, `contain`, explicit crop,
+   SVG pictures, and basic theme color/text-style resolution including
+   `line_height`. It returns capability errors for schema-valid features that
+   are still outside the implemented writer subset.
 
 Compiler Reliability status:
 
@@ -363,7 +364,8 @@ Errors block PPTX generation:
 - Every page reference must resolve to a page.
 - Element ids must be unique within a page.
 - Bounds width and height must not be negative.
-- Image, background, and icon asset paths must not be empty.
+- Image and background asset paths must not be empty.
+- Icon names must not be empty.
 - Referenced local image assets must exist and must be files, not directories.
 - Remote asset URLs are not allowed. Agents must download or generate assets
   into the deck directory before referencing them.
@@ -606,8 +608,8 @@ metadata. Type-specific fields live under `[elements.content]`.
 
 Allowed element types: `text`, `shape`, `image`, `icon`, `table`, `chart`.
 Allowed background types: `solid`, `gradient`, `image`.
-`icon`, `table`, and `chart` are allowed schema/AST concepts but are outside
-the MVP writer scope unless later implementation work explicitly adds them.
+`table` and `chart` are allowed schema/AST concepts but are outside the MVP
+writer scope unless later implementation work explicitly adds them.
 MVP shape content supports PowerPoint preset auto-shapes by canonical `pptz`
 snake_case names. Examples include `rect`, `round_rect`, `ellipse`, `diamond`,
 `right_arrow`, `flow_chart_process`, `action_button_home`, `round2_diag_rect`,
@@ -657,6 +659,11 @@ The current writer supports outer shadows for shape and connector elements.
 Opacity/alpha is a shared color, fill, stroke, and text capability rather than
 an effect. `pptz` should not expose the full `moon-pptx` `EffectList` surface
 in the first v2 slice.
+
+The current writer supports built-in icon elements by mapping `icon.name` to a
+small set of PowerPoint preset shapes. Supported names are `cube`, `circle`,
+`square`, `star`, `heart`, and `plus`; names may also use a prefix such as
+`fas:cube`. Unknown icon names are writer capability errors.
 
 Planned v2 table semantics have a canonical table form based on PowerPoint
 table concepts: rows, cells, merge spans, cell fills, cell borders, cell

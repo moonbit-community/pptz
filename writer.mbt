@@ -129,7 +129,7 @@ fn connector_shape_bounds(elements : Array[Element]) -> Map[String, Bounds] {
   let result = Map([], capacity=elements.length())
   for element in elements {
     match element {
-      TextElement(base, _) | ShapeElement(base, _) =>
+      TextElement(base, _) | ShapeElement(base, _) | IconElement(base, _) =>
         result[base.id] = base.bounds
       _ => ()
     }
@@ -211,8 +211,15 @@ fn build_shape(
       )
     ImageElement(_, _) =>
       raise WriteError::Capability("internal image dispatch error")
-    IconElement(_, _) =>
-      raise WriteError::Capability("icon elements are not implemented")
+    IconElement(base, spec) =>
+      @slide.AutoShape(
+        build_icon_shape(
+          bundle,
+          base,
+          spec,
+          require_shape_id(shape_ids, base.id),
+        ),
+      )
     TableElement(_) =>
       raise WriteError::Capability("table elements are not implemented")
     ChartElement(_) =>
@@ -532,6 +539,77 @@ fn build_auto_shape(
       }
   }
   shape
+}
+
+///|
+fn build_icon_shape(
+  bundle : DeckBundle,
+  base : ElementBase,
+  spec : IconSpec,
+  shape_id : Int,
+) -> @slide.AutoShape raise {
+  let bounds = base.bounds
+  let mut shape = build_preset_shape(
+    base,
+    bounds,
+    shape_id,
+    icon_preset_shape(spec.name),
+  )
+  shape = shape.with_no_stroke()
+  match spec.fill {
+    None => shape = shape.with_fill(SolidFill(resolve_color(bundle, "#000000")))
+    Some(NoFill) => shape = shape.with_no_fill()
+    Some(SolidFill(color)) =>
+      shape = shape.with_fill(SolidFill(resolve_color(bundle, color)))
+    Some(GradientFill(gradient)) =>
+      shape = shape.with_fill(to_gradient_fill(bundle, gradient))
+  }
+  shape
+}
+
+///|
+fn icon_preset_shape(name : String) -> @slide.PresetShape raise {
+  match icon_local_name(name) {
+    "cube" => @slide.PresetShape::Cube
+    "circle" => @slide.PresetShape::Ellipse
+    "square" => @slide.PresetShape::Rect
+    "star" => @slide.PresetShape::Star5
+    "heart" => @slide.PresetShape::Heart
+    "plus" => @slide.PresetShape::Plus
+    _ =>
+      raise WriteError::Capability(
+        "icon '\{name}' is not implemented; supported icon names: cube, circle, square, star, heart, plus",
+      )
+  }
+}
+
+///|
+fn icon_local_name(name : String) -> String raise {
+  if name.is_empty() {
+    raise WriteError::Capability("icon name must not be empty")
+  }
+  let prefix = []
+  let local_chars = []
+  let mut colon_count = 0
+  for char in name {
+    if char == ':' {
+      colon_count += 1
+    } else if colon_count == 0 {
+      prefix.push(char)
+    } else if colon_count == 1 {
+      local_chars.push(char)
+    }
+  }
+  match colon_count {
+    0 => name
+    1 =>
+      if prefix.is_empty() || local_chars.is_empty() {
+        raise WriteError::Capability("icon '\{name}' must use prefix:name")
+      } else {
+        String::from_iter(local_chars.iter())
+      }
+    _ => raise WriteError::Capability("icon '\{name}' must use prefix:name")
+  }
 }
 
 ///|

@@ -57,6 +57,6 @@ test "compile command reports writer capability errors" {
   )
   assert_eq(response.exit_code, 1)
   assert_eq(response.stdout, "")
-  assert_true(response.stderr.contains("icon elements"))
+  assert_true(response.stderr.contains("icon 'fas:dragon'"))
   assert_false(@miniio.exists(output) catch { _ => false })
 }

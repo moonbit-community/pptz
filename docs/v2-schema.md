@@ -121,6 +121,28 @@ fit = "contain"
 
 The schema does not accept a user-provided raster fallback for SVG.
 
+## Icon Element
+
+The current writer supports a small built-in icon set by mapping icon names to
+PowerPoint preset shapes. Supported names are `cube`, `circle`, `square`,
+`star`, `heart`, and `plus`; names may also use a prefix such as `fas:cube`.
+
+```toml
+[[elements]]
+id = "cube_icon"
+type = "icon"
+bounds = [80, 80, 80, 80]
+
+[elements.content]
+name = "fas:cube"
+
+[elements.content.fill]
+type = "solid"
+color = "$accent"
+```
+
+Unknown icon names are writer capability errors.
+
 ## Shape Element
 
 Shape subtypes expand toward the `moon-pptx` preset-shape surface. User-facing

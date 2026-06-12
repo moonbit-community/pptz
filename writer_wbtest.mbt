@@ -26,9 +26,32 @@ test "render minimal deck as pptx bytes" {
   assert_slide_xml_contains(prs, 3, "<p:cxnSp>")
   assert_slide_xml_contains(prs, 3, "<a:tailEnd type=\"triangle\"")
   assert_slide_xml_contains(prs, 3, "<a:outerShdw")
+  assert_slide_xml_contains(prs, 3, "name=\"cube_icon\"")
+  assert_slide_xml_contains(prs, 3, "prst=\"cube\"")
   assert_slide_xml_contains(prs, 3, "spcPct val=\"115000\"")
   assert_slide_xml_contains(prs, 3, "wrap=\"square\"")
   assert_slide_xml_contains(prs, 3, "<a:br>")
+}
+
+///|
+test "writer renders icon elements" {
+  let loaded = unsupported_loaded(
+    page_with_element(
+      IconElement(test_base("icon"), IconSpec::{
+        name: "fas:cube",
+        fill: Some(SolidFill("#F59E0B")),
+      }),
+    ),
+  )
+  let bytes = render_pptx(loaded) catch {
+    err => abort("render failed: \{err}")
+  }
+  let prs = @presentation.Presentation::open(bytes) catch {
+    err => abort("open generated pptx failed: \{err}")
+  }
+  assert_slide_xml_contains(prs, 1, "name=\"icon\"")
+  assert_slide_xml_contains(prs, 1, "prst=\"cube\"")
+  assert_slide_xml_contains(prs, 1, "val=\"F59E0B\"")
 }
 
 ///|
@@ -47,12 +70,7 @@ test "writer preserves existing output when render fails" {
   let failing = unsupported_loaded(Page::{
     page_type: None,
     background: None,
-    elements: [
-      IconElement(test_base("icon"), IconSpec::{
-        name: "fas:cube",
-        fill: Some(SolidFill("#F59E0B")),
-      }),
-    ],
+    elements: [TableElement(test_base("table"))],
   })
   ignore(
     write_pptx_file(failing, output) catch {
@@ -177,12 +195,12 @@ test "writer reports capability errors for unsupported schema-valid features" {
     unsupported_loaded(
       page_with_element(
         IconElement(test_base("icon"), IconSpec::{
-          name: "fas:cube",
+          name: "fas:dragon",
           fill: Some(SolidFill("#F59E0B")),
         }),
       ),
     ),
-    "icon elements",
+    "icon 'fas:dragon'",
   )
   expect_capability(
     unsupported_loaded(page_with_element(TableElement(test_base("table")))),
