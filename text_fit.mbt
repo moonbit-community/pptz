@@ -10,7 +10,10 @@ fn estimate_text_fit(
   bounds : Bounds,
   content : TextContent,
 ) -> TextFitEstimate {
-  let font_size = resolved_text_font_size(bundle, content)
+  let font_size = match resolve_text_properties(bundle, content).font_size {
+    Some(size) => size
+    None => 18.0
+  }
   let font_px = font_size / 72.0 * 96.0
   let line_height = font_px * 1.1
   let mut line_count = 0
@@ -76,36 +79,5 @@ fn char_width_factor(char : Char) -> Double {
     }
   } else {
     1.0
-  }
-}
-
-///|
-fn resolved_text_font_size(
-  bundle : DeckBundle,
-  content : TextContent,
-) -> Double {
-  match content.font_size {
-    Some(size) => size
-    None =>
-      match content.style {
-        None => 18.0
-        Some(style_token) =>
-          match token_name(style_token) {
-            None => 18.0
-            Some(name) =>
-              match bundle.deck.theme {
-                None => 18.0
-                Some(theme) =>
-                  match theme.text_styles.get(name) {
-                    Some(style) =>
-                      match style.font_size {
-                        Some(size) => size
-                        None => 18.0
-                      }
-                    None => 18.0
-                  }
-              }
-          }
-      }
   }
 }

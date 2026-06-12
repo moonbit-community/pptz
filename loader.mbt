@@ -152,6 +152,16 @@ fn validate_bundle(
   errors : Array[Diagnostic],
   warnings : Array[Diagnostic],
 ) -> Unit {
+  validate_deck_definition(bundle, errors)
+  validate_theme(bundle.deck, bundle.deck_path, errors)
+  validate_pages(bundle, errors, warnings)
+}
+
+///|
+fn validate_deck_definition(
+  bundle : DeckBundle,
+  errors : Array[Diagnostic],
+) -> Unit {
   if bundle.deck.size.width <= 0.0 || bundle.deck.size.height <= 0.0 {
     errors.push(
       error_diagnostic(
@@ -172,7 +182,14 @@ fn validate_bundle(
       ),
     )
   }
-  validate_theme(bundle.deck, bundle.deck_path, errors)
+}
+
+///|
+fn validate_pages(
+  bundle : DeckBundle,
+  errors : Array[Diagnostic],
+  warnings : Array[Diagnostic],
+) -> Unit {
   for resolved_page in bundle.pages {
     validate_page(bundle, resolved_page, errors, warnings)
   }
@@ -796,17 +813,7 @@ fn resolve_existing_asset_path(
   bundle : DeckBundle,
   asset_path : String,
 ) -> String? {
-  match resolve_source_path(bundle.deck_dir, asset_path) {
-    None => None
-    Some(full_path) => {
-      let full_path_text = full_path.to_string()
-      if (@miniio.is_file(full_path_text) catch { _ => false }) {
-        Some(full_path_text)
-      } else {
-        None
-      }
-    }
-  }
+  resolve_existing_source_file(bundle.deck_dir, asset_path)
 }
 
 ///|
@@ -819,97 +826,4 @@ fn element_base(element : Element) -> ElementBase {
     TableElement(base) => base
     ChartElement(base) => base
   }
-}
-
-///|
-fn normal_path(value : String) -> @path.Path {
-  let path : @path.Path = value
-  path.normalize()
-}
-
-///|
-fn resolve_source_path(base : @path.Path, value : String) -> @path.Path? {
-  let relative : @path.Path = value
-  if relative.is_absolute() || value.is_blank() {
-    return None
-  }
-  let full_path = base.join(relative).normalize()
-  let rel_text = full_path.relative(base~).to_string()
-  if rel_text == ".." ||
-    rel_text.has_prefix("../") ||
-    rel_text.has_prefix("..\\") {
-    None
-  } else {
-    Some(full_path)
-  }
-}
-
-///|
-fn token_name(value : String) -> String? {
-  match value.strip_prefix("$") {
-    None => None
-    Some(name_view) => {
-      let name = name_view.to_owned()
-      if is_identifier(name) {
-        Some(name)
-      } else {
-        None
-      }
-    }
-  }
-}
-
-///|
-fn is_hex_color(value : String) -> Bool {
-  guard value.length() == 7 || value.length() == 9 else { return false }
-  guard value.get_char(0) == Some('#') else { return false }
-  for index in 1..<value.length() {
-    match value.get_char(index) {
-      Some(char) => if !char.is_ascii_hexdigit() { return false }
-      None => return false
-    }
-  }
-  true
-}
-
-///|
-fn is_identifier(value : String) -> Bool {
-  guard !value.is_empty() else { return false }
-  let mut index = 0
-  for char in value.iter() {
-    if index == 0 {
-      if !char.is_ascii_alphabetic() {
-        return false
-      }
-    } else if !(char.is_ascii_alphabetic() ||
-      char.is_ascii_digit() ||
-      char == '_' ||
-      char == '-') {
-      return false
-    }
-    index += 1
-  }
-  true
-}
-
-///|
-fn error_diagnostic(
-  code : String,
-  message : String,
-  path? : String,
-  element_id? : String,
-  field? : String,
-) -> Diagnostic {
-  Diagnostic::{ severity: Error, code, message, path, element_id, field }
-}
-
-///|
-fn warning_diagnostic(
-  code : String,
-  message : String,
-  path? : String,
-  element_id? : String,
-  field? : String,
-) -> Diagnostic {
-  Diagnostic::{ severity: Warning, code, message, path, element_id, field }
 }

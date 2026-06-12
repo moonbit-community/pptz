@@ -275,19 +275,7 @@ fn parse_element_table(
   path : String,
 ) -> Element raise {
   let kind = required_string(table, "\{path}.type", key="type")
-  match kind {
-    "text" =>
-      reject_unknown_fields(table, path, ["id", "type", "bounds", "content"])
-    "shape" =>
-      reject_unknown_fields(table, path, ["id", "type", "bounds", "content"])
-    "image" =>
-      reject_unknown_fields(table, path, ["id", "type", "bounds", "content"])
-    "icon" =>
-      reject_unknown_fields(table, path, ["id", "type", "bounds", "content"])
-    "table" => reject_unknown_fields(table, path, ["id", "type", "bounds"])
-    "chart" => reject_unknown_fields(table, path, ["id", "type", "bounds"])
-    _ => fail("\{path}.type: unsupported element type '\{kind}'")
-  }
+  reject_unknown_element_fields(table, path, kind)
   let base = ElementBase::{
     id: required_string(table, "\{path}.id", key="id"),
     bounds: parse_bounds(
@@ -295,43 +283,84 @@ fn parse_element_table(
       "\{path}.bounds",
     ),
   }
+  parse_element_content(kind, base, table, path)
+}
+
+///|
+fn reject_unknown_element_fields(
+  table : Map[String, @toml.TomlValue],
+  path : String,
+  kind : String,
+) -> Unit raise {
   match kind {
-    "text" =>
-      TextElement(
-        base,
-        parse_text_content(
-          required_table(table, "\{path}.content", key="content"),
-          "\{path}.content",
-        ),
-      )
-    "shape" =>
-      ShapeElement(
-        base,
-        parse_shape_spec(
-          required_table(table, "\{path}.content", key="content"),
-          "\{path}.content",
-        ),
-      )
-    "image" =>
-      ImageElement(
-        base,
-        parse_image_spec(
-          required_table(table, "\{path}.content", key="content"),
-          "\{path}.content",
-        ),
-      )
-    "icon" =>
-      IconElement(
-        base,
-        parse_icon_spec(
-          required_table(table, "\{path}.content", key="content"),
-          "\{path}.content",
-        ),
-      )
+    "text" | "shape" | "image" | "icon" =>
+      reject_unknown_fields(table, path, ["id", "type", "bounds", "content"])
+    "table" | "chart" =>
+      reject_unknown_fields(table, path, ["id", "type", "bounds"])
+    _ => fail("\{path}.type: unsupported element type '\{kind}'")
+  }
+}
+
+///|
+fn parse_element_content(
+  kind : String,
+  base : ElementBase,
+  table : Map[String, @toml.TomlValue],
+  path : String,
+) -> Element raise {
+  match kind {
+    "text" => TextElement(base, parse_required_text_content(table, path))
+    "shape" => ShapeElement(base, parse_required_shape_spec(table, path))
+    "image" => ImageElement(base, parse_required_image_spec(table, path))
+    "icon" => IconElement(base, parse_required_icon_spec(table, path))
     "table" => TableElement(base)
     "chart" => ChartElement(base)
     kind => fail("\{path}.type: unsupported element type '\{kind}'")
   }
+}
+
+///|
+fn parse_required_text_content(
+  table : Map[String, @toml.TomlValue],
+  path : String,
+) -> TextContent raise {
+  parse_text_content(
+    required_table(table, "\{path}.content", key="content"),
+    "\{path}.content",
+  )
+}
+
+///|
+fn parse_required_shape_spec(
+  table : Map[String, @toml.TomlValue],
+  path : String,
+) -> ShapeSpec raise {
+  parse_shape_spec(
+    required_table(table, "\{path}.content", key="content"),
+    "\{path}.content",
+  )
+}
+
+///|
+fn parse_required_image_spec(
+  table : Map[String, @toml.TomlValue],
+  path : String,
+) -> ImageSpec raise {
+  parse_image_spec(
+    required_table(table, "\{path}.content", key="content"),
+    "\{path}.content",
+  )
+}
+
+///|
+fn parse_required_icon_spec(
+  table : Map[String, @toml.TomlValue],
+  path : String,
+) -> IconSpec raise {
+  parse_icon_spec(
+    required_table(table, "\{path}.content", key="content"),
+    "\{path}.content",
+  )
 }
 
 ///|

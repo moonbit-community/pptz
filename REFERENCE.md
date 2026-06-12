@@ -294,12 +294,12 @@ Build `pptz` in this order:
    The MVP capability baseline is the observed `t-ujiie-g/moon-pptx@0.4.0`
    builder API. Keep MVP source features close to what that API can express
    directly.
-   MVP writer scope:
+   Current writer scope:
    deck size, ordered pages, optional solid background, text elements,
-   rectangle/ellipse shape elements, raster image elements stretched to their
-   bounds, and basic theme
-   color/text-style resolution with element-local overrides. Valid AST features
-   outside this MVP subset may fail as writer capability errors.
+   rectangle/ellipse shape elements, raster image elements with `stretch`,
+   `cover`, or `contain`, SVG image elements, image crop rectangles, and basic
+   theme color/text-style resolution with element-local overrides. Valid AST
+   features outside this subset may fail as writer capability errors.
    MVP text styling follows the `moon-pptx@0.4.0` `RunProperties` builder
    surface: `font_size`, `font_family`, `color`, `bold`, and `italic`.
    `letter_spacing` and `line_height` may remain schema/AST concepts but are
@@ -308,9 +308,10 @@ Build `pptz` in this order:
    to `moon-pptx`. Fail with a writer capability error instead.
    Current status: `writer.mbt` generates valid PPTX bytes for deck size,
    ordered pages, optional solid backgrounds, text elements, rectangle/ellipse
-   shape elements, stretch image elements, and basic theme color/text-style
-   resolution. It returns capability errors for schema-valid features that are
-   still outside the implemented writer subset.
+   shape elements, image elements with `stretch`, `cover`, `contain`, explicit
+   crop, SVG pictures, and basic theme color/text-style resolution. It returns
+   capability errors for schema-valid features that are still outside the
+   implemented writer subset.
 
 Compiler Reliability status:
 
@@ -318,13 +319,11 @@ Compiler Reliability status:
   PPTX at the final output path.
 - CLI contract coverage includes success, argument failures, and a
   representative writer capability failure.
-- Unsupported schema-valid writer features remain capability errors; this slice
-  does not expand visual expressiveness.
+- Unsupported schema-valid writer features remain capability errors.
 - Writer tests cover representative capability errors for unsupported features.
 - OpenXML package smoke checks are part of the writer test gate.
 - `examples/minimal` is the single maintained current-capabilities regression
   example.
-- Warning-policy expansion remains outside this slice.
 - Agent-facing documentation is synchronized with the current writer scope.
 
 Do not add a `format` command. Formatting TOML is outside `pptz`; `pptz`
@@ -371,13 +370,13 @@ Warnings allow generation but indicate potentially surprising `pptz` semantics:
 - Element bounds width or height is zero.
 - Text element content is empty or whitespace-only.
 
-The first loader warning set is limited to `PZ100`, `PZ101`, and `PZ102`. Do not
-add authoring-quality or design-taste warnings.
 `PZ100` is emitted when
 `x < 0 || y < 0 || x + width > deck.width || y + height > deck.height`.
 An element may produce multiple warnings.
 `PZ102` uses MoonBit's library-provided trim behavior or equivalent standard
 string trimming. Do not define a custom whitespace character set.
+`PZ103` is an estimated visibility warning, not a full PowerPoint layout engine.
+It should catch obvious text overflow without judging slide content quality.
 
 Negative `x` or `y` bounds are allowed and may produce an outside-canvas
 warning. Negative `width` or `height` bounds are errors.
@@ -388,8 +387,9 @@ The loader should not warn on element overlap. Overlap is often an intentional
 presentation technique and would create noisy warnings without a separate
 element role or layer model.
 
-The loader should not inspect image dimensions or parse image file contents.
-It should not download remote assets.
+The loader inspects image dimensions only when needed for PPTX generation
+preconditions such as `cover` or `contain` fit. It should not download remote
+assets.
 The loader should not judge table layout quality, chart data reasonableness,
 color contrast, gradient stop order, or other authoring choices that are not
 required to construct the PPTX.
@@ -641,13 +641,12 @@ The first chart slice uses inline chart data in page TOML. External CSV, TOML,
 or spreadsheet-backed chart data is outside the first v2 chart slice.
 
 Image `fit` values are `stretch`, `cover`, or `contain`. Omitted `fit` defaults
-to `stretch`. The MVP writer maps raster image elements with `stretch` directly
-to `moon-pptx` picture bounds; `cover` and `contain` may fail as writer
-capability errors until implemented.
+to `stretch`. The writer maps `stretch` directly to the requested bounds, uses
+intrinsic image size for `cover` and `contain`, and supports SVG pictures.
 
-Planned v2 image semantics: `cover` and `contain` use the image asset's
-intrinsic size to preserve aspect ratio automatically. Explicit crop rectangles
-use edge insets, not pixel rectangles:
+`cover` and `contain` use the image asset's intrinsic size to preserve aspect
+ratio automatically. Explicit crop rectangles use edge insets, not pixel
+rectangles:
 
 ```toml
 [elements.content.crop]
@@ -669,10 +668,11 @@ computes the aspect-ratio-preserving fit from that cropped region into the
 element bounds. Explicit crop values therefore narrow the source image before
 automatic fitting; they do not replace the fit mode.
 
-SVG pictures are allowed in the planned v2 image slice. They use the SVG asset
-directly; `pptz` does not support or require a raster fallback image for SVG.
+SVG pictures use the SVG asset directly. `pptz` does not support or require a
+user-provided raster fallback image for SVG; the writer supplies the
+backend-required fallback internally.
 
-MVP image element content uses a deck-relative raster image path:
+Image element content uses a deck-relative image path:
 
 ```toml
 [[elements]]

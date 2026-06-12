@@ -19,18 +19,27 @@ pub fn render_pptx(loaded : LoadedDeck) -> FixedArray[Byte] raise {
     err => raise WriteError::Backend("cannot set slide size: \{err}")
   }
   for index, resolved_page in loaded.bundle.pages {
-    let _ = prs.add_blank_typed_slide_mut().finish_mut() catch {
-        err => raise WriteError::Backend("cannot add slide: \{err}")
-      }
-    let slide = build_slide(loaded.bundle, resolved_page) catch {
-      err => raise err
-    }
-    prs.update_slide_mut(index, slide) catch {
-      err => raise WriteError::Backend("cannot update slide \{index}: \{err}")
-    }
-    add_page_images(prs, index, loaded.bundle, resolved_page)
+    render_page_mut(prs, index, loaded.bundle, resolved_page)
   }
   prs.save()
+}
+
+///|
+fn render_page_mut(
+  prs : @presentation.Presentation,
+  slide_index : Int,
+  bundle : DeckBundle,
+  resolved_page : ResolvedPage,
+) -> Unit raise {
+  let _ = prs.add_blank_typed_slide_mut().finish_mut() catch {
+      err => raise WriteError::Backend("cannot add slide: \{err}")
+    }
+  let slide = build_slide(bundle, resolved_page) catch { err => raise err }
+  prs.update_slide_mut(slide_index, slide) catch {
+    err =>
+      raise WriteError::Backend("cannot update slide \{slide_index}: \{err}")
+  }
+  add_page_images(prs, slide_index, bundle, resolved_page)
 }
 
 ///|
@@ -153,7 +162,32 @@ fn add_image(
     spec.crop,
   )
   let bounds = placement.bounds
-  if is_svg_path(spec.path) {
+  let shape_index = add_picture_shape_mut(
+    prs,
+    slide_index,
+    spec.path,
+    image_bytes,
+    bounds,
+  )
+  apply_picture_crop_at(
+    prs,
+    slide_index,
+    shape_index,
+    placement.crop,
+    spec.path,
+  )
+}
+
+///|
+fn add_picture_shape_mut(
+  prs : @presentation.Presentation,
+  slide_index : Int,
+  path : String,
+  image_bytes : FixedArray[Byte],
+  bounds : Bounds,
+) -> Int raise {
+  let shape_index = last_shape_index(prs, slide_index) + 1
+  if is_svg_path(path) {
     prs.add_svg_picture_mut(
       slide_index,
       image_bytes,
@@ -163,8 +197,7 @@ fn add_image(
       to_emu(bounds.width),
       to_emu(bounds.height),
     ) catch {
-      err =>
-        raise WriteError::Backend("cannot add SVG image '\{spec.path}': \{err}")
+      err => raise WriteError::Backend("cannot add SVG image '\{path}': \{err}")
     }
   } else {
     prs.add_picture_mut(
@@ -175,17 +208,17 @@ fn add_image(
       to_emu(bounds.width),
       to_emu(bounds.height),
     ) catch {
-      err =>
-        raise WriteError::Backend("cannot add image '\{spec.path}': \{err}")
+      err => raise WriteError::Backend("cannot add image '\{path}': \{err}")
     }
   }
-  apply_last_picture_crop(prs, slide_index, placement.crop, spec.path)
+  shape_index
 }
 
 ///|
-fn apply_last_picture_crop(
+fn apply_picture_crop_at(
   prs : @presentation.Presentation,
   slide_index : Int,
+  shape_index : Int,
   crop : CropRect?,
   path : String,
 ) -> Unit raise {
@@ -196,7 +229,6 @@ fn apply_last_picture_crop(
         err => raise WriteError::Backend("cannot read slides: \{err}")
       }
       let slide = slides[slide_index]
-      let shape_index = slide.shapes.length() - 1
       let shape = match slide.shapes[shape_index] {
         @slide.Picture(picture) =>
           @slide.Shape::Picture(
@@ -226,6 +258,17 @@ fn apply_last_picture_crop(
       }
     }
   }
+}
+
+///|
+fn last_shape_index(
+  prs : @presentation.Presentation,
+  slide_index : Int,
+) -> Int raise {
+  let slides = prs.slides() catch {
+    err => raise WriteError::Backend("cannot read slides: \{err}")
+  }
+  slides[slide_index].shapes.length() - 1
 }
 
 ///|
@@ -325,61 +368,31 @@ fn text_run_properties(
   content : TextContent,
 ) -> @slide.RunProperties raise {
   let mut props = @slide.RunProperties::default()
-  let theme_style = match content.style {
-    None => None
-    Some(style_token) => lookup_text_style(bundle, style_token)
-  }
-  let font_size = option_or(content.font_size, style_font_size(theme_style))
-  match font_size {
+  let text = resolve_text_properties(bundle, content)
+  match text.font_size {
     None => ()
     Some(size) => props = props.with_font_size(@units.Pt(size))
   }
-  let font_family = option_or(
-    content.font_family,
-    style_font_family(theme_style),
-  )
-  match font_family {
+  match text.font_family {
     None => ()
     Some(family) => props = props.with_font(family)
   }
-  let color = option_or(content.color, style_color(theme_style))
-  match color {
+  match text.color {
     None => ()
     Some(color) => props = props.with_color(resolve_rgb(bundle, color))
   }
-  let bold = option_or(content.bold, style_bold(theme_style))
-  if bold == Some(true) {
+  if text.bold == Some(true) {
     props = props.with_bold()
   }
-  let italic = option_or(content.italic, style_italic(theme_style))
-  if italic == Some(true) {
+  if text.italic == Some(true) {
     props = props.with_italic()
   }
-  match theme_style {
-    Some(style) =>
-      if style.line_height is Some(_) || style.letter_spacing is Some(_) {
-        raise WriteError::Capability(
-          "line_height and letter_spacing are not implemented by the MVP writer",
-        )
-      }
-    None => ()
+  if text.line_height is Some(_) || text.letter_spacing is Some(_) {
+    raise WriteError::Capability(
+      "line_height and letter_spacing are not implemented by the MVP writer",
+    )
   }
   props
-}
-
-///|
-fn lookup_text_style(
-  bundle : DeckBundle,
-  style_token : String,
-) -> TextStyle? raise {
-  match token_name_for_writer(style_token) {
-    None => raise WriteError::Capability("text style must be a theme token")
-    Some(name) =>
-      match bundle.deck.theme {
-        None => None
-        Some(theme) => theme.text_styles.get(name)
-      }
-  }
 }
 
 ///|
@@ -389,7 +402,7 @@ fn resolve_color(bundle : DeckBundle, color : String) -> @oxml.Color raise {
 
 ///|
 fn resolve_rgb(bundle : DeckBundle, color : String) -> @units.RgbColor raise {
-  let color = match token_name_for_writer(color) {
+  let color = match token_name_unchecked(color) {
     None => color
     Some(name) =>
       match bundle.deck.theme {
@@ -469,13 +482,6 @@ fn to_emu(value : Double) -> @units.Emu {
 }
 
 ///|
-fn source_full_path(base : String, value : String) -> @path.Path {
-  let base_path : @path.Path = base
-  let relative : @path.Path = value
-  base_path.join(relative).normalize()
-}
-
-///|
 fn ensure_parent_dir(output_path : String) -> Unit raise {
   let path : @path.Path = output_path
   let parent = path.dirname().to_string()
@@ -517,61 +523,5 @@ fn output_temp_path(output_path : String) -> String raise {
 fn remove_temp_file(path : String) -> Unit {
   @miniio.remove_file(path) catch {
     _ => ()
-  }
-}
-
-///|
-fn token_name_for_writer(value : String) -> String? {
-  match value.strip_prefix("$") {
-    None => None
-    Some(name) => Some(name.to_owned())
-  }
-}
-
-///|
-fn[T] option_or(value : T?, fallback : T?) -> T? {
-  match value {
-    Some(_) => value
-    None => fallback
-  }
-}
-
-///|
-fn style_font_size(style : TextStyle?) -> Double? {
-  match style {
-    None => None
-    Some(style) => style.font_size
-  }
-}
-
-///|
-fn style_font_family(style : TextStyle?) -> String? {
-  match style {
-    None => None
-    Some(style) => style.font_family
-  }
-}
-
-///|
-fn style_color(style : TextStyle?) -> String? {
-  match style {
-    None => None
-    Some(style) => style.color
-  }
-}
-
-///|
-fn style_bold(style : TextStyle?) -> Bool? {
-  match style {
-    None => None
-    Some(style) => style.bold
-  }
-}
-
-///|
-fn style_italic(style : TextStyle?) -> Bool? {
-  match style {
-    None => None
-    Some(style) => style.italic
   }
 }
