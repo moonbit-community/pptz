@@ -70,7 +70,7 @@ Use these features for deliverable decks:
 - explicit deck size and ordered page files;
 - optional solid or gradient page backgrounds;
 - text elements with theme text styles and local overrides;
-- rectangle, rounded rectangle, and ellipse shapes;
+- rectangle, rounded rectangle, ellipse, and common preset shapes;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
@@ -79,7 +79,7 @@ Use these features for deliverable decks:
 
 Do not use these in deliverable decks until `pptz` implements them in the
 writer: image backgrounds, icon/table/chart elements, `letter_spacing`, or
-shape names other than `rect`, `round_rect`, and `ellipse`.
+shape names outside the documented common preset subset.
 
 ## Important Notes
 

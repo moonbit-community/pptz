@@ -253,7 +253,7 @@ test "parse minimal shapes page" {
   let page = parse_page_toml(source) catch {
     err => abort("parse page failed: \{err}")
   }
-  assert_eq(page.elements.length(), 6)
+  assert_eq(page.elements.length(), 7)
   match page.elements[1] {
     ShapeElement(base, spec) => {
       assert_eq(base.id, "panel")
@@ -270,6 +270,13 @@ test "parse minimal shapes page" {
       }
     }
     _ => abort("expected outline element")
+  }
+  match page.elements[4] {
+    ShapeElement(base, spec) => {
+      assert_eq(base.id, "diamond")
+      assert_eq(spec.shape, "diamond")
+    }
+    _ => abort("expected diamond element")
   }
 }
 

@@ -296,12 +296,12 @@ Build `pptz` in this order:
    directly.
    Current writer scope:
    deck size, ordered pages, optional solid/gradient background, text elements,
-   rectangle/round-rectangle/ellipse shape elements, solid/no-fill/gradient
-   shape fills, alpha colors, solid and dashed shape borders, raster image
-   elements with `stretch`, `cover`, or `contain`, SVG image elements, image
-   crop rectangles, and basic theme color/text-style resolution with
-   element-local overrides. Valid AST features outside this subset may fail as
-   writer capability errors.
+   rectangle/round-rectangle/ellipse and common preset shape elements,
+   solid/no-fill/gradient shape fills, alpha colors, solid and dashed shape
+   borders, raster image elements with `stretch`, `cover`, or `contain`, SVG
+   image elements, image crop rectangles, and basic theme color/text-style
+   resolution with element-local overrides. Valid AST features outside this
+   subset may fail as writer capability errors.
    MVP text styling follows the `moon-pptx@0.4.0` text builder surface:
    `font_size`, `font_family`, `color`, `bold`, `italic`, and `line_height`.
    `letter_spacing` may remain a schema/AST concept but is outside the MVP
@@ -310,12 +310,12 @@ Build `pptz` in this order:
    to `moon-pptx`. Fail with a writer capability error instead.
    Current status: `writer.mbt` generates valid PPTX bytes for deck size,
    ordered pages, optional solid/gradient backgrounds, text elements,
-   rectangle/round-rectangle/ellipse shape elements, solid/no-fill/gradient
-   shape fills, alpha colors, solid and dashed shape borders, image elements
-   with `stretch`, `cover`, `contain`, explicit crop, SVG pictures, and basic
-   theme color/text-style resolution including `line_height`. It returns
-   capability errors for schema-valid features that are still outside the
-   implemented writer subset.
+   rectangle/round-rectangle/ellipse and common preset shape elements,
+   solid/no-fill/gradient shape fills, alpha colors, solid and dashed shape
+   borders, image elements with `stretch`, `cover`, `contain`, explicit crop,
+   SVG pictures, and basic theme color/text-style resolution including
+   `line_height`. It returns capability errors for schema-valid features that
+   are still outside the implemented writer subset.
 
 Compiler Reliability status:
 
@@ -593,8 +593,10 @@ Allowed background types: `solid`, `gradient`, `image`.
 `icon`, `table`, `chart`, and image backgrounds are allowed schema/AST concepts
 but are outside the MVP writer scope unless later implementation work
 explicitly adds them.
-MVP shape content supports only `rect`, `round_rect`, and `ellipse` shape
-subtypes:
+MVP shape content supports `rect`, `round_rect`, `ellipse`, and this common
+preset subset: `diamond`, `triangle`, `right_triangle`, `parallelogram`,
+`trapezoid`, `pentagon`, `hexagon`, `octagon`, `chevron`, `right_arrow`,
+`left_arrow`, `up_arrow`, `down_arrow`, `plus`, and `star5`.
 
 ```toml
 [[elements]]

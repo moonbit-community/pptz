@@ -357,6 +357,41 @@ fn build_auto_shape(
         to_emu(bounds.width),
         to_emu(bounds.height),
       )
+    "diamond" =>
+      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Diamond)
+    "triangle" =>
+      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Triangle)
+    "right_triangle" =>
+      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::RtTriangle)
+    "parallelogram" =>
+      build_preset_shape(
+        base,
+        bounds,
+        shape_id,
+        @slide.PresetShape::Parallelogram,
+      )
+    "trapezoid" =>
+      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Trapezoid)
+    "pentagon" =>
+      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Pentagon)
+    "hexagon" =>
+      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Hexagon)
+    "octagon" =>
+      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Octagon)
+    "chevron" =>
+      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Chevron)
+    "right_arrow" =>
+      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::RightArrow)
+    "left_arrow" =>
+      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::LeftArrow)
+    "up_arrow" =>
+      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::UpArrow)
+    "down_arrow" =>
+      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::DownArrow)
+    "plus" =>
+      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Plus)
+    "star5" =>
+      build_preset_shape(base, bounds, shape_id, @slide.PresetShape::Star5)
     other => raise WriteError::Capability("shape '\{other}' is not implemented")
   }
   match spec.fill {
@@ -372,6 +407,24 @@ fn build_auto_shape(
     Some(border) => shape = shape.with_stroke(to_stroke(bundle, border))
   }
   shape
+}
+
+///|
+fn build_preset_shape(
+  base : ElementBase,
+  bounds : Bounds,
+  shape_id : Int,
+  preset : @slide.PresetShape,
+) -> @slide.AutoShape {
+  @slide.AutoShape::of_preset(
+    shape_id,
+    base.id,
+    preset,
+    to_emu(bounds.x),
+    to_emu(bounds.y),
+    to_emu(bounds.width),
+    to_emu(bounds.height),
+  )
 }
 
 ///|

@@ -19,6 +19,7 @@ test "render minimal deck as pptx bytes" {
   assert_slide_xml_contains(prs, 1, "<p:bg>")
   assert_slide_xml_contains(prs, 1, "<a:gradFill")
   assert_slide_xml_contains(prs, 3, "prst=\"roundRect\"")
+  assert_slide_xml_contains(prs, 3, "prst=\"diamond\"")
   assert_slide_xml_contains(prs, 3, "<a:gradFill")
   assert_slide_xml_contains(prs, 3, "alpha val=\"80000\"")
   assert_slide_xml_contains(prs, 3, "prstDash val=\"dash\"")
@@ -62,6 +63,53 @@ test "writer preserves existing output when render fails" {
   )
   @miniio.remove_file(output) catch {
     _ => ()
+  }
+}
+
+///|
+test "writer maps common preset shape names" {
+  let cases = [
+    ("diamond", "diamond"),
+    ("triangle", "triangle"),
+    ("right_triangle", "rtTriangle"),
+    ("parallelogram", "parallelogram"),
+    ("trapezoid", "trapezoid"),
+    ("pentagon", "pentagon"),
+    ("hexagon", "hexagon"),
+    ("octagon", "octagon"),
+    ("chevron", "chevron"),
+    ("right_arrow", "rightArrow"),
+    ("left_arrow", "leftArrow"),
+    ("up_arrow", "upArrow"),
+    ("down_arrow", "downArrow"),
+    ("plus", "plus"),
+    ("star5", "star5"),
+  ]
+  let elements = []
+  for item in cases {
+    let (shape_name, _) = item
+    elements.push(
+      ShapeElement(test_base(shape_name), ShapeSpec::{
+        shape: shape_name,
+        fill: Some(SolidFill("#3B82F6")),
+        border: None,
+      }),
+    )
+  }
+  let loaded = unsupported_loaded(Page::{
+    page_type: None,
+    background: None,
+    elements,
+  })
+  let bytes = render_pptx(loaded) catch {
+    err => abort("render failed: \{err}")
+  }
+  let prs = @presentation.Presentation::open(bytes) catch {
+    err => abort("open generated pptx failed: \{err}")
+  }
+  for item in cases {
+    let (_, xml_name) = item
+    assert_slide_xml_contains(prs, 1, "prst=\"\{xml_name}\"")
   }
 }
 
