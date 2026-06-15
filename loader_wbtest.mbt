@@ -53,8 +53,16 @@ test "load minimal deck resolves ordered pages" {
     }
     None => abort("expected theme")
   }
-  match loaded.bundle.pages[1].page.elements[4] {
-    ChartElement(_, spec) => {
+  match loaded.bundle.pages[1].page.layout {
+    None => ()
+    Some(_) => abort("expected expanded page layout")
+  }
+  match find_text_content(loaded.bundle.pages[1].page, "layout_heading") {
+    Some(content) => assert_eq(content.text, "Agenda")
+    None => abort("expected layout heading")
+  }
+  match find_chart_spec(loaded.bundle.pages[1].page, "revenue_chart") {
+    Some(spec) => {
       match spec.chart_style {
         None => ()
         Some(_) => abort("expected expanded chart style")
@@ -69,7 +77,7 @@ test "load minimal deck resolves ordered pages" {
         None => abort("expected inherited chart labels")
       }
     }
-    _ => abort("expected chart element")
+    None => abort("expected chart element")
   }
   assert_eq(loaded.warnings.length(), 0)
 }
@@ -183,4 +191,26 @@ fn has_diagnostic_code(diagnostics : Array[Diagnostic], code : String) -> Bool {
     }
   }
   false
+}
+
+///|
+fn find_chart_spec(page : Page, id : String) -> ChartSpec? {
+  for element in page.elements {
+    match element {
+      ChartElement(base, spec) => if base.id == id { return Some(spec) }
+      _ => ()
+    }
+  }
+  None
+}
+
+///|
+fn find_text_content(page : Page, id : String) -> TextContent? {
+  for element in page.elements {
+    match element {
+      TextElement(base, content) => if base.id == id { return Some(content) }
+      _ => ()
+    }
+  }
+  None
 }

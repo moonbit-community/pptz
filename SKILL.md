@@ -97,6 +97,42 @@ header_text_color = "$text"
 body_text_color = "$text"
 ```
 
+### Layout Templates
+
+Use deck-level layouts for repeated slide chrome such as eyebrow, heading,
+footer, and accent marks. Pages fill named text slots and keep their own content
+elements focused.
+
+```toml
+[layouts.content.slots.eyebrow]
+bounds = [72, 38, 500, 24]
+style = "$caption"
+
+[layouts.content.slots.heading]
+bounds = [72, 72, 900, 72]
+style = "$title"
+
+[[layouts.content.elements]]
+id = "accent"
+type = "shape"
+bounds = [48, 40, 6, 96]
+
+[layouts.content.elements.content]
+shape = "rect"
+
+[layouts.content.elements.content.fill]
+type = "solid"
+color = "$primary"
+```
+
+```toml
+layout = "$content"
+
+[slots]
+eyebrow = "Risk model"
+heading = "风险分析"
+```
+
 ### Rich Text
 
 Use explicit paragraphs/runs for bullets and hyperlinks. Do not encode rich text

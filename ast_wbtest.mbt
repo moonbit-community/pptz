@@ -42,6 +42,7 @@ test "deck ast covers minimal deck source" {
     title: Some("MoonBit PPTX Demo"),
     size: Size::{ width: 1280.0, height: 720.0 },
     theme: Some(theme),
+    layouts: Map([], capacity=0),
     pages: [
       PageRef::{ path: "pages/cover.page.toml" },
       PageRef::{ path: "pages/agenda.page.toml" },
@@ -59,6 +60,8 @@ test "deck ast covers minimal deck source" {
 test "page ast supports solid background and text elements" {
   let page = Page::{
     page_type: Some("cover"),
+    layout: None,
+    slots: Map([], capacity=0),
     background: Some(SolidBackground("$background")),
     elements: [
       TextElement(

@@ -443,6 +443,10 @@ Theme token handling is deliberately simple:
   legend, style number, data-label, data-table, and rounded-corner defaults.
   Page chart elements use `chart_style = "$name"` and can override any
   inherited option locally. Chart styles never carry chart data.
+- Deck-level `layouts` provide reusable slide chrome. A page may set
+  `layout = "$name"` and fill `[slots]` values; the loader expands layout
+  elements and text slots into ordinary page elements before validation and
+  writing.
 - `font_family` is a single PowerPoint typeface name. It is not a CSS fallback
   list; comma-separated values may render differently across PowerPoint and
   preview tools.
@@ -641,6 +645,9 @@ text = "Example Deck"
 
 Element tables use top-level `id`, `type`, and `bounds` for shared placement
 metadata. Type-specific fields live under `[elements.content]`.
+Page `layout` is optional. When present, it must be a whole-string token that
+references a deck-level layout. Page `[slots]` values are strings consumed by
+the referenced layout's slot definitions.
 
 Allowed element types: `text`, `shape`, `image`, `icon`, `table`, `chart`.
 Allowed background types: `solid`, `gradient`, `image`.

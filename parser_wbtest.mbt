@@ -283,8 +283,13 @@ test "parse minimal agenda page multiline text" {
     Some(kind) => assert_eq(kind, "content")
     None => abort("expected page_type")
   }
-  assert_eq(page.elements.length(), 5)
-  match page.elements[1] {
+  match page.layout {
+    Some(layout) => assert_eq(layout, "$content")
+    None => abort("expected layout")
+  }
+  assert_eq(page.slots["heading"], "Agenda")
+  assert_eq(page.elements.length(), 4)
+  match page.elements[0] {
     TextElement(base, content) => {
       assert_eq(base.id, "items")
       assert_true(content.text.contains("Theme and background"))
@@ -296,6 +301,13 @@ test "parse minimal agenda page multiline text" {
     _ => abort("expected text element")
   }
   match page.elements[2] {
+    TableElement(base, spec) => {
+      assert_eq(base.id, "summary_table")
+      assert_eq(spec.rows[0].cells[0].text, "Metrics")
+    }
+    _ => abort("expected table element")
+  }
+  match page.elements[1] {
     ImageElement(base, spec) => {
       assert_eq(base.id, "diagram")
       assert_eq(spec.path, "images/diagram.png")
@@ -303,13 +315,6 @@ test "parse minimal agenda page multiline text" {
     _ => abort("expected image element")
   }
   match page.elements[3] {
-    TableElement(base, spec) => {
-      assert_eq(base.id, "summary_table")
-      assert_eq(spec.rows[0].cells[0].text, "Metrics")
-    }
-    _ => abort("expected table element")
-  }
-  match page.elements[4] {
     ChartElement(base, spec) => {
       assert_eq(base.id, "revenue_chart")
       assert_eq(spec.kind, "")

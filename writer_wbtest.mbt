@@ -215,6 +215,8 @@ test "writer preserves existing output when render fails" {
   assert_openxml_pptx(before.binary().to_fixedarray(), slide_count=4)
   let failing = unsupported_loaded(Page::{
     page_type: None,
+    layout: None,
+    slots: Map([], capacity=0),
     background: None,
     elements: [
       IconElement(test_base("icon"), IconSpec::{
@@ -752,6 +754,7 @@ fn unsupported_loaded(page : Page) -> LoadedDeck {
           ]),
           chart_styles: Map([], capacity=0),
         }),
+        layouts: Map([], capacity=0),
         pages: [PageRef::{ path: "pages/unsupported.page.toml" }],
       },
       pages: [
@@ -768,7 +771,13 @@ fn unsupported_loaded(page : Page) -> LoadedDeck {
 
 ///|
 fn page_with_element(element : Element) -> Page {
-  Page::{ page_type: None, background: None, elements: [element] }
+  Page::{
+    page_type: None,
+    layout: None,
+    slots: Map([], capacity=0),
+    background: None,
+    elements: [element],
+  }
 }
 
 ///|

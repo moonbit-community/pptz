@@ -30,20 +30,27 @@ pub fn parse_page_toml(source : String) -> Page raise {
 
 ///|
 fn parse_deck_table(table : Map[String, @toml.TomlValue]) -> Deck raise {
-  reject_unknown_fields(table, "deck", ["title", "size", "theme", "pages"])
+  reject_unknown_fields(table, "deck", [
+    "title", "size", "theme", "layouts", "pages",
+  ])
   Deck::{
     title: optional_string(table.get("title"), "title"),
     size: parse_size(required_array(table, "size"), "size"),
     theme: parse_optional_theme(table.get("theme"), "theme"),
+    layouts: parse_layouts(table.get("layouts"), "layouts"),
     pages: parse_page_refs(required_array(table, "pages"), "pages"),
   }
 }
 
 ///|
 fn parse_page_table(table : Map[String, @toml.TomlValue]) -> Page raise {
-  reject_unknown_fields(table, "page", ["page_type", "background", "elements"])
+  reject_unknown_fields(table, "page", [
+    "page_type", "layout", "slots", "background", "elements",
+  ])
   Page::{
     page_type: optional_string(table.get("page_type"), "page_type"),
+    layout: optional_string(table.get("layout"), "layout"),
+    slots: parse_string_map_optional(table.get("slots"), "slots"),
     background: parse_optional_background(table.get("background"), "background"),
     elements: parse_elements(required_array(table, "elements"), "elements"),
   }
@@ -98,6 +105,91 @@ fn parse_string_map(
     }
   }
   result
+}
+
+///|
+fn parse_string_map_optional(
+  value : @toml.TomlValue?,
+  path : String,
+) -> Map[String, String] raise {
+  match value {
+    None => Map([], capacity=0)
+    Some(value) => parse_string_map(expect_table(value, path), path)
+  }
+}
+
+///|
+fn parse_layouts(
+  value : @toml.TomlValue?,
+  path : String,
+) -> Map[String, LayoutTemplate] raise {
+  match value {
+    None => Map([], capacity=0)
+    Some(value) => {
+      let table = expect_table(value, path)
+      let result = Map([], capacity=table.length())
+      for name, layout_value in table {
+        let layout_path = "\{path}.\{name}"
+        let layout_table = expect_table(layout_value, layout_path)
+        reject_unknown_fields(layout_table, layout_path, [
+          "background", "slots", "elements",
+        ])
+        let elements = match layout_table.get("elements") {
+          None => []
+          Some(values) =>
+            parse_elements(
+              expect_array(values, "\{layout_path}.elements"),
+              "\{layout_path}.elements",
+            )
+        }
+        result[name] = LayoutTemplate::{
+          background: parse_optional_background(
+            layout_table.get("background"),
+            "\{layout_path}.background",
+          ),
+          slots: parse_layout_slots(
+            layout_table.get("slots"),
+            "\{layout_path}.slots",
+          ),
+          elements,
+        }
+      }
+      result
+    }
+  }
+}
+
+///|
+fn parse_layout_slots(
+  value : @toml.TomlValue?,
+  path : String,
+) -> Map[String, LayoutSlot] raise {
+  match value {
+    None => Map([], capacity=0)
+    Some(value) => {
+      let table = expect_table(value, path)
+      let result = Map([], capacity=table.length())
+      for name, slot_value in table {
+        let slot_path = "\{path}.\{name}"
+        let slot_table = expect_table(slot_value, slot_path)
+        reject_unknown_fields(slot_table, slot_path, [
+          "bounds", "style", "align",
+        ])
+        result[name] = LayoutSlot::{
+          bounds: parse_bounds(
+            required_array(slot_table, "\{slot_path}.bounds", key="bounds"),
+            "\{slot_path}.bounds",
+          ),
+          style: optional_string(slot_table.get("style"), "\{slot_path}.style"),
+          align: parse_optional_align(
+            slot_table.get("align"),
+            "\{slot_path}.align",
+          ),
+        }
+      }
+      result
+    }
+  }
 }
 
 ///|
@@ -1305,6 +1397,17 @@ fn required_array(
     Some(@toml.TomlArray(values)) => values
     Some(_) => fail("\{path}: expected array")
     None => fail("\{path}: missing required array")
+  }
+}
+
+///|
+fn expect_array(
+  value : @toml.TomlValue,
+  path : String,
+) -> Array[@toml.TomlValue] raise {
+  match value {
+    @toml.TomlArray(values) => values
+    _ => fail("\{path}: expected array")
   }
 }
 

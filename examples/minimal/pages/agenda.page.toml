@@ -1,17 +1,10 @@
 page_type = "content"
+layout = "$content"
 
-[background]
-type = "solid"
-color = "$background"
-
-[[elements]]
-id = "heading"
-type = "text"
-bounds = [80, 60, 900, 95]
-
-[elements.content]
-style = "$title"
-text = "Agenda"
+[slots]
+eyebrow = "Minimal deck"
+heading = "Agenda"
+footer = "Generated from a reusable content layout"
 
 [[elements]]
 id = "items"

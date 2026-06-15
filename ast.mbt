@@ -23,7 +23,22 @@ pub(all) struct Deck {
   title : String?
   size : Size
   theme : Theme?
+  layouts : Map[String, LayoutTemplate]
   pages : Array[PageRef]
+} derive(Eq, Debug)
+
+///|
+pub(all) struct LayoutTemplate {
+  background : Background?
+  slots : Map[String, LayoutSlot]
+  elements : Array[Element]
+} derive(Eq, Debug)
+
+///|
+pub(all) struct LayoutSlot {
+  bounds : Bounds
+  style : String?
+  align : Align?
 } derive(Eq, Debug)
 
 ///|
@@ -78,6 +93,8 @@ pub(all) struct ChartStyle {
 ///|
 pub(all) struct Page {
   page_type : String?
+  layout : String?
+  slots : Map[String, String]
   background : Background?
   elements : Array[Element]
 } derive(Eq, Debug)

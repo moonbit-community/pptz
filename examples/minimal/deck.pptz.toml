@@ -54,6 +54,37 @@ data_labels = "outside_end"
 data_table = false
 rounded_corners = false
 
+[layouts.content.background]
+type = "solid"
+color = "$background"
+
+[layouts.content.slots.eyebrow]
+bounds = [80, 38, 500, 24]
+style = "$caption"
+align = ["left", "top"]
+
+[layouts.content.slots.heading]
+bounds = [80, 64, 900, 86]
+style = "$title"
+align = ["left", "top"]
+
+[layouts.content.slots.footer]
+bounds = [80, 672, 900, 24]
+style = "$caption"
+align = ["left", "top"]
+
+[[layouts.content.elements]]
+id = "accent"
+type = "shape"
+bounds = [54, 42, 8, 96]
+
+[layouts.content.elements.content]
+shape = "rect"
+
+[layouts.content.elements.content.fill]
+type = "solid"
+color = "$primary"
+
 [[pages]]
 path = "pages/cover.page.toml"
 

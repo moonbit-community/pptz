@@ -118,6 +118,7 @@ fn expand_deck_theme(
           table_styles: expand_table_styles(theme, deck_path, errors),
           chart_styles: expand_chart_styles(theme, deck_path, errors),
         }),
+        layouts: deck.layouts,
         pages: deck.pages,
       }
   }
@@ -522,11 +523,152 @@ fn expand_page(
   page : Page,
   errors : Array[Diagnostic],
 ) -> Page {
+  let page = expand_page_layout(deck, page_path, page, errors)
   let elements = []
   for element in page.elements {
     elements.push(expand_element(deck, page_path, element, errors))
   }
-  Page::{ page_type: page.page_type, background: page.background, elements }
+  Page::{
+    page_type: page.page_type,
+    layout: None,
+    slots: Map([], capacity=0),
+    background: page.background,
+    elements,
+  }
+}
+
+///|
+fn expand_page_layout(
+  deck : Deck,
+  page_path : String,
+  page : Page,
+  errors : Array[Diagnostic],
+) -> Page {
+  match page.layout {
+    None => {
+      if page.slots.length() > 0 {
+        errors.push(
+          error_diagnostic(
+            "PZ030",
+            "page slots require a layout",
+            path=page_path,
+            field="slots",
+          ),
+        )
+      }
+      page
+    }
+    Some(layout_ref) =>
+      match token_name(layout_ref) {
+        None => {
+          errors.push(
+            error_diagnostic(
+              "PZ030",
+              "layout must be a whole-string layout token",
+              path=page_path,
+              field="layout",
+            ),
+          )
+          page
+        }
+        Some(name) =>
+          match deck.layouts.get(name) {
+            None => {
+              errors.push(
+                error_diagnostic(
+                  "PZ030",
+                  "unresolved layout token",
+                  path=page_path,
+                  field="layout",
+                ),
+              )
+              page
+            }
+            Some(layout) =>
+              apply_layout_template(page_path, page, layout, errors)
+          }
+      }
+  }
+}
+
+///|
+fn apply_layout_template(
+  page_path : String,
+  page : Page,
+  layout : LayoutTemplate,
+  errors : Array[Diagnostic],
+) -> Page {
+  for name, _ in page.slots {
+    if !layout.slots.contains(name) {
+      errors.push(
+        error_diagnostic(
+          "PZ030",
+          "page slot is not declared by the layout",
+          path=page_path,
+          field="slots.\{name}",
+        ),
+      )
+    }
+  }
+  let elements = []
+  for element in layout.elements {
+    elements.push(prefix_layout_element(element))
+  }
+  for name, slot in layout.slots {
+    match page.slots.get(name) {
+      None => ()
+      Some(text) => elements.push(layout_slot_element(name, slot, text))
+    }
+  }
+  for element in page.elements {
+    elements.push(element)
+  }
+  Page::{
+    page_type: page.page_type,
+    layout: None,
+    slots: Map([], capacity=0),
+    background: option_background_or(page.background, layout.background),
+    elements,
+  }
+}
+
+///|
+fn layout_slot_element(
+  name : String,
+  slot : LayoutSlot,
+  text : String,
+) -> Element {
+  TextElement(ElementBase::{ id: "layout_\{name}", bounds: slot.bounds }, TextContent::{
+    text,
+    style: slot.style,
+    align: slot.align,
+    wrap: Some(true),
+    body: None,
+    paragraphs: None,
+    font_size: None,
+    font_family: None,
+    color: None,
+    bold: None,
+    italic: None,
+  })
+}
+
+///|
+fn prefix_layout_element(element : Element) -> Element {
+  match element {
+    TextElement(base, content) => TextElement(prefix_layout_base(base), content)
+    ShapeElement(base, spec) => ShapeElement(prefix_layout_base(base), spec)
+    ImageElement(base, spec) => ImageElement(prefix_layout_base(base), spec)
+    IconElement(base, spec) => IconElement(prefix_layout_base(base), spec)
+    TableElement(base, spec) => TableElement(prefix_layout_base(base), spec)
+    ChartElement(base, spec) => ChartElement(prefix_layout_base(base), spec)
+    ConnectorElement(id, spec) => ConnectorElement("layout_\{id}", spec)
+  }
+}
+
+///|
+fn prefix_layout_base(base : ElementBase) -> ElementBase {
+  ElementBase::{ id: "layout_\{base.id}", bounds: base.bounds }
 }
 
 ///|
@@ -664,6 +806,17 @@ fn option_int_or(value : Int?, fallback : Int?) -> Int? {
 
 ///|
 fn option_border_or(value : Border?, fallback : Border?) -> Border? {
+  match value {
+    Some(_) => value
+    None => fallback
+  }
+}
+
+///|
+fn option_background_or(
+  value : Background?,
+  fallback : Background?,
+) -> Background? {
   match value {
     Some(_) => value
     None => fallback
