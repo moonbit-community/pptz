@@ -262,6 +262,66 @@ fn validate_theme(
             )
         }
       }
+      for name, style in theme.table_styles {
+        if !is_identifier(name) {
+          errors.push(
+            error_diagnostic(
+              "PZ030",
+              "theme table style token name is invalid",
+              path=deck_path,
+              field="theme.table_styles.\{name}",
+            ),
+          )
+        }
+        match style.header_fill {
+          None => ()
+          Some(color) =>
+            validate_color_value(
+              color,
+              theme,
+              deck_path,
+              None,
+              "theme.table_styles.\{name}.header_fill",
+              errors,
+            )
+        }
+        match style.header_color {
+          None => ()
+          Some(color) =>
+            validate_color_value(
+              color,
+              theme,
+              deck_path,
+              None,
+              "theme.table_styles.\{name}.header_color",
+              errors,
+            )
+        }
+        match style.body_color {
+          None => ()
+          Some(color) =>
+            validate_color_value(
+              color,
+              theme,
+              deck_path,
+              None,
+              "theme.table_styles.\{name}.body_color",
+              errors,
+            )
+        }
+        match style.border {
+          None => ()
+          Some(border) =>
+            validate_color_value(
+              border.color,
+              theme,
+              deck_path,
+              None,
+              "theme.table_styles.\{name}.border.color",
+              errors,
+            )
+        }
+      }
     }
   }
 }
@@ -389,6 +449,7 @@ fn validate_element(
       }
       validate_text_fit(bundle, page_path, base, content, warnings)
       validate_text_style_ref(bundle, page_path, base.id, content.style, errors)
+      validate_text_content(bundle, page_path, base.id, content, errors)
       match content.color {
         None => ()
         Some(color) =>
@@ -502,6 +563,58 @@ fn validate_element(
     TableElement(base, spec) =>
       validate_table(bundle, page_path, base, spec, errors)
     ChartElement(base, spec) => validate_chart(page_path, base, spec, errors)
+  }
+}
+
+///|
+fn validate_text_content(
+  bundle : DeckBundle,
+  page_path : String,
+  element_id : String,
+  content : TextContent,
+  errors : Array[Diagnostic],
+) -> Unit {
+  match content.paragraphs {
+    None => ()
+    Some(paragraphs) =>
+      for paragraph_index, paragraph in paragraphs {
+        let paragraph_field = "elements.content.paragraphs[\{paragraph_index}]"
+        validate_text_style_ref_at(
+          bundle,
+          page_path,
+          element_id,
+          paragraph.style,
+          "\{paragraph_field}.style",
+          errors,
+        )
+        match paragraph.runs {
+          None => ()
+          Some(runs) =>
+            for run_index, run in runs {
+              let run_field = "\{paragraph_field}.runs[\{run_index}]"
+              validate_text_style_ref_at(
+                bundle,
+                page_path,
+                element_id,
+                run.style,
+                "\{run_field}.style",
+                errors,
+              )
+              match run.color {
+                None => ()
+                Some(color) =>
+                  validate_page_color(
+                    bundle,
+                    page_path,
+                    Some(element_id),
+                    "\{run_field}.color",
+                    color,
+                    errors,
+                  )
+              }
+            }
+        }
+      }
   }
 }
 
@@ -825,6 +938,7 @@ fn validate_table(
   spec : TableSpec,
   errors : Array[Diagnostic],
 ) -> Unit {
+  validate_table_style_ref(bundle, page_path, base.id, spec.style, errors)
   if spec.rows.is_empty() {
     errors.push(
       error_diagnostic(
@@ -1386,6 +1500,20 @@ fn validate_text_style_ref(
   style : String?,
   errors : Array[Diagnostic],
 ) -> Unit {
+  validate_text_style_ref_at(
+    bundle, page_path, element_id, style, "elements.content.style", errors,
+  )
+}
+
+///|
+fn validate_text_style_ref_at(
+  bundle : DeckBundle,
+  page_path : String,
+  element_id : String,
+  style : String?,
+  field : String,
+  errors : Array[Diagnostic],
+) -> Unit {
   match style {
     None => ()
     Some(style) =>
@@ -1397,7 +1525,7 @@ fn validate_text_style_ref(
               "text style token has no deck theme",
               path=page_path,
               element_id~,
-              field="elements.content.style",
+              field~,
             ),
           )
         Some(theme) =>
@@ -1410,7 +1538,7 @@ fn validate_text_style_ref(
                     "unresolved text style token",
                     path=page_path,
                     element_id~,
-                    field="elements.content.style",
+                    field~,
                   ),
                 )
               }
@@ -1419,6 +1547,57 @@ fn validate_text_style_ref(
                 error_diagnostic(
                   "PZ030",
                   "text style must be a whole-string theme token",
+                  path=page_path,
+                  element_id~,
+                  field~,
+                ),
+              )
+          }
+      }
+  }
+}
+
+///|
+fn validate_table_style_ref(
+  bundle : DeckBundle,
+  page_path : String,
+  element_id : String,
+  style : String?,
+  errors : Array[Diagnostic],
+) -> Unit {
+  match style {
+    None => ()
+    Some(style) =>
+      match bundle.deck.theme {
+        None =>
+          errors.push(
+            error_diagnostic(
+              "PZ030",
+              "table style token has no deck theme",
+              path=page_path,
+              element_id~,
+              field="elements.content.style",
+            ),
+          )
+        Some(theme) =>
+          match token_name(style) {
+            Some(name) =>
+              if !theme.table_styles.contains(name) {
+                errors.push(
+                  error_diagnostic(
+                    "PZ030",
+                    "unresolved table style token",
+                    path=page_path,
+                    element_id~,
+                    field="elements.content.style",
+                  ),
+                )
+              }
+            None =>
+              errors.push(
+                error_diagnostic(
+                  "PZ030",
+                  "table style must be a whole-string theme token",
                   path=page_path,
                   element_id~,
                   field="elements.content.style",

@@ -610,19 +610,7 @@ fn build_textbox(
   shape_id : Int,
 ) -> @slide.AutoShape raise {
   let bounds = base.bounds
-  let run_props = text_run_properties(bundle, content)
-  let mut paragraph = text_paragraph(content.text, run_props)
-  match content.align {
-    None => ()
-    Some(align) =>
-      paragraph = paragraph.with_alignment(
-        horizontal_alignment(align.horizontal),
-      )
-  }
-  paragraph = paragraph.with_properties(
-    text_paragraph_properties(bundle, content, paragraph.properties),
-  )
-  let mut text_body = @slide.TextBody::of_paragraphs([paragraph])
+  let mut text_body = text_body(bundle, content)
   let mut body_props = @slide.BodyProperties::default()
   let mut has_body_props = false
   match content.align {
@@ -651,6 +639,34 @@ fn build_textbox(
       has_body_props = true
     }
   }
+  match content.body {
+    None => ()
+    Some(options) => {
+      match options.inset {
+        None => ()
+        Some(inset) => {
+          body_props = @slide.BodyProperties::{
+            ..body_props,
+            left_inset: optional_emu(inset.left),
+            right_inset: optional_emu(inset.right),
+            top_inset: optional_emu(inset.top),
+            bottom_inset: optional_emu(inset.bottom),
+          }
+          has_body_props = true
+        }
+      }
+      match options.auto_fit {
+        None => ()
+        Some(auto_fit) => {
+          body_props = @slide.BodyProperties::{
+            ..body_props,
+            auto_fit: Some(text_auto_fit(auto_fit)),
+          }
+          has_body_props = true
+        }
+      }
+    }
+  }
   if has_body_props {
     text_body = @slide.TextBody::{
       ..text_body,
@@ -669,6 +685,123 @@ fn build_textbox(
   .with_text_body(text_body)
   .with_no_fill()
   .with_no_stroke()
+}
+
+///|
+fn text_body(
+  bundle : DeckBundle,
+  content : TextContent,
+) -> @slide.TextBody raise {
+  match content.paragraphs {
+    None =>
+      @slide.TextBody::of_paragraphs([legacy_text_paragraph(bundle, content)])
+    Some(paragraphs) => {
+      let result = []
+      for paragraph in paragraphs {
+        result.push(rich_text_paragraph(bundle, content, paragraph))
+      }
+      @slide.TextBody::of_paragraphs(result)
+    }
+  }
+}
+
+///|
+fn legacy_text_paragraph(
+  bundle : DeckBundle,
+  content : TextContent,
+) -> @slide.Paragraph raise {
+  let run_props = text_run_properties(bundle, content)
+  let mut paragraph = text_paragraph(content.text, run_props)
+  match content.align {
+    None => ()
+    Some(align) =>
+      paragraph = paragraph.with_alignment(
+        horizontal_alignment(align.horizontal),
+      )
+  }
+  paragraph.with_properties(
+    text_paragraph_properties(bundle, content, paragraph.properties),
+  )
+}
+
+///|
+fn rich_text_paragraph(
+  bundle : DeckBundle,
+  content : TextContent,
+  paragraph : TextParagraphSpec,
+) -> @slide.Paragraph raise {
+  let paragraph_content = []
+  match paragraph.runs {
+    None => {
+      let text = match paragraph.text {
+        None => ""
+        Some(text) => text
+      }
+      paragraph_content.push(
+        @slide.ParagraphContent::RunContent(@slide.Run::{
+          text,
+          properties: text_run_properties_from_values(
+            bundle,
+            text_style_with_fallback(paragraph.style, content.style),
+            content.font_size,
+            content.font_family,
+            content.color,
+            content.bold,
+            content.italic,
+            None,
+            None,
+          ),
+          extension: [],
+        }),
+      )
+    }
+    Some(runs) =>
+      for run in runs {
+        paragraph_content.push(
+          @slide.ParagraphContent::RunContent(@slide.Run::{
+            text: run.text,
+            properties: text_run_properties_from_values(
+              bundle,
+              text_style_with_fallback(
+                run.style,
+                text_style_with_fallback(paragraph.style, content.style),
+              ),
+              text_double_with_fallback(run.font_size, content.font_size),
+              text_string_with_fallback(run.font_family, content.font_family),
+              text_string_with_fallback(run.color, content.color),
+              text_bool_with_fallback(run.bold, content.bold),
+              text_bool_with_fallback(run.italic, content.italic),
+              run.hyperlink,
+              run.tooltip,
+            ),
+            extension: [],
+          }),
+        )
+      }
+  }
+  let mut props = @slide.ParagraphProperties::default()
+  match paragraph.align {
+    None =>
+      match content.align {
+        None => ()
+        Some(align) =>
+          props = @slide.ParagraphProperties::{
+            ..props,
+            alignment: Some(horizontal_alignment(align.horizontal)),
+          }
+      }
+    Some(align) =>
+      props = @slide.ParagraphProperties::{
+        ..props,
+        alignment: Some(horizontal_alignment(align.horizontal)),
+      }
+  }
+  props = rich_text_paragraph_properties(bundle, content, paragraph, props)
+  @slide.Paragraph::{
+    content: paragraph_content,
+    properties: props,
+    extension: [],
+  }
 }
 
 ///|
@@ -805,6 +938,7 @@ fn table_rows(
 ) -> Array[@slide.TableRow] raise {
   let row_heights = table_row_heights(spec, bounds)
   let column_count = table_column_count(spec)
+  let style = theme_table_style(bundle, spec.style)
   let mut active_counts = zero_int_array(column_count)
   let mut active_horizontal = false_bool_array(column_count)
   let rows = []
@@ -812,6 +946,8 @@ fn table_rows(
     let (cells, next_counts, next_horizontal) = table_cells(
       bundle,
       row.cells,
+      style,
+      index,
       active_counts,
       active_horizontal,
       column_count,
@@ -827,6 +963,8 @@ fn table_rows(
 fn table_cells(
   bundle : DeckBundle,
   cells : Array[TableCellSpec],
+  style : TableStyle?,
+  row_index : Int,
   active_counts : Array[Int],
   active_horizontal : Array[Bool],
   column_count : Int,
@@ -857,7 +995,7 @@ fn table_cells(
           raise WriteError::Backend("table merge overlaps active row span")
         }
       }
-      result.push(table_origin_cell(bundle, cell))
+      result.push(table_origin_cell(bundle, cell, style, row_index))
       if cell.row_span > 1 {
         next_counts[column] = cell.row_span - 1
         next_horizontal[column] = false
@@ -885,6 +1023,8 @@ fn table_cells(
 fn table_origin_cell(
   bundle : DeckBundle,
   cell : TableCellSpec,
+  style : TableStyle?,
+  row_index : Int,
 ) -> @slide.TableCell raise {
   let mut table_cell = if cell.col_span == 1 && cell.row_span == 1 {
     @slide.TableCell::of_text(cell.text)
@@ -895,7 +1035,14 @@ fn table_origin_cell(
       row_span=cell.row_span,
     )
   }
-  let properties = table_cell_properties(bundle, cell)
+  let run_props = table_cell_run_properties(bundle, style, row_index)
+  if run_props is Some(props) {
+    table_cell = @slide.TableCell::{
+      ..table_cell,
+      text_body: Some(@slide.TextBody::of_styled_text(cell.text, props)),
+    }
+  }
+  let properties = table_cell_properties(bundle, cell, style, row_index)
   if properties is Some(_) {
     table_cell = @slide.TableCell::{ ..table_cell, properties, }
   }
@@ -906,10 +1053,12 @@ fn table_origin_cell(
 fn table_cell_properties(
   bundle : DeckBundle,
   cell : TableCellSpec,
+  style : TableStyle?,
+  row_index : Int,
 ) -> @slide.TableCellProperties? raise {
   let mut properties = @slide.TableCellProperties::default()
   let mut has_properties = false
-  match cell.fill {
+  match table_cell_fill(cell, style, row_index) {
     None => ()
     Some(NoFill) => {
       properties = @slide.TableCellProperties::{
@@ -927,7 +1076,7 @@ fn table_cell_properties(
       has_properties = true
     }
   }
-  match cell.border {
+  match table_cell_border(cell, style) {
     None => ()
     Some(border) => {
       properties = properties.with_border_all(to_stroke(bundle, border))
@@ -962,6 +1111,107 @@ fn table_cell_properties(
     Some(properties)
   } else {
     None
+  }
+}
+
+///|
+fn table_cell_fill(
+  cell : TableCellSpec,
+  style : TableStyle?,
+  row_index : Int,
+) -> Fill? {
+  match cell.fill {
+    Some(_) => cell.fill
+    None =>
+      if row_index == 0 {
+        match style {
+          None => None
+          Some(style) =>
+            match style.header_fill {
+              None => None
+              Some(color) => Some(SolidFill(color))
+            }
+        }
+      } else {
+        None
+      }
+  }
+}
+
+///|
+fn table_cell_border(cell : TableCellSpec, style : TableStyle?) -> Border? {
+  match cell.border {
+    Some(_) => cell.border
+    None =>
+      match style {
+        None => None
+        Some(style) => style.border
+      }
+  }
+}
+
+///|
+fn table_cell_run_properties(
+  bundle : DeckBundle,
+  style : TableStyle?,
+  row_index : Int,
+) -> @slide.RunProperties? raise {
+  match style {
+    None => None
+    Some(style) => {
+      let mut props = @slide.RunProperties::default()
+      let mut has_props = false
+      match style.font_size {
+        None => ()
+        Some(size) => {
+          props = props.with_font_size(@units.Pt(size))
+          has_props = true
+        }
+      }
+      match style.font_family {
+        None => ()
+        Some(family) => {
+          props = props.with_font(family)
+          has_props = true
+        }
+      }
+      let color = if row_index == 0 {
+        style.header_color
+      } else {
+        style.body_color
+      }
+      match color {
+        None => ()
+        Some(color) => {
+          props = @slide.RunProperties::{
+            ..props,
+            fill: Some(resolve_color(bundle, color)),
+          }
+          has_props = true
+        }
+      }
+      if has_props {
+        Some(props)
+      } else {
+        None
+      }
+    }
+  }
+}
+
+///|
+fn theme_table_style(bundle : DeckBundle, style : String?) -> TableStyle? {
+  match style {
+    None => None
+    Some(style_token) =>
+      match token_name(style_token) {
+        None => None
+        Some(name) =>
+          match bundle.deck.theme {
+            None => None
+            Some(theme) => theme.table_styles.get(name)
+          }
+      }
   }
 }
 
@@ -1419,8 +1669,45 @@ fn text_run_properties(
   bundle : DeckBundle,
   content : TextContent,
 ) -> @slide.RunProperties raise {
+  text_run_properties_from_values(
+    bundle,
+    content.style,
+    content.font_size,
+    content.font_family,
+    content.color,
+    content.bold,
+    content.italic,
+    None,
+    None,
+  )
+}
+
+///|
+fn text_run_properties_from_values(
+  bundle : DeckBundle,
+  style : String?,
+  font_size : Double?,
+  font_family : String?,
+  color : String?,
+  bold : Bool?,
+  italic : Bool?,
+  hyperlink : String?,
+  tooltip : String?,
+) -> @slide.RunProperties raise {
   let mut props = @slide.RunProperties::default()
-  let text = resolve_text_properties(bundle, content)
+  let text = resolve_text_properties(bundle, TextContent::{
+    text: "",
+    style,
+    align: None,
+    wrap: None,
+    body: None,
+    paragraphs: None,
+    font_size,
+    font_family,
+    color,
+    bold,
+    italic,
+  })
   match text.font_size {
     None => ()
     Some(size) => props = props.with_font_size(@units.Pt(size))
@@ -1446,6 +1733,14 @@ fn text_run_properties(
   if text.letter_spacing is Some(_) {
     raise WriteError::Capability("letter_spacing is not implemented")
   }
+  match hyperlink {
+    None => ()
+    Some(url) =>
+      props = match tooltip {
+        None => props.with_hyperlink(url)
+        Some(tooltip) => props.with_hyperlink(url, tooltip~)
+      }
+  }
   props
 }
 
@@ -1463,6 +1758,163 @@ fn text_paragraph_properties(
         ..props,
         line_spacing: Some(@units.Percentage((line_height * 100.0).round())),
       }
+  }
+}
+
+///|
+fn rich_text_paragraph_properties(
+  bundle : DeckBundle,
+  content : TextContent,
+  paragraph : TextParagraphSpec,
+  props : @slide.ParagraphProperties,
+) -> @slide.ParagraphProperties raise {
+  let style = text_style_with_fallback(paragraph.style, content.style)
+  let style_content = TextContent::{
+    text: "",
+    style,
+    align: None,
+    wrap: None,
+    body: None,
+    paragraphs: None,
+    font_size: None,
+    font_family: None,
+    color: None,
+    bold: None,
+    italic: None,
+  }
+  let text = resolve_text_properties(bundle, style_content)
+  let mut result = match paragraph.line_height {
+    None =>
+      match text.line_height {
+        None => props
+        Some(line_height) =>
+          @slide.ParagraphProperties::{
+            ..props,
+            line_spacing: Some(@units.Percentage((line_height * 100.0).round())),
+          }
+      }
+    Some(line_height) =>
+      @slide.ParagraphProperties::{
+        ..props,
+        line_spacing: Some(@units.Percentage((line_height * 100.0).round())),
+      }
+  }
+  match paragraph.space_before {
+    None => ()
+    Some(value) =>
+      result = @slide.ParagraphProperties::{
+        ..result,
+        space_before: Some(@units.Pt(value)),
+      }
+  }
+  match paragraph.space_after {
+    None => ()
+    Some(value) =>
+      result = @slide.ParagraphProperties::{
+        ..result,
+        space_after: Some(@units.Pt(value)),
+      }
+  }
+  match paragraph.margin_left {
+    None => ()
+    Some(value) =>
+      result = @slide.ParagraphProperties::{
+        ..result,
+        margin_left: Some(to_emu(value)),
+      }
+  }
+  match paragraph.indent {
+    None => ()
+    Some(value) =>
+      result = @slide.ParagraphProperties::{
+        ..result,
+        indent: Some(to_emu(value)),
+      }
+  }
+  match paragraph.bullet {
+    None => ()
+    Some(bullet) =>
+      result = @slide.ParagraphProperties::{
+        ..result,
+        bullet: Some(text_bullet(bullet)),
+      }
+  }
+  result
+}
+
+///|
+fn text_bullet(bullet : BulletSpec) -> @slide.Bullet raise {
+  match bullet.kind {
+    "none" => @slide.Bullet::BulNone
+    "char" =>
+      @slide.Bullet::Char(
+        match bullet.char {
+          None => "•"
+          Some(char) => char
+        },
+      )
+    "number" =>
+      @slide.Bullet::AutoNum(
+        @slide.AutoNumType::ArabicPeriod,
+        match bullet.start {
+          None => 1
+          Some(start) => start
+        },
+      )
+    other =>
+      raise WriteError::Capability(
+        "text bullet kind '\{other}' is not implemented",
+      )
+  }
+}
+
+///|
+fn text_auto_fit(value : String) -> @slide.AutoFit raise {
+  match value {
+    "none" => @slide.AutoFit::NoAutoFit
+    "shrink" =>
+      @slide.AutoFit::NormAutoFit(
+        @units.Percentage(100.0),
+        @units.Percentage(0.0),
+      )
+    "shape" => @slide.AutoFit::SpAutoFit
+    "resize_shape" => @slide.AutoFit::SpAutoFit
+    other =>
+      raise WriteError::Capability(
+        "text body auto_fit '\{other}' is not implemented",
+      )
+  }
+}
+
+///|
+fn text_style_with_fallback(value : String?, fallback : String?) -> String? {
+  match value {
+    Some(_) => value
+    None => fallback
+  }
+}
+
+///|
+fn text_string_with_fallback(value : String?, fallback : String?) -> String? {
+  match value {
+    Some(_) => value
+    None => fallback
+  }
+}
+
+///|
+fn text_double_with_fallback(value : Double?, fallback : Double?) -> Double? {
+  match value {
+    Some(_) => value
+    None => fallback
+  }
+}
+
+///|
+fn text_bool_with_fallback(value : Bool?, fallback : Bool?) -> Bool? {
+  match value {
+    Some(_) => value
+    None => fallback
   }
 }
 

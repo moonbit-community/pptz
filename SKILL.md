@@ -70,8 +70,9 @@ Use these features for deliverable decks:
 
 - explicit deck size and ordered page files;
 - optional solid, gradient, or image page backgrounds;
-- text elements with theme text styles, local overrides, text wrapping, and
-  line breaks;
+- text elements with theme text styles, local overrides, text wrapping,
+  line breaks, rich paragraphs, styled runs, bullets, external hyperlinks,
+  body insets, and autofit controls;
 - PowerPoint preset auto-shapes, excluding line and connector presets;
 - straight, bent, and curved connectors with coordinate or element endpoints,
   stroke, dash, and arrowheads;
@@ -83,10 +84,10 @@ Use these features for deliverable decks:
   `chart_star`, `chart_x`, and `no_smoking`, with optional `fas:`-style
   prefixes;
 - table elements with explicit or evenly distributed column widths and row
-  heights, including cell merge spans;
+  heights, including cell merge spans, cell styling, and theme table styles;
 - inline chart elements for `bar`, `line`, `pie`, `doughnut`, `area`,
   `scatter`, `bubble`, and `radar`, with title, legend, style, data labels,
-  data table, and rounded-corner options;
+  data table, rounded-corner options, and a category chart data shorthand;
 - raster image elements with `fit = "stretch"`, `fit = "cover"`, or
   `fit = "contain"`;
 - image crop rectangles;

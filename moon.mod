@@ -1,6 +1,6 @@
 name = "Milky2018/pptz"
 
-version = "0.2.4"
+version = "0.3.0"
 
 readme = "README.md"
 

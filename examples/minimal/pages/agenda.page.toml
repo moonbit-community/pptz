@@ -20,11 +20,54 @@ bounds = [110, 190, 460, 260]
 
 [elements.content]
 style = "$body"
-text = """
-1. Theme and background
-2. Deck and page sources
-3. Format check and generation
-"""
+align = ["left", "top"]
+wrap = true
+
+[elements.content.body]
+auto_fit = "shape"
+
+[elements.content.body.inset]
+left = 8
+right = 8
+top = 4
+bottom = 4
+
+[[elements.content.paragraphs]]
+text = "Theme and background"
+space_after = 8
+margin_left = 18
+indent = -9
+
+[elements.content.paragraphs.bullet]
+kind = "char"
+char = "-"
+
+[[elements.content.paragraphs]]
+text = "Deck and page sources"
+space_after = 8
+margin_left = 18
+indent = -9
+
+[elements.content.paragraphs.bullet]
+kind = "char"
+char = "-"
+
+[[elements.content.paragraphs]]
+margin_left = 18
+indent = -9
+
+[elements.content.paragraphs.bullet]
+kind = "char"
+char = "-"
+
+[[elements.content.paragraphs.runs]]
+text = "Reference: "
+
+[[elements.content.paragraphs.runs]]
+text = "pptz schema"
+style = "$link"
+hyperlink = "https://github.com/Milky2018/pptz"
+tooltip = "Project repository"
 
 [[elements]]
 id = "diagram"
@@ -41,6 +84,7 @@ type = "table"
 bounds = [650, 500, 500, 120]
 
 [elements.content]
+style = "$compact"
 col_widths = [220, 140, 140]
 row_heights = [40, 40, 40]
 rows = [
@@ -63,8 +107,7 @@ legend = "bottom"
 style = 4
 data_labels = "outside_end"
 rounded_corners = false
-categories = ["Q1", "Q2", "Q3"]
-
-[[elements.content.series]]
-name = "Revenue"
-values = [100.0, 150.0, 125.0]
+data = [
+  ["", "Q1", "Q2", "Q3"],
+  ["Revenue", 100.0, 150.0, 125.0],
+]

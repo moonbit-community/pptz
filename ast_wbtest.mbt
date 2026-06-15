@@ -69,6 +69,8 @@ test "page ast supports solid background and text elements" {
           style: Some("$title"),
           align: Some(Align::{ horizontal: "center", vertical: "center" }),
           wrap: None,
+          body: None,
+          paragraphs: None,
           font_size: None,
           font_family: None,
           color: None,

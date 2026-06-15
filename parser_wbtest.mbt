@@ -282,6 +282,90 @@ test "parse minimal agenda page multiline text" {
 }
 
 ///|
+test "parse rich text paragraphs and body options" {
+  let page = parse_page_toml(
+    (
+      #|[[elements]]
+      #|id = "copy"
+      #|type = "text"
+      #|bounds = [80, 120, 640, 240]
+      #|
+      #|[elements.content]
+      #|style = "$body"
+      #|align = ["left", "top"]
+      #|wrap = true
+      #|
+      #|[elements.content.body]
+      #|auto_fit = "shape"
+      #|
+      #|[elements.content.body.inset]
+      #|left = 12
+      #|right = 12
+      #|top = 8
+      #|bottom = 8
+      #|
+      #|[[elements.content.paragraphs]]
+      #|text = "Overview"
+      #|style = "$title"
+      #|line_height = 1.15
+      #|space_after = 6
+      #|
+      #|[elements.content.paragraphs.bullet]
+      #|kind = "char"
+      #|char = "-"
+      #|
+      #|[[elements.content.paragraphs]]
+      #|space_before = 4
+      #|
+      #|[[elements.content.paragraphs.runs]]
+      #|text = "Read "
+      #|
+      #|[[elements.content.paragraphs.runs]]
+      #|text = "docs"
+      #|color = "$accent"
+      #|hyperlink = "https://example.com"
+      #|tooltip = "Documentation"
+    ),
+  ) catch {
+    err => abort("parse rich text failed: \{err}")
+  }
+  match page.elements[0] {
+    TextElement(_, content) => {
+      assert_eq(content.text, "Overview\nRead docs")
+      match content.body {
+        Some(body) =>
+          match body.auto_fit {
+            Some(value) => assert_eq(value, "shape")
+            None => abort("expected auto_fit")
+          }
+        None => abort("expected body options")
+      }
+      match content.paragraphs {
+        Some(paragraphs) => {
+          assert_eq(paragraphs.length(), 2)
+          match paragraphs[0].bullet {
+            Some(bullet) => assert_eq(bullet.kind, "char")
+            None => abort("expected bullet")
+          }
+          match paragraphs[1].runs {
+            Some(runs) => {
+              assert_eq(runs.length(), 2)
+              match runs[1].hyperlink {
+                Some(url) => assert_eq(url, "https://example.com")
+                None => abort("expected hyperlink")
+              }
+            }
+            None => abort("expected runs")
+          }
+        }
+        None => abort("expected paragraphs")
+      }
+    }
+    _ => abort("expected text element")
+  }
+}
+
+///|
 test "parse minimal shapes page" {
   let source = @miniio.read_text_file("examples/minimal/pages/shapes.page.toml") catch {
     err => abort("read page failed: \{err}")
@@ -356,6 +440,7 @@ test "parse table content rows and data shorthand" {
       #|bounds = [80, 120, 720, 300]
       #|
       #|[elements.content]
+      #|style = "$compact"
       #|col_widths = [240, 240]
       #|row_heights = [48, 48]
       #|rows = [
@@ -372,6 +457,10 @@ test "parse table content rows and data shorthand" {
   match page.elements[0] {
     TableElement(base, spec) => {
       assert_eq(base.id, "summary")
+      match spec.style {
+        Some(style) => assert_eq(style, "$compact")
+        None => abort("expected table style")
+      }
       assert_eq(spec.rows.length(), 2)
       assert_eq(spec.rows[0].cells[0].text, "Metric")
       match spec.rows[0].cells[0].fill {
@@ -408,6 +497,40 @@ test "parse table content rows and data shorthand" {
   match shorthand.elements[0] {
     TableElement(_, spec) => assert_eq(spec.rows[1].cells[0].text, "Revenue")
     _ => abort("expected shorthand table element")
+  }
+}
+
+///|
+test "parse chart data shorthand" {
+  let page = parse_page_toml(
+    (
+      #|[[elements]]
+      #|id = "chart"
+      #|type = "chart"
+      #|bounds = [80, 120, 720, 360]
+      #|
+      #|[elements.content]
+      #|kind = "line"
+      #|data = [
+      #|  ["", "Q1", "Q2", "Q3"],
+      #|  ["Revenue", 100, 200, 150],
+      #|  ["Users", 10.0, 24.0, 32.0],
+      #|]
+    ),
+  ) catch {
+    err => abort("parse chart shorthand failed: \{err}")
+  }
+  match page.elements[0] {
+    ChartElement(_, spec) => {
+      match spec.categories {
+        Some(categories) => assert_eq(categories[2], "Q3")
+        None => abort("expected categories")
+      }
+      assert_eq(spec.series.length(), 2)
+      assert_eq(spec.series[1].name, "Users")
+      assert_eq(spec.series[0].values[1], 200.0)
+    }
+    _ => abort("expected chart element")
   }
 }
 

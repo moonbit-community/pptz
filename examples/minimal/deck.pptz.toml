@@ -27,6 +27,20 @@ font_size = 16
 font_family = "Liter, MiSans"
 color = "$muted"
 
+[theme.text_styles.link]
+font_size = 24
+font_family = "Liter, MiSans"
+color = "$primary"
+bold = true
+
+[theme.table_styles.compact]
+font_size = 14
+font_family = "Liter, MiSans"
+header_fill = "$surface_alt"
+header_color = "$text"
+body_color = "$background"
+border = { style = "solid", width = 1, color = "$muted" }
+
 [[pages]]
 path = "pages/cover.page.toml"
 

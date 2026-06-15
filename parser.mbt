@@ -421,13 +421,26 @@ fn parse_text_content(
 ) -> TextContent raise {
   reject_unknown_fields(table, path, [
     "text", "style", "align", "wrap", "font_size", "font_family", "color", "bold",
-    "italic",
+    "italic", "body", "paragraphs",
   ])
+  let paragraphs = parse_optional_text_paragraphs(
+    table.get("paragraphs"),
+    "\{path}.paragraphs",
+  )
+  let text = match (table.get("text"), paragraphs) {
+    (Some(_), Some(_)) =>
+      fail("\{path}: use either text or paragraphs, not both")
+    (Some(value), None) => expect_string(value, "\{path}.text")
+    (None, Some(paragraphs)) => text_from_paragraphs(paragraphs)
+    (None, None) => fail("\{path}.text: missing required string")
+  }
   TextContent::{
-    text: required_string(table, "\{path}.text", key="text"),
+    text,
     style: optional_string(table.get("style"), "\{path}.style"),
     align: parse_optional_align(table.get("align"), "\{path}.align"),
     wrap: optional_bool(table.get("wrap"), "\{path}.wrap"),
+    body: parse_optional_text_body_options(table.get("body"), "\{path}.body"),
+    paragraphs,
     font_size: optional_double(table.get("font_size"), "\{path}.font_size"),
     font_family: optional_string(
       table.get("font_family"),
@@ -437,6 +450,188 @@ fn parse_text_content(
     bold: optional_bool(table.get("bold"), "\{path}.bold"),
     italic: optional_bool(table.get("italic"), "\{path}.italic"),
   }
+}
+
+///|
+fn parse_optional_text_body_options(
+  value : @toml.TomlValue?,
+  path : String,
+) -> TextBodyOptions? raise {
+  match value {
+    None => None
+    Some(value) => {
+      let table = expect_table(value, path)
+      reject_unknown_fields(table, path, ["inset", "auto_fit"])
+      Some(TextBodyOptions::{
+        inset: parse_optional_text_inset(table.get("inset"), "\{path}.inset"),
+        auto_fit: optional_string(table.get("auto_fit"), "\{path}.auto_fit"),
+      })
+    }
+  }
+}
+
+///|
+fn parse_optional_text_inset(
+  value : @toml.TomlValue?,
+  path : String,
+) -> TextInset? raise {
+  match value {
+    None => None
+    Some(value) => {
+      let table = expect_table(value, path)
+      reject_unknown_fields(table, path, ["left", "right", "top", "bottom"])
+      Some(TextInset::{
+        left: optional_double(table.get("left"), "\{path}.left"),
+        right: optional_double(table.get("right"), "\{path}.right"),
+        top: optional_double(table.get("top"), "\{path}.top"),
+        bottom: optional_double(table.get("bottom"), "\{path}.bottom"),
+      })
+    }
+  }
+}
+
+///|
+fn parse_optional_text_paragraphs(
+  value : @toml.TomlValue?,
+  path : String,
+) -> Array[TextParagraphSpec]? raise {
+  match value {
+    None => None
+    Some(@toml.TomlArray(values)) => {
+      let paragraphs = []
+      for index, value in values {
+        paragraphs.push(parse_text_paragraph(value, "\{path}[\{index}]"))
+      }
+      Some(paragraphs)
+    }
+    Some(_) => fail("\{path}: expected array")
+  }
+}
+
+///|
+fn parse_text_paragraph(
+  value : @toml.TomlValue,
+  path : String,
+) -> TextParagraphSpec raise {
+  let table = expect_table(value, path)
+  reject_unknown_fields(table, path, [
+    "text", "runs", "style", "align", "line_height", "space_before", "space_after",
+    "margin_left", "indent", "bullet",
+  ])
+  let text = optional_string(table.get("text"), "\{path}.text")
+  let runs = parse_optional_text_runs(table.get("runs"), "\{path}.runs")
+  if text is Some(_) && runs is Some(_) {
+    fail("\{path}: use either text or runs, not both")
+  }
+  if text is None && runs is None {
+    fail("\{path}: missing text or runs")
+  }
+  TextParagraphSpec::{
+    text,
+    runs,
+    style: optional_string(table.get("style"), "\{path}.style"),
+    align: parse_optional_align(table.get("align"), "\{path}.align"),
+    line_height: optional_double(
+      table.get("line_height"),
+      "\{path}.line_height",
+    ),
+    space_before: optional_double(
+      table.get("space_before"),
+      "\{path}.space_before",
+    ),
+    space_after: optional_double(
+      table.get("space_after"),
+      "\{path}.space_after",
+    ),
+    margin_left: optional_double(
+      table.get("margin_left"),
+      "\{path}.margin_left",
+    ),
+    indent: optional_double(table.get("indent"), "\{path}.indent"),
+    bullet: parse_optional_bullet(table.get("bullet"), "\{path}.bullet"),
+  }
+}
+
+///|
+fn parse_optional_text_runs(
+  value : @toml.TomlValue?,
+  path : String,
+) -> Array[TextRunSpec]? raise {
+  match value {
+    None => None
+    Some(@toml.TomlArray(values)) => {
+      let runs = []
+      for index, value in values {
+        runs.push(parse_text_run(value, "\{path}[\{index}]"))
+      }
+      Some(runs)
+    }
+    Some(_) => fail("\{path}: expected array")
+  }
+}
+
+///|
+fn parse_text_run(value : @toml.TomlValue, path : String) -> TextRunSpec raise {
+  let table = expect_table(value, path)
+  reject_unknown_fields(table, path, [
+    "text", "style", "font_size", "font_family", "color", "bold", "italic", "hyperlink",
+    "tooltip",
+  ])
+  TextRunSpec::{
+    text: required_string(table, "\{path}.text", key="text"),
+    style: optional_string(table.get("style"), "\{path}.style"),
+    font_size: optional_double(table.get("font_size"), "\{path}.font_size"),
+    font_family: optional_string(
+      table.get("font_family"),
+      "\{path}.font_family",
+    ),
+    color: optional_string(table.get("color"), "\{path}.color"),
+    bold: optional_bool(table.get("bold"), "\{path}.bold"),
+    italic: optional_bool(table.get("italic"), "\{path}.italic"),
+    hyperlink: optional_string(table.get("hyperlink"), "\{path}.hyperlink"),
+    tooltip: optional_string(table.get("tooltip"), "\{path}.tooltip"),
+  }
+}
+
+///|
+fn parse_optional_bullet(
+  value : @toml.TomlValue?,
+  path : String,
+) -> BulletSpec? raise {
+  match value {
+    None => None
+    Some(value) => {
+      let table = expect_table(value, path)
+      reject_unknown_fields(table, path, ["kind", "char", "start"])
+      Some(BulletSpec::{
+        kind: required_string(table, "\{path}.kind", key="kind"),
+        char: optional_string(table.get("char"), "\{path}.char"),
+        start: optional_int_or_none(table.get("start"), "\{path}.start"),
+      })
+    }
+  }
+}
+
+///|
+fn text_from_paragraphs(paragraphs : Array[TextParagraphSpec]) -> String {
+  let lines = []
+  for paragraph in paragraphs {
+    match paragraph.text {
+      Some(text) => lines.push(text)
+      None =>
+        match paragraph.runs {
+          None => lines.push("")
+          Some(runs) => {
+            let mut line = ""
+            for run in runs {
+              line = line + run.text
+            }
+            lines.push(line)
+          }
+        }
+    }
+  }
+  lines.join("\n")
 }
 
 ///|
@@ -589,7 +784,7 @@ fn parse_table_spec(
   path : String,
 ) -> TableSpec raise {
   reject_unknown_fields(table, path, [
-    "col_widths", "row_heights", "rows", "data",
+    "style", "col_widths", "row_heights", "rows", "data",
   ])
   let rows = match (table.get("rows"), table.get("data")) {
     (Some(_), Some(_)) => fail("\{path}: use either rows or data, not both")
@@ -598,6 +793,7 @@ fn parse_table_spec(
     (None, None) => fail("\{path}: missing rows or data")
   }
   TableSpec::{
+    style: optional_string(table.get("style"), "\{path}.style"),
     col_widths: parse_optional_double_array(
       table.get("col_widths"),
       "\{path}.col_widths",
@@ -617,10 +813,33 @@ fn parse_chart_spec(
 ) -> ChartSpec raise {
   reject_unknown_fields(table, path, [
     "kind", "title", "legend", "style", "data_labels", "data_table", "rounded_corners",
-    "categories", "series",
+    "categories", "series", "data",
   ])
+  let kind = required_string(table, "\{path}.kind", key="kind")
+  let (categories, series) = match table.get("data") {
+    None =>
+      (
+        parse_optional_string_array(
+          table.get("categories"),
+          "\{path}.categories",
+        ),
+        parse_chart_series_array(
+          required_array(table, "\{path}.series", key="series"),
+          "\{path}.series",
+        ),
+      )
+    Some(data) => {
+      if table.get("categories") is Some(_) || table.get("series") is Some(_) {
+        fail("\{path}: data cannot be combined with categories or series")
+      }
+      if kind == "scatter" || kind == "bubble" {
+        fail("\{path}.data: data shorthand is only for category charts")
+      }
+      parse_chart_data(data, "\{path}.data")
+    }
+  }
   ChartSpec::{
-    kind: required_string(table, "\{path}.kind", key="kind"),
+    kind,
     title: optional_string(table.get("title"), "\{path}.title"),
     legend: optional_string(table.get("legend"), "\{path}.legend"),
     style: optional_int_or_none(table.get("style"), "\{path}.style"),
@@ -633,14 +852,63 @@ fn parse_chart_spec(
       table.get("rounded_corners"),
       "\{path}.rounded_corners",
     ),
-    categories: parse_optional_string_array(
-      table.get("categories"),
-      "\{path}.categories",
-    ),
-    series: parse_chart_series_array(
-      required_array(table, "\{path}.series", key="series"),
-      "\{path}.series",
-    ),
+    categories,
+    series,
+  }
+}
+
+///|
+fn parse_chart_data(
+  value : @toml.TomlValue,
+  path : String,
+) -> (Array[String]?, Array[ChartSeriesSpec]) raise {
+  match value {
+    @toml.TomlArray(rows) => {
+      if rows.length() < 2 {
+        fail("\{path}: expected a header row and at least one series row")
+      }
+      let header = expect_chart_data_row(rows[0], "\{path}[0]")
+      if header.length() < 2 {
+        fail("\{path}[0]: expected at least one category")
+      }
+      let categories = []
+      for index in 1..<header.length() {
+        categories.push(expect_string(header[index], "\{path}[0][\{index}]"))
+      }
+      let series = []
+      for row_index in 1..<rows.length() {
+        let row_path = "\{path}[\{row_index}]"
+        let row = expect_chart_data_row(rows[row_index], row_path)
+        if row.length() != header.length() {
+          fail("\{row_path}: expected \{header.length()} cells")
+        }
+        let values = []
+        for value_index in 1..<row.length() {
+          values.push(
+            expect_double(row[value_index], "\{row_path}[\{value_index}]"),
+          )
+        }
+        series.push(ChartSeriesSpec::{
+          name: expect_string(row[0], "\{row_path}[0]"),
+          values,
+          x_values: None,
+          bubble_sizes: None,
+        })
+      }
+      (Some(categories), series)
+    }
+    _ => fail("\{path}: expected array")
+  }
+}
+
+///|
+fn expect_chart_data_row(
+  value : @toml.TomlValue,
+  path : String,
+) -> Array[@toml.TomlValue] raise {
+  match value {
+    @toml.TomlArray(values) => values
+    _ => fail("\{path}: expected array")
   }
 }
 

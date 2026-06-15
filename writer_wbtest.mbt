@@ -323,6 +323,8 @@ test "writer maps text wrap false" {
         style: None,
         align: None,
         wrap: Some(false),
+        body: None,
+        paragraphs: None,
         font_size: None,
         font_family: None,
         color: None,
@@ -338,6 +340,173 @@ test "writer maps text wrap false" {
     err => abort("open generated pptx failed: \{err}")
   }
   assert_slide_xml_contains(prs, 1, "wrap=\"none\"")
+}
+
+///|
+test "writer renders rich text paragraphs runs and body options" {
+  let page = parse_page_toml(
+    (
+      #|[[elements]]
+      #|id = "copy"
+      #|type = "text"
+      #|bounds = [80, 120, 640, 240]
+      #|
+      #|[elements.content]
+      #|style = "$body"
+      #|align = ["left", "top"]
+      #|wrap = true
+      #|
+      #|[elements.content.body]
+      #|auto_fit = "shape"
+      #|
+      #|[elements.content.body.inset]
+      #|left = 12
+      #|right = 12
+      #|top = 8
+      #|bottom = 8
+      #|
+      #|[[elements.content.paragraphs]]
+      #|text = "Overview"
+      #|space_after = 6
+      #|margin_left = 18
+      #|indent = -9
+      #|
+      #|[elements.content.paragraphs.bullet]
+      #|kind = "char"
+      #|char = "-"
+      #|
+      #|[[elements.content.paragraphs]]
+      #|space_before = 4
+      #|
+      #|[[elements.content.paragraphs.runs]]
+      #|text = "Read "
+      #|
+      #|[[elements.content.paragraphs.runs]]
+      #|text = "docs"
+      #|style = "$link"
+      #|hyperlink = "https://example.com"
+      #|tooltip = "Documentation"
+    ),
+  ) catch {
+    err => abort("parse rich text page failed: \{err}")
+  }
+  let loaded = unsupported_loaded(page)
+  let bytes = render_pptx(loaded) catch {
+    err => abort("render failed: \{err}")
+  }
+  let prs = @presentation.Presentation::open(bytes) catch {
+    err => abort("open generated pptx failed: \{err}")
+  }
+  assert_slide_xml_contains(prs, 1, "<a:t>Overview</a:t>")
+  assert_slide_xml_contains(prs, 1, "<a:t>docs</a:t>")
+  assert_slide_xml_contains(prs, 1, "<a:buChar char=\"-\"")
+  assert_slide_xml_contains(prs, 1, "<a:spAutoFit/>")
+  assert_slide_xml_contains(prs, 1, "lIns=\"114300\"")
+  assert_slide_xml_contains(prs, 1, "marL=\"171450\"")
+  assert_slide_xml_contains(prs, 1, "indent=\"-85725\"")
+  assert_slide_xml_contains(prs, 1, "<a:hlinkClick")
+  assert_slide_xml_contains(prs, 1, "tooltip=\"Documentation\"")
+}
+
+///|
+test "writer applies table styles" {
+  let loaded = unsupported_loaded(
+    page_with_element(
+      TableElement(test_base("styled_table"), TableSpec::{
+        style: Some("$compact"),
+        col_widths: Some([120.0, 120.0]),
+        row_heights: Some([36.0, 36.0]),
+        rows: [
+          TableRowSpec::{
+            cells: [
+              TableCellSpec::{
+                text: "Metric",
+                fill: None,
+                border: None,
+                col_span: 1,
+                row_span: 1,
+                align: None,
+                margin: None,
+              },
+              TableCellSpec::{
+                text: "Value",
+                fill: None,
+                border: None,
+                col_span: 1,
+                row_span: 1,
+                align: None,
+                margin: None,
+              },
+            ],
+          },
+          TableRowSpec::{
+            cells: [
+              TableCellSpec::{
+                text: "Revenue",
+                fill: None,
+                border: None,
+                col_span: 1,
+                row_span: 1,
+                align: None,
+                margin: None,
+              },
+              TableCellSpec::{
+                text: "100",
+                fill: None,
+                border: None,
+                col_span: 1,
+                row_span: 1,
+                align: None,
+                margin: None,
+              },
+            ],
+          },
+        ],
+      }),
+    ),
+  )
+  let bytes = render_pptx(loaded) catch {
+    err => abort("render failed: \{err}")
+  }
+  let prs = @presentation.Presentation::open(bytes) catch {
+    err => abort("open generated pptx failed: \{err}")
+  }
+  assert_slide_xml_contains(prs, 1, "<a:t>Metric</a:t>")
+  assert_slide_xml_contains(prs, 1, "val=\"334155\"")
+  assert_slide_xml_contains(prs, 1, "val=\"F8FAFC\"")
+  assert_slide_xml_contains(prs, 1, "val=\"0F172A\"")
+  assert_slide_xml_contains(prs, 1, "val=\"CBD5E1\"")
+  assert_slide_xml_contains(prs, 1, "sz=\"1400\"")
+}
+
+///|
+test "writer renders chart data shorthand" {
+  let page = parse_page_toml(
+    (
+      #|[[elements]]
+      #|id = "chart"
+      #|type = "chart"
+      #|bounds = [80, 120, 720, 360]
+      #|
+      #|[elements.content]
+      #|kind = "bar"
+      #|data = [
+      #|  ["", "Q1", "Q2"],
+      #|  ["Revenue", 100, 200],
+      #|]
+    ),
+  ) catch {
+    err => abort("parse chart shorthand failed: \{err}")
+  }
+  let bytes = render_pptx(unsupported_loaded(page)) catch {
+    err => abort("render failed: \{err}")
+  }
+  let prs = @presentation.Presentation::open(bytes) catch {
+    err => abort("open generated pptx failed: \{err}")
+  }
+  assert_chart_xml_contains(prs, 1, "Revenue")
+  assert_chart_xml_contains(prs, 1, "Q2")
+  assert_chart_xml_contains(prs, 1, "<c:v>200</c:v>")
 }
 
 ///|
@@ -400,6 +569,8 @@ test "writer reports capability errors for unsupported schema-valid features" {
           style: Some("$spaced"),
           align: None,
           wrap: None,
+          body: None,
+          paragraphs: None,
           font_size: None,
           font_family: None,
           color: None,
@@ -516,8 +687,33 @@ fn unsupported_loaded(page : Page) -> LoadedDeck {
             ("background", "#10131A"),
             ("surface", "#1C2230"),
             ("text", "#F4F6FB"),
+            ("accent", "#38BDF8"),
           ]),
           text_styles: Map::from_array([
+            (
+              "body",
+              TextStyle::{
+                font_size: Some(18.0),
+                font_family: Some("Liter, MiSans"),
+                color: Some("$text"),
+                bold: None,
+                italic: None,
+                line_height: Some(1.2),
+                letter_spacing: None,
+              },
+            ),
+            (
+              "link",
+              TextStyle::{
+                font_size: Some(18.0),
+                font_family: Some("Liter, MiSans"),
+                color: Some("$accent"),
+                bold: Some(true),
+                italic: None,
+                line_height: None,
+                letter_spacing: None,
+              },
+            ),
             (
               "spaced",
               TextStyle::{
@@ -531,7 +727,23 @@ fn unsupported_loaded(page : Page) -> LoadedDeck {
               },
             ),
           ]),
-          table_styles: Map([], capacity=0),
+          table_styles: Map::from_array([
+            (
+              "compact",
+              TableStyle::{
+                font_size: Some(14.0),
+                font_family: Some("Liter, MiSans"),
+                header_fill: Some("#334155"),
+                header_color: Some("#F8FAFC"),
+                body_color: Some("#0F172A"),
+                border: Some(Border::{
+                  style: "solid",
+                  width: 1.0,
+                  color: "#CBD5E1",
+                }),
+              },
+            ),
+          ]),
         }),
         pages: [PageRef::{ path: "pages/unsupported.page.toml" }],
       },
@@ -555,6 +767,7 @@ fn page_with_element(element : Element) -> Page {
 ///|
 fn test_table_spec() -> TableSpec {
   TableSpec::{
+    style: None,
     col_widths: Some([120.0]),
     row_heights: Some([36.0]),
     rows: [
@@ -587,6 +800,7 @@ fn test_table_spec() -> TableSpec {
 ///|
 fn test_merged_table_spec() -> TableSpec {
   TableSpec::{
+    style: None,
     col_widths: Some([80.0, 80.0, 80.0]),
     row_heights: Some([32.0, 32.0]),
     rows: [

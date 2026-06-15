@@ -57,8 +57,58 @@ stroke model.
 
 Text styling should extend the current text style model toward the
 `moon-pptx` run properties surface while staying in `pptz` terminology.
-Font size, font family, color, bold, italic, underline, strikethrough, caps,
-baseline, bullets, and numbering belong here as the schema grows.
+The current writer supports font size, font family, color, bold, italic,
+line height, paragraph spacing, bullets, external hyperlinks, body insets, and
+autofit controls. Underline, strikethrough, caps, baseline, and internal slide
+hyperlinks remain future schema extensions.
+
+Plain text remains valid:
+
+```toml
+[elements.content]
+style = "$body"
+text = "Hello"
+```
+
+Rich text uses explicit paragraphs and runs. Do not mix `text` and
+`paragraphs` in the same text element.
+
+```toml
+[elements.content]
+style = "$body"
+align = ["left", "top"]
+wrap = true
+
+[elements.content.body]
+auto_fit = "shape"
+
+[elements.content.body.inset]
+left = 8
+right = 8
+top = 4
+bottom = 4
+
+[[elements.content.paragraphs]]
+text = "Agenda item"
+space_after = 6
+margin_left = 18
+indent = -9
+
+[elements.content.paragraphs.bullet]
+kind = "char"
+char = "-"
+
+[[elements.content.paragraphs]]
+
+[[elements.content.paragraphs.runs]]
+text = "Read "
+
+[[elements.content.paragraphs.runs]]
+text = "docs"
+style = "$link"
+hyperlink = "https://example.com"
+tooltip = "Documentation"
+```
 
 ### Crop Rectangle
 
@@ -211,6 +261,7 @@ type = "table"
 bounds = [80, 120, 720, 300]
 
 [elements.content]
+style = "$compact"
 col_widths = [240, 240, 240]
 row_heights = [48, 48]
 
@@ -225,7 +276,9 @@ cells = [
 ```
 
 The canonical model covers rows, cells, merge spans, fills, borders, margins,
-and anchors.
+anchors, and a table-level theme style token. A table style may define
+`font_size`, `font_family`, `header_fill`, `header_color`, `body_color`, and
+`border`; explicit cell fill or border values override the table style.
 
 Shorthand form:
 
@@ -247,7 +300,7 @@ Weight-based sizing is outside the v2 shorthand scope.
 
 The current writer renders the first chart schema.
 
-The first chart slice covers these chart families:
+The current chart slice covers these chart families:
 
 - `bar`
 - `line`
@@ -258,7 +311,9 @@ The first chart slice covers these chart families:
 - `bubble`
 - `radar`
 
-Chart data is inline in page TOML for the first slice.
+Chart data is inline in page TOML for the first slice. Category charts may use
+either explicit `categories` plus `series` tables or the compact `data`
+matrix shorthand.
 
 ```toml
 [[elements]]
@@ -280,6 +335,17 @@ name = "Revenue"
 values = [100.0, 200.0, 300.0, 250.0]
 ```
 
+Equivalent category chart shorthand:
+
+```toml
+[elements.content]
+kind = "bar"
+data = [
+  ["", "Q1", "Q2", "Q3", "Q4"],
+  ["Revenue", 100.0, 200.0, 300.0, 250.0],
+]
+```
+
 Supported `legend` values are `hidden`, `bottom`, `top_right`, `left`,
 `right`, and `top`. Supported `data_labels` values are `hidden`, `best_fit`,
 `bottom`, `center`, `inside_base`, `inside_end`, `left`, `outside_end`,
@@ -289,7 +355,18 @@ Scatter series use `x_values` plus `values` for Y values. Bubble series add
 `bubble_sizes`.
 
 3D charts, stock charts, surface charts, of-pie charts, chartEx families, and
-external CSV/TOML/spreadsheet-backed data are outside the first chart slice.
+external CSV/TOML/spreadsheet-backed data are outside the current chart slice.
+Scatter and bubble charts still use explicit series with `x_values` and cannot
+use the category `data` shorthand.
+
+## 0.3.0 Release Boundary
+
+`0.3.0` promotes authoring ergonomics for real content decks:
+
+- rich text paragraphs, styled runs, bullets, external hyperlinks, body insets,
+  and autofit controls;
+- table-level theme styles for header/body text, header fill, and borders;
+- category chart `data` shorthand normalized into the existing chart AST.
 
 ## 0.2.x Release Boundary
 

@@ -129,11 +129,61 @@ pub(all) struct TextContent {
   style : String?
   align : Align?
   wrap : Bool?
+  body : TextBodyOptions?
+  paragraphs : Array[TextParagraphSpec]?
   font_size : Double?
   font_family : String?
   color : String?
   bold : Bool?
   italic : Bool?
+} derive(Eq, Debug)
+
+///|
+pub(all) struct TextBodyOptions {
+  inset : TextInset?
+  auto_fit : String?
+} derive(Eq, Debug)
+
+///|
+pub(all) struct TextInset {
+  left : Double?
+  right : Double?
+  top : Double?
+  bottom : Double?
+} derive(Eq, Debug)
+
+///|
+pub(all) struct TextParagraphSpec {
+  text : String?
+  runs : Array[TextRunSpec]?
+  style : String?
+  align : Align?
+  line_height : Double?
+  space_before : Double?
+  space_after : Double?
+  margin_left : Double?
+  indent : Double?
+  bullet : BulletSpec?
+} derive(Eq, Debug)
+
+///|
+pub(all) struct TextRunSpec {
+  text : String
+  style : String?
+  font_size : Double?
+  font_family : String?
+  color : String?
+  bold : Bool?
+  italic : Bool?
+  hyperlink : String?
+  tooltip : String?
+} derive(Eq, Debug)
+
+///|
+pub(all) struct BulletSpec {
+  kind : String
+  char : String?
+  start : Int?
 } derive(Eq, Debug)
 
 ///|
@@ -212,6 +262,7 @@ pub(all) struct IconSpec {
 
 ///|
 pub(all) struct TableSpec {
+  style : String?
   col_widths : Array[Double]?
   row_heights : Array[Double]?
   rows : Array[TableRowSpec]

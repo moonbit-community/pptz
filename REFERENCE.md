@@ -294,31 +294,35 @@ Build `pptz` in this order:
    directly.
    Current writer scope:
    deck size, ordered pages, optional solid/gradient/image background, text
-   elements with wrapping and line breaks, preset auto-shape elements excluding
-   line and connector presets, straight connector elements, solid/no-fill/
-   gradient shape fills, alpha colors, solid and dashed shape borders, outer
-   shadows for shape and connector elements, built-in icon elements, raster
-   image elements with `stretch`, `cover`, or `contain`, SVG image elements,
-   image crop rectangles, and basic theme color/text-style resolution with
-   element-local overrides. Valid AST features outside this subset may fail as
-   writer capability errors.
+   elements with wrapping, line breaks, rich paragraphs, styled runs, bullets,
+   external hyperlinks, body insets, autofit controls, preset auto-shape
+   elements excluding line and connector presets, straight connector elements,
+   solid/no-fill/gradient shape fills, alpha colors, solid and dashed shape
+   borders, outer shadows for shape and connector elements, built-in icon
+   elements, raster image elements with `stretch`, `cover`, or `contain`, SVG
+   image elements, image crop rectangles, and basic theme color/text-style
+   resolution with element-local overrides. Valid AST features outside this
+   subset may fail as writer capability errors.
    MVP text styling follows the `moon-pptx@0.4.0` text builder surface:
-   `font_size`, `font_family`, `color`, `bold`, `italic`, `line_height`, and
+   `font_size`, `font_family`, `color`, `bold`, `italic`, `line_height`,
+   paragraph spacing, bullets, external hyperlinks, body insets, autofit, and
    `wrap`. `letter_spacing` remains a schema/AST concept but is outside the
    current `moon-pptx@0.4.0` writer surface.
    The MVP writer must not silently ignore declared fields that it cannot map
    to `moon-pptx`. Fail with a writer capability error instead.
    Current status: `writer.mbt` generates valid PPTX bytes for deck size,
    ordered pages, optional solid/gradient/image backgrounds, text elements
-   with wrapping and line breaks, preset auto-shape elements excluding line and
-   connector presets, straight, bent, and curved connectors with coordinate or
-   element endpoints, solid/no-fill/gradient shape fills, alpha colors, solid
-   and dashed shape borders, outer shadows for shape and connector elements,
-   built-in icon elements, table elements with explicit or evenly distributed
-   column widths and row heights including merge spans, inline chart elements
-   with title, legend, style, data-label, data-table, and rounded-corner
-   options, image elements with `stretch`, `cover`, `contain`, explicit crop,
-   SVG pictures, and basic theme color/text-style resolution including
+   with wrapping, line breaks, rich paragraphs, styled runs, bullets, external
+   hyperlinks, body insets, and autofit controls, preset auto-shape elements
+   excluding line and connector presets, straight, bent, and curved connectors
+   with coordinate or element endpoints, solid/no-fill/gradient shape fills,
+   alpha colors, solid and dashed shape borders, outer shadows for shape and
+   connector elements, built-in icon elements, table elements with explicit or
+   evenly distributed column widths and row heights including merge spans and
+   theme table styles, inline chart elements with title, legend, style,
+   data-label, data-table, rounded-corner options, and category chart data
+   shorthand, image elements with `stretch`, `cover`, `contain`, explicit
+   crop, SVG pictures, and basic theme color/text-style resolution including
    `line_height`. It returns capability errors for schema-valid features that
    are still outside the implemented writer subset.
 
@@ -420,12 +424,12 @@ Theme token handling is deliberately simple:
 - Text style fields may include `font_size`, `font_family`, `color`, `bold`,
   and `italic` in both `theme.text_styles.<name>` and element-local text
   content.
-- Text content is plain text. Do not parse HTML, XML, Markdown, or rich-text
-  markup inside `text`, and do not scan `$name` inside text content.
+- Text content is either a plain `text` string or explicit `paragraphs`; do not
+  combine both in one text element. Do not parse HTML, XML, Markdown, or
+  rich-text markup inside `text`, and do not scan `$name` inside text content.
   Newline characters in `text`, including TOML multiline string newlines, map
-  to PPTX text line breaks.
-  Bullets and rich paragraph structure are outside the MVP. Do not infer bullets
-  from Markdown-like text.
+  to PPTX text line breaks. Bullets and hyperlinks must be declared through the
+  paragraph/run schema; do not infer them from Markdown-like text.
 - Embedded expressions such as `linear($a, $b)` are not interpreted as token
   references in the first slice.
 
@@ -674,23 +678,23 @@ PowerPoint preset shapes. Supported names are `cube`, `circle`, `square`,
 prefix such as `fas:cube`. Unknown icon names are writer capability errors.
 
 Current table schema has a canonical table form based on PowerPoint table
-concepts: rows, cells, merge spans, cell fills, cell borders, cell margins, and
-cell anchors. A compact `data` shorthand is accepted for simple tables and is
-normalized into the canonical rows/cells model before validation. Table
-shorthand may omit column widths and row heights; omitted sizes are evenly
-distributed inside the table element bounds by the writer. Explicit
-`col_widths` and `row_heights` may override the equal distribution.
-Weight-based table sizing is outside the v2 shorthand scope. The current
-writer renders rectangular tables, including cells that declare `col_span` or
-`row_span`.
+concepts: rows, cells, merge spans, cell fills, cell borders, cell margins, cell
+anchors, and optional theme table styles. A compact `data` shorthand is
+accepted for simple tables and is normalized into the canonical rows/cells
+model before validation. Table shorthand may omit column widths and row
+heights; omitted sizes are evenly distributed inside the table element bounds
+by the writer. Explicit `col_widths` and `row_heights` may override the equal
+distribution. Weight-based table sizing is outside the v2 shorthand scope. The
+current writer renders rectangular tables, including cells that declare
+`col_span` or `row_span`.
 
 Current chart writer support covers bar, line, pie, doughnut, area, scatter,
 bubble, and radar chart families, with chart title, legend, style,
-data-labels, data-table, and rounded-corner options. 3D charts, stock charts,
-surface charts, of-pie charts, and chartEx families are outside the first v2
-chart slice. The first chart slice uses inline chart data in page TOML.
-External CSV, TOML, or spreadsheet-backed chart data is outside the first v2
-chart slice.
+data-labels, data-table, rounded-corner options, and a category chart data
+shorthand. 3D charts, stock charts, surface charts, of-pie charts, and chartEx
+families are outside the current v2 chart slice. The current chart slice uses
+inline chart data in page TOML. External CSV, TOML, or spreadsheet-backed chart
+data is outside the current v2 chart slice.
 
 Image `fit` values are `stretch`, `cover`, or `contain`. Omitted `fit` defaults
 to `stretch`. The writer maps `stretch` directly to the requested bounds, uses
