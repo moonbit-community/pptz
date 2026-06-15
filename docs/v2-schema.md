@@ -376,6 +376,7 @@ use the category `data` shorthand.
 - table-level theme styles for header/body text, header fill, and borders;
 - chart style templates for reusable chart options;
 - layout templates with text slots and default elements;
+- component templates with local coordinates and text props;
 - category chart `data` shorthand normalized into the existing chart AST.
 
 ## 0.2.x Release Boundary

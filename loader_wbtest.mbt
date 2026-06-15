@@ -61,6 +61,10 @@ test "load minimal deck resolves ordered pages" {
     Some(content) => assert_eq(content.text, "Agenda")
     None => abort("expected layout heading")
   }
+  match find_text_content(loaded.bundle.pages[1].page, "revenue_card_value") {
+    Some(content) => assert_eq(content.text, "150")
+    None => abort("expected component value")
+  }
   match find_chart_spec(loaded.bundle.pages[1].page, "revenue_chart") {
     Some(spec) => {
       match spec.chart_style {

@@ -447,6 +447,10 @@ Theme token handling is deliberately simple:
   `layout = "$name"` and fill `[slots]` values; the loader expands layout
   elements and text slots into ordinary page elements before validation and
   writing.
+- Deck-level `components` provide reusable local element groups. Page
+  `[[components]]` instances set `use = "$name"`, `bounds`, and optional string
+  `props`. The loader expands component instances into ordinary page elements
+  with instance-prefixed ids before validation and writing.
 - `font_family` is a single PowerPoint typeface name. It is not a CSS fallback
   list; comma-separated values may render differently across PowerPoint and
   preview tools.
@@ -648,6 +652,9 @@ metadata. Type-specific fields live under `[elements.content]`.
 Page `layout` is optional. When present, it must be a whole-string token that
 references a deck-level layout. Page `[slots]` values are strings consumed by
 the referenced layout's slot definitions.
+Page `[[components]]` entries are optional. Component coordinates are local to
+the template bounds and are translated/scaled into the instance bounds. Props
+replace whole-string `$name` text values.
 
 Allowed element types: `text`, `shape`, `image`, `icon`, `table`, `chart`.
 Allowed background types: `solid`, `gradient`, `image`.

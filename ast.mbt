@@ -24,7 +24,22 @@ pub(all) struct Deck {
   size : Size
   theme : Theme?
   layouts : Map[String, LayoutTemplate]
+  components : Map[String, ComponentTemplate]
   pages : Array[PageRef]
+} derive(Eq, Debug)
+
+///|
+pub(all) struct ComponentTemplate {
+  bounds : Bounds
+  elements : Array[Element]
+} derive(Eq, Debug)
+
+///|
+pub(all) struct ComponentInstance {
+  id : String
+  template : String
+  bounds : Bounds
+  props : Map[String, String]
 } derive(Eq, Debug)
 
 ///|
@@ -96,6 +111,7 @@ pub(all) struct Page {
   layout : String?
   slots : Map[String, String]
   background : Background?
+  components : Array[ComponentInstance]
   elements : Array[Element]
 } derive(Eq, Debug)
 

@@ -31,13 +31,14 @@ pub fn parse_page_toml(source : String) -> Page raise {
 ///|
 fn parse_deck_table(table : Map[String, @toml.TomlValue]) -> Deck raise {
   reject_unknown_fields(table, "deck", [
-    "title", "size", "theme", "layouts", "pages",
+    "title", "size", "theme", "layouts", "components", "pages",
   ])
   Deck::{
     title: optional_string(table.get("title"), "title"),
     size: parse_size(required_array(table, "size"), "size"),
     theme: parse_optional_theme(table.get("theme"), "theme"),
     layouts: parse_layouts(table.get("layouts"), "layouts"),
+    components: parse_component_templates(table.get("components"), "components"),
     pages: parse_page_refs(required_array(table, "pages"), "pages"),
   }
 }
@@ -45,13 +46,14 @@ fn parse_deck_table(table : Map[String, @toml.TomlValue]) -> Deck raise {
 ///|
 fn parse_page_table(table : Map[String, @toml.TomlValue]) -> Page raise {
   reject_unknown_fields(table, "page", [
-    "page_type", "layout", "slots", "background", "elements",
+    "page_type", "layout", "slots", "background", "components", "elements",
   ])
   Page::{
     page_type: optional_string(table.get("page_type"), "page_type"),
     layout: optional_string(table.get("layout"), "layout"),
     slots: parse_string_map_optional(table.get("slots"), "slots"),
     background: parse_optional_background(table.get("background"), "background"),
+    components: parse_component_instances(table.get("components"), "components"),
     elements: parse_elements(required_array(table, "elements"), "elements"),
   }
 }
@@ -186,6 +188,78 @@ fn parse_layout_slots(
             "\{slot_path}.align",
           ),
         }
+      }
+      result
+    }
+  }
+}
+
+///|
+fn parse_component_templates(
+  value : @toml.TomlValue?,
+  path : String,
+) -> Map[String, ComponentTemplate] raise {
+  match value {
+    None => Map([], capacity=0)
+    Some(value) => {
+      let table = expect_table(value, path)
+      let result = Map([], capacity=table.length())
+      for name, component_value in table {
+        let component_path = "\{path}.\{name}"
+        let component_table = expect_table(component_value, component_path)
+        reject_unknown_fields(component_table, component_path, [
+          "bounds", "elements",
+        ])
+        result[name] = ComponentTemplate::{
+          bounds: parse_bounds(
+            required_array(
+              component_table,
+              "\{component_path}.bounds",
+              key="bounds",
+            ),
+            "\{component_path}.bounds",
+          ),
+          elements: parse_elements(
+            required_array(
+              component_table,
+              "\{component_path}.elements",
+              key="elements",
+            ),
+            "\{component_path}.elements",
+          ),
+        }
+      }
+      result
+    }
+  }
+}
+
+///|
+fn parse_component_instances(
+  value : @toml.TomlValue?,
+  path : String,
+) -> Array[ComponentInstance] raise {
+  match value {
+    None => []
+    Some(value) => {
+      let values = expect_array(value, path)
+      let result = []
+      for index, value in values {
+        let item_path = "\{path}[\{index}]"
+        let table = expect_table(value, item_path)
+        reject_unknown_fields(table, item_path, ["id", "use", "bounds", "props"])
+        result.push(ComponentInstance::{
+          id: required_string(table, "\{item_path}.id", key="id"),
+          template: required_string(table, "\{item_path}.use", key="use"),
+          bounds: parse_bounds(
+            required_array(table, "\{item_path}.bounds", key="bounds"),
+            "\{item_path}.bounds",
+          ),
+          props: parse_string_map_optional(
+            table.get("props"),
+            "\{item_path}.props",
+          ),
+        })
       }
       result
     }

@@ -63,6 +63,8 @@ test "parse minimal deck toml" {
         Some(kind) => assert_eq(kind, "bar")
         None => abort("expected chart style kind")
       }
+      assert_eq(deck.layouts["content"].slots.length(), 3)
+      assert_eq(deck.components["stat_card"].elements.length(), 3)
     }
     None => abort("expected theme")
   }
@@ -288,6 +290,8 @@ test "parse minimal agenda page multiline text" {
     None => abort("expected layout")
   }
   assert_eq(page.slots["heading"], "Agenda")
+  assert_eq(page.components.length(), 1)
+  assert_eq(page.components[0].id, "revenue_card")
   assert_eq(page.elements.length(), 4)
   match page.elements[0] {
     TextElement(base, content) => {

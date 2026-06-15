@@ -43,6 +43,7 @@ test "deck ast covers minimal deck source" {
     size: Size::{ width: 1280.0, height: 720.0 },
     theme: Some(theme),
     layouts: Map([], capacity=0),
+    components: Map([], capacity=0),
     pages: [
       PageRef::{ path: "pages/cover.page.toml" },
       PageRef::{ path: "pages/agenda.page.toml" },
@@ -63,6 +64,7 @@ test "page ast supports solid background and text elements" {
     layout: None,
     slots: Map([], capacity=0),
     background: Some(SolidBackground("$background")),
+    components: [],
     elements: [
       TextElement(
         ElementBase::{

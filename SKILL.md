@@ -133,6 +133,34 @@ eyebrow = "Risk model"
 heading = "风险分析"
 ```
 
+### Components
+
+Use components for repeated local element groups such as stat cards. Component
+coordinates are local to the component bounds; instances place and scale the
+group. Props replace whole-string `$name` text values.
+
+```toml
+[components.stat_card]
+bounds = [0, 0, 180, 90]
+
+[[components.stat_card.elements]]
+id = "label"
+type = "text"
+bounds = [16, 14, 148, 24]
+
+[components.stat_card.elements.content]
+style = "$caption"
+text = "$label"
+
+[[components]]
+id = "npm_card"
+use = "$stat_card"
+bounds = [72, 160, 180, 90]
+
+[components.props]
+label = "npm packages"
+```
+
 ### Rich Text
 
 Use explicit paragraphs/runs for bullets and hyperlinks. Do not encode rich text

@@ -85,6 +85,46 @@ shape = "rect"
 type = "solid"
 color = "$primary"
 
+[components.stat_card]
+bounds = [0, 0, 180, 90]
+
+[[components.stat_card.elements]]
+id = "bg"
+type = "shape"
+bounds = [0, 0, 180, 90]
+
+[components.stat_card.elements.content]
+shape = "round_rect"
+
+[components.stat_card.elements.content.fill]
+type = "solid"
+color = "$surface"
+
+[components.stat_card.elements.content.border]
+style = "solid"
+width = 1
+color = "$muted"
+
+[[components.stat_card.elements]]
+id = "label"
+type = "text"
+bounds = [16, 14, 148, 24]
+
+[components.stat_card.elements.content]
+style = "$caption"
+text = "$label"
+
+[[components.stat_card.elements]]
+id = "value"
+type = "text"
+bounds = [16, 40, 148, 42]
+
+[components.stat_card.elements.content]
+style = "$body"
+font_size = 24
+bold = true
+text = "$value"
+
 [[pages]]
 path = "pages/cover.page.toml"
 

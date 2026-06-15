@@ -119,6 +119,7 @@ fn expand_deck_theme(
           chart_styles: expand_chart_styles(theme, deck_path, errors),
         }),
         layouts: deck.layouts,
+        components: deck.components,
         pages: deck.pages,
       }
   }
@@ -524,6 +525,7 @@ fn expand_page(
   errors : Array[Diagnostic],
 ) -> Page {
   let page = expand_page_layout(deck, page_path, page, errors)
+  let page = expand_page_components(deck, page_path, page, errors)
   let elements = []
   for element in page.elements {
     elements.push(expand_element(deck, page_path, element, errors))
@@ -533,6 +535,7 @@ fn expand_page(
     layout: None,
     slots: Map([], capacity=0),
     background: page.background,
+    components: [],
     elements,
   }
 }
@@ -628,7 +631,220 @@ fn apply_layout_template(
     layout: None,
     slots: Map([], capacity=0),
     background: option_background_or(page.background, layout.background),
+    components: page.components,
     elements,
+  }
+}
+
+///|
+fn expand_page_components(
+  deck : Deck,
+  page_path : String,
+  page : Page,
+  errors : Array[Diagnostic],
+) -> Page {
+  let elements = []
+  for instance in page.components {
+    match token_name(instance.template) {
+      None =>
+        errors.push(
+          error_diagnostic(
+            "PZ030",
+            "component use must be a whole-string component token",
+            path=page_path,
+            element_id=instance.id,
+            field="components.use",
+          ),
+        )
+      Some(name) =>
+        match deck.components.get(name) {
+          None =>
+            errors.push(
+              error_diagnostic(
+                "PZ030",
+                "unresolved component token",
+                path=page_path,
+                element_id=instance.id,
+                field="components.use",
+              ),
+            )
+          Some(template) =>
+            for element in template.elements {
+              elements.push(
+                expand_component_element(instance, template, element),
+              )
+            }
+        }
+    }
+  }
+  for element in page.elements {
+    elements.push(element)
+  }
+  Page::{
+    page_type: page.page_type,
+    layout: page.layout,
+    slots: page.slots,
+    background: page.background,
+    components: [],
+    elements,
+  }
+}
+
+///|
+fn expand_component_element(
+  instance : ComponentInstance,
+  template : ComponentTemplate,
+  element : Element,
+) -> Element {
+  let element = apply_component_props(element, instance.props)
+  match element {
+    TextElement(base, content) =>
+      TextElement(component_base(instance, template.bounds, base), content)
+    ShapeElement(base, spec) =>
+      ShapeElement(component_base(instance, template.bounds, base), spec)
+    ImageElement(base, spec) =>
+      ImageElement(component_base(instance, template.bounds, base), spec)
+    IconElement(base, spec) =>
+      IconElement(component_base(instance, template.bounds, base), spec)
+    TableElement(base, spec) =>
+      TableElement(component_base(instance, template.bounds, base), spec)
+    ChartElement(base, spec) =>
+      ChartElement(component_base(instance, template.bounds, base), spec)
+    ConnectorElement(id, spec) => ConnectorElement("\{instance.id}_\{id}", spec)
+  }
+}
+
+///|
+fn component_base(
+  instance : ComponentInstance,
+  template_bounds : Bounds,
+  base : ElementBase,
+) -> ElementBase {
+  let sx = if template_bounds.width > 0.0 {
+    instance.bounds.width / template_bounds.width
+  } else {
+    1.0
+  }
+  let sy = if template_bounds.height > 0.0 {
+    instance.bounds.height / template_bounds.height
+  } else {
+    1.0
+  }
+  ElementBase::{
+    id: "\{instance.id}_\{base.id}",
+    bounds: Bounds::{
+      x: instance.bounds.x + (base.bounds.x - template_bounds.x) * sx,
+      y: instance.bounds.y + (base.bounds.y - template_bounds.y) * sy,
+      width: base.bounds.width * sx,
+      height: base.bounds.height * sy,
+    },
+  }
+}
+
+///|
+fn apply_component_props(
+  element : Element,
+  props : Map[String, String],
+) -> Element {
+  match element {
+    TextElement(base, content) =>
+      TextElement(base, apply_text_props(content, props))
+    _ => element
+  }
+}
+
+///|
+fn apply_text_props(
+  content : TextContent,
+  props : Map[String, String],
+) -> TextContent {
+  TextContent::{
+    text: replace_prop_value(content.text, props),
+    style: content.style,
+    align: content.align,
+    wrap: content.wrap,
+    body: content.body,
+    paragraphs: apply_paragraph_props(content.paragraphs, props),
+    font_size: content.font_size,
+    font_family: content.font_family,
+    color: content.color,
+    bold: content.bold,
+    italic: content.italic,
+  }
+}
+
+///|
+fn apply_paragraph_props(
+  paragraphs : Array[TextParagraphSpec]?,
+  props : Map[String, String],
+) -> Array[TextParagraphSpec]? {
+  match paragraphs {
+    None => None
+    Some(paragraphs) => {
+      let result = []
+      for paragraph in paragraphs {
+        result.push(TextParagraphSpec::{
+          text: replace_prop_option(paragraph.text, props),
+          runs: apply_run_props(paragraph.runs, props),
+          style: paragraph.style,
+          align: paragraph.align,
+          line_height: paragraph.line_height,
+          space_before: paragraph.space_before,
+          space_after: paragraph.space_after,
+          margin_left: paragraph.margin_left,
+          indent: paragraph.indent,
+          bullet: paragraph.bullet,
+        })
+      }
+      Some(result)
+    }
+  }
+}
+
+///|
+fn apply_run_props(
+  runs : Array[TextRunSpec]?,
+  props : Map[String, String],
+) -> Array[TextRunSpec]? {
+  match runs {
+    None => None
+    Some(runs) => {
+      let result = []
+      for run in runs {
+        result.push(TextRunSpec::{
+          text: replace_prop_value(run.text, props),
+          style: run.style,
+          font_size: run.font_size,
+          font_family: run.font_family,
+          color: run.color,
+          bold: run.bold,
+          italic: run.italic,
+          hyperlink: run.hyperlink,
+          tooltip: run.tooltip,
+        })
+      }
+      Some(result)
+    }
+  }
+}
+
+///|
+fn replace_prop_option(value : String?, props : Map[String, String]) -> String? {
+  match value {
+    None => None
+    Some(value) => Some(replace_prop_value(value, props))
+  }
+}
+
+///|
+fn replace_prop_value(value : String, props : Map[String, String]) -> String {
+  match token_name(value) {
+    None => value
+    Some(name) =>
+      match props.get(name) {
+        None => value
+        Some(value) => value
+      }
   }
 }
 

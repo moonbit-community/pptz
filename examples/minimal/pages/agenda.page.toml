@@ -6,6 +6,15 @@ eyebrow = "Minimal deck"
 heading = "Agenda"
 footer = "Generated from a reusable content layout"
 
+[[components]]
+id = "revenue_card"
+use = "$stat_card"
+bounds = [390, 350, 180, 90]
+
+[components.props]
+label = "Revenue"
+value = "150"
+
 [[elements]]
 id = "items"
 type = "text"

@@ -218,6 +218,7 @@ test "writer preserves existing output when render fails" {
     layout: None,
     slots: Map([], capacity=0),
     background: None,
+    components: [],
     elements: [
       IconElement(test_base("icon"), IconSpec::{
         name: "fas:dragon",
@@ -755,6 +756,7 @@ fn unsupported_loaded(page : Page) -> LoadedDeck {
           chart_styles: Map([], capacity=0),
         }),
         layouts: Map([], capacity=0),
+        components: Map([], capacity=0),
         pages: [PageRef::{ path: "pages/unsupported.page.toml" }],
       },
       pages: [
@@ -776,6 +778,7 @@ fn page_with_element(element : Element) -> Page {
     layout: None,
     slots: Map([], capacity=0),
     background: None,
+    components: [],
     elements: [element],
   }
 }
