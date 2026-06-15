@@ -9,12 +9,12 @@ line = "#CBD5E1"
 
 [theme.text_styles.body]
 font_size = 16
-font_family = "Liter, MiSans"
+font_family = "Aptos"
 color = "$text"
 
 [theme.table_styles.bad]
 font_size = 16
-font_family = "Liter, MiSans"
+font_family = "Aptos"
 header_fill = "$surface"
 header_text_color = "$text"
 body_text_color = "$surface"

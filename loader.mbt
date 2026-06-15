@@ -167,7 +167,7 @@ fn validate_bundle(
   warnings : Array[Diagnostic],
 ) -> Unit {
   validate_deck_definition(bundle, errors)
-  validate_theme(bundle.deck, bundle.deck_path, errors)
+  validate_theme(bundle.deck, bundle.deck_path, errors, warnings)
   validate_pages(bundle, errors, warnings)
 }
 
@@ -214,6 +214,7 @@ fn validate_theme(
   deck : Deck,
   deck_path : String,
   errors : Array[Diagnostic],
+  warnings : Array[Diagnostic],
 ) -> Unit {
   match deck.theme {
     None => ()
@@ -261,6 +262,13 @@ fn validate_theme(
               errors,
             )
         }
+        validate_font_family(
+          deck_path,
+          None,
+          "theme.text_styles.\{name}.font_family",
+          style.font_family,
+          warnings,
+        )
       }
       for name, style in theme.table_styles {
         if !is_identifier(name) {
@@ -345,6 +353,13 @@ fn validate_theme(
               errors,
             )
         }
+        validate_font_family(
+          deck_path,
+          None,
+          "theme.table_styles.\{name}.font_family",
+          style.font_family,
+          warnings,
+        )
       }
     }
   }
@@ -481,7 +496,21 @@ fn validate_element(
       }
       validate_text_fit(bundle, page_path, base, content, warnings)
       validate_text_style_ref(bundle, page_path, base.id, content.style, errors)
-      validate_text_content(bundle, page_path, base.id, content, errors)
+      validate_text_content(
+        bundle,
+        page_path,
+        base.id,
+        content,
+        errors,
+        warnings,
+      )
+      validate_font_family(
+        page_path,
+        Some(base.id),
+        "elements.content.font_family",
+        content.font_family,
+        warnings,
+      )
       match content.color {
         None => ()
         Some(color) =>
@@ -607,6 +636,7 @@ fn validate_text_content(
   element_id : String,
   content : TextContent,
   errors : Array[Diagnostic],
+  warnings : Array[Diagnostic],
 ) -> Unit {
   match content.paragraphs {
     None => ()
@@ -646,10 +676,47 @@ fn validate_text_content(
                     errors,
                   )
               }
+              validate_font_family(
+                page_path,
+                Some(element_id),
+                "\{run_field}.font_family",
+                run.font_family,
+                warnings,
+              )
             }
         }
       }
   }
+}
+
+///|
+fn validate_font_family(
+  path : String,
+  element_id : String?,
+  field : String,
+  font_family : String?,
+  warnings : Array[Diagnostic],
+) -> Unit {
+  match font_family {
+    None => ()
+    Some(family) =>
+      if font_family_looks_like_fallback_list(family) {
+        warnings.push(
+          warning_diagnostic(
+            "PZ105",
+            "font_family should name one PowerPoint typeface, not a CSS fallback list",
+            path~,
+            element_id?,
+            field~,
+          ),
+        )
+      }
+  }
+}
+
+///|
+fn font_family_looks_like_fallback_list(value : String) -> Bool {
+  value.contains(",")
 }
 
 ///|

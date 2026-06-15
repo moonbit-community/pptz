@@ -61,6 +61,8 @@ The current writer supports font size, font family, color, bold, italic,
 line height, paragraph spacing, bullets, external hyperlinks, body insets, and
 autofit controls. Underline, strikethrough, caps, baseline, and internal slide
 hyperlinks remain future schema extensions.
+`font_family` names one PowerPoint typeface. It does not accept CSS-style
+fallback lists.
 
 Plain text remains valid:
 

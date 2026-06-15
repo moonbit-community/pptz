@@ -13,4 +13,5 @@ bounds = [20, 40, 120, 24]
 
 [elements.content]
 font_size = 28
+font_family = "Aptos, Arial"
 text = "This sentence is intentionally much too long for the tiny text box."

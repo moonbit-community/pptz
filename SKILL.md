@@ -63,6 +63,9 @@ deck-topic/
   with backend internals.
 - Do not rely on `letter_spacing`, line/connector shape presets, unsupported
   icon names, unsupported connector kinds, or unsupported shape names.
+- `font_family` must be one PowerPoint typeface name, not a CSS fallback list.
+  Use `"Aptos"` or one concrete CJK font such as `"PingFang SC"`; do not write
+  `"Aptos, Arial"` or `"MiSans, PingFang SC, Microsoft YaHei"`.
 
 ## Patterns
 
@@ -115,7 +118,7 @@ Define table styles in the deck theme and reference them from table content.
 ```toml
 [theme.table_styles.compact]
 font_size = 14
-font_family = "Liter, MiSans"
+font_family = "Aptos"
 header_fill = "$surface_alt"
 header_text_color = "$text"
 body_text_color = "$text"

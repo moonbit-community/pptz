@@ -12,30 +12,30 @@ accent = "#F59E0B"
 
 [theme.text_styles.title]
 font_size = 56
-font_family = "Liter, MiSans"
+font_family = "Aptos"
 color = "$text"
 bold = true
 
 [theme.text_styles.body]
 font_size = 24
-font_family = "Liter, MiSans"
+font_family = "Aptos"
 color = "$text"
 line_height = 1.15
 
 [theme.text_styles.caption]
 font_size = 16
-font_family = "Liter, MiSans"
+font_family = "Aptos"
 color = "$muted"
 
 [theme.text_styles.link]
 font_size = 24
-font_family = "Liter, MiSans"
+font_family = "Aptos"
 color = "$primary"
 bold = true
 
 [theme.table_styles.compact]
 font_size = 14
-font_family = "Liter, MiSans"
+font_family = "Aptos"
 header_fill = "$surface_alt"
 header_text_color = "$text"
 body_text_color = "$text"

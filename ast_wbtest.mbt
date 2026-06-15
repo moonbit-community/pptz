@@ -25,7 +25,7 @@ test "deck ast covers minimal deck source" {
         "title",
         TextStyle::{
           font_size: Some(56.0),
-          font_family: Some("Liter, MiSans"),
+          font_family: Some("Aptos"),
           color: Some("$text"),
           bold: Some(true),
           italic: None,

@@ -384,6 +384,8 @@ Warnings allow generation but indicate potentially surprising `pptz` semantics:
 - Element bounds width or height is zero.
 - Text element content is empty or whitespace-only.
 - Table text may have low contrast against a solid table or page background.
+- `font_family` looks like a CSS fallback list rather than one PowerPoint
+  typeface.
 
 `PZ100` is emitted when
 `x < 0 || y < 0 || x + width > deck.width || y + height > deck.height`.
@@ -395,6 +397,9 @@ It should catch obvious text overflow without judging slide content quality.
 `PZ104` is emitted only when table text foreground and background both resolve
 to solid hex colors and their approximate contrast ratio is below 3:1. It does
 not inspect image or gradient backgrounds.
+`PZ105` is emitted when `font_family` contains a comma. PPTX typefaces are
+single names; comma-separated CSS fallback lists can produce different
+line-breaking in PowerPoint and preview tools.
 
 Negative `x` or `y` bounds are allowed and may produce an outside-canvas
 warning. Negative `width` or `height` bounds are errors.
@@ -430,6 +435,9 @@ Theme token handling is deliberately simple:
 - Text style fields may include `font_size`, `font_family`, `color`, `bold`,
   and `italic` in both `theme.text_styles.<name>` and element-local text
   content.
+- `font_family` is a single PowerPoint typeface name. It is not a CSS fallback
+  list; comma-separated values may render differently across PowerPoint and
+  preview tools.
 - Text content is either a plain `text` string or explicit `paragraphs`; do not
   combine both in one text element. Do not parse HTML, XML, Markdown, or
   rich-text markup inside `text`, and do not scan `$name` inside text content.
@@ -510,6 +518,7 @@ text. Messages may change; codes should not. Initial code ranges:
   PowerPoint text layout depends on viewer fonts and rendering behavior.
 - `PZ104`: table text may have low contrast against a solid table or page
   background.
+- `PZ105`: `font_family` looks like a CSS fallback list.
 
 Loader validation should collect all diagnostics it can collect before failing,
 so agents can fix multiple issues in one pass. Blocking input errors, such as
@@ -570,7 +579,7 @@ accent = "#F59E0B"
 
 [theme.text_styles.title]
 font_size = 56
-font_family = "Liter, MiSans"
+font_family = "Aptos"
 color = "$text"
 bold = true
 
