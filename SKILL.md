@@ -1,111 +1,171 @@
 ---
 name: pptz
-description: Creates PPTX decks from TOML pptz/page sources using the portable MoonBit wasm tool `Milky2018/pptz`. Use when an agent needs to design slides, write pptz TOML sources, compile them to `.pptx`, and deliver both sources and output.
+description: Create editable PowerPoint PPTX decks from pptz TOML sources with Milky2018/pptz. Use when Codex needs to design a new slide deck, write deck/page TOML, compile it to .pptx, and deliver both sources and output. Do not use for editing an existing PPTX or for PowerPoint features outside the pptz schema.
 ---
 
-# pptz Skill
+# pptz
 
-## Quick Start
+## Quick Reference
 
-Use `moon runwasm Milky2018/pptz` as the published presentation compiler. Run
-it from the deck project directory and pass relative paths for the deck, page,
-image, and output files. While developing this repository, use the top-level
-package with `moon runwasm .`.
+| Task | Read |
+| --- | --- |
+| Full schema, diagnostics, CLI contract | [REFERENCE.md](REFERENCE.md) |
+| Known-good compiling source deck | [examples/minimal](examples/minimal) |
+| Technical/API/architecture deck | [references/technical-deck.md](references/technical-deck.md) |
+| Metrics/reporting deck | [references/data-report.md](references/data-report.md) |
+| Product launch/demo deck | [references/product-demo.md](references/product-demo.md) |
+| Course/tutorial/workshop deck | [references/course-lecture.md](references/course-lecture.md) |
 
-Expected project layout:
+## Contract
+
+Produce a source directory and a generated PPTX. The source directory is part of
+the deliverable.
 
 ```text
 deck-topic/
-├── deck.pptz.toml
-├── pages/
-│   ├── cover.page.toml
-│   └── agenda.page.toml
-├── images/
-│   └── diagram.png
-└── dist/
-    └── deck.pptx
+|-- deck.pptz.toml
+|-- pages/
+|   |-- cover.page.toml
+|   `-- agenda.page.toml
+|-- images/
+`-- dist/
+    `-- deck.pptx
 ```
 
 ## Workflow
 
-1. Clarify the deck goal, audience, language, duration, required slide count,
-   and delivery constraints.
-2. Design a reusable visual system that fits the subject and supports text
-   legibility across all slides. Use a solid theme background when an image
-   background would reduce legibility or needs behavior outside current writer
-   support.
-3. Write a `.pptz.toml` file with title, canvas size, theme tokens, shared text
-   styles, image paths, and ordered page list.
-4. Write every `pages/*.page.toml` file. Keep coordinates explicit and reuse
-   theme tokens instead of hard-coded styles where possible. For decks that
-   must compile with the current writer, use only the supported feature set
-   below.
-5. Find or create required `images/` assets. Do not use low-quality,
-   watermarked, license-unknown, or unreadable images.
-6. Compile the project with `pptz` from the deck directory:
+1. Create `deck.pptz.toml` with deck size, theme colors, text/table styles, and
+   ordered page paths.
+2. Create `pages/*.page.toml` with explicit `bounds` and theme tokens.
+3. Put local assets under the deck directory and reference them with relative
+   paths.
+4. Compile from the deck directory:
 
    ```bash
-   cd deck-topic
-   moon runwasm Milky2018/pptz deck.pptz.toml --out dist/deck.pptx
+   moon runwasm Milky2018/pptz@0.3.1 deck.pptz.toml --out dist/deck.pptx
    ```
 
-7. Fix any `pptz` errors. Inspect every warning and either fix it or record why
-   it is an intentional design choice.
-8. Deliver both the `pptz` source directory and the generated `.pptx`.
+   When working inside this repository, use the local package instead:
 
-## Quality Gate
+   ```bash
+   moon runwasm . examples/minimal/deck.pptz.toml --out examples/minimal/dist/deck.pptx
+   ```
 
-- `pptz` exits successfully and writes the expected PPTX.
-- Every warning is fixed before delivery unless it is intentional and documented
-  in the handoff. For text overflow warnings, first try larger bounds, smaller
-  font size, shorter copy, extra line breaks, or splitting the content.
-- All page/image paths are relative to the deck directory.
-- Text fits within its bounds and does not overlap important imagery.
-- The common visual system works on cover, section, dense content, and closing
-  slides.
+5. Deliver the source directory and generated `.pptx`.
 
-## Current Supported Feature Set
+## Boundaries
 
-Use these features for deliverable decks:
+- Use paths relative to the deck directory. Published wasm runs with sandboxed
+  file access.
+- Stay inside the documented pptz schema. Unknown fields are rejected before
+  1.0, and raw OpenXML passthrough is intentionally unsupported.
+- Treat writer capability errors as schema boundaries, not TODOs to work around
+  with backend internals.
+- Do not rely on `letter_spacing`, line/connector shape presets, unsupported
+  icon names, unsupported connector kinds, or unsupported shape names.
 
-- explicit deck size and ordered page files;
-- optional solid, gradient, or image page backgrounds;
-- text elements with theme text styles, local overrides, text wrapping,
-  line breaks, rich paragraphs, styled runs, bullets, external hyperlinks,
-  body insets, and autofit controls;
-- PowerPoint preset auto-shapes, excluding line and connector presets;
-- straight, bent, and curved connectors with coordinate or element endpoints,
-  stroke, dash, and arrowheads;
-- solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
-- outer shadows for shape and connector elements;
-- built-in icon elements for `cube`, `circle`, `square`, `star`, `heart`,
-  `plus`, `home`, `info`, `help`, `return`, `blank`, `smiley`, `sun`, `moon`,
-  `cloud`, `lightning`, `gear6`, `gear9`, `funnel`, `chart_plus`,
-  `chart_star`, `chart_x`, and `no_smoking`, with optional `fas:`-style
-  prefixes;
-- table elements with explicit or evenly distributed column widths and row
-  heights, including cell merge spans, cell styling, and theme table styles;
-- inline chart elements for `bar`, `line`, `pie`, `doughnut`, `area`,
-  `scatter`, `bubble`, and `radar`, with title, legend, style, data labels,
-  data table, rounded-corner options, and a category chart data shorthand;
-- raster image elements with `fit = "stretch"`, `fit = "cover"`, or
-  `fit = "contain"`;
-- image crop rectangles;
-- SVG image elements.
+## Patterns
 
-Do not use these in deliverable decks until `pptz` implements them in the
-writer: `letter_spacing`, unsupported icon names, line/connector shape presets,
-unsupported connector kinds, or unsupported shape names.
+### Rich Text
 
-## Important Notes
+Use explicit paragraphs/runs for bullets and hyperlinks. Do not encode rich text
+as Markdown inside `text`.
 
-- The reference `selene-engine` layout uses a similar directory organization,
-  but its sample files are YAML-like. This skill uses real TOML.
-- `pptz` and page sources must be parseable by `bobzhang/toml@0.4.1`.
-- File IO for the MoonBit tool should use `moonbit-community/miniio`.
-- Published `moon runwasm` executes inside a WASI-style file sandbox. Prefer
-  running from the deck directory with relative paths; absolute paths outside
-  the current working tree may not be visible to the tool.
-- See [REFERENCE.md](REFERENCE.md) for the source schema and CLI contract.
-- See [examples/minimal](examples/minimal) for the maintained TOML deck that
-  covers the currently supported writer features.
+```toml
+[elements.content]
+style = "$body"
+align = ["left", "top"]
+wrap = true
+
+[elements.content.body]
+auto_fit = "shape"
+
+[elements.content.body.inset]
+left = 8
+right = 8
+top = 4
+bottom = 4
+
+[[elements.content.paragraphs]]
+text = "Agenda item"
+space_after = 6
+margin_left = 18
+indent = -9
+
+[elements.content.paragraphs.bullet]
+kind = "char"
+char = "-"
+
+[[elements.content.paragraphs]]
+
+[[elements.content.paragraphs.runs]]
+text = "Read "
+
+[[elements.content.paragraphs.runs]]
+text = "docs"
+style = "$link"
+hyperlink = "https://example.com"
+tooltip = "Documentation"
+```
+
+### Table Style
+
+Define table styles in the deck theme and reference them from table content.
+
+```toml
+[theme.table_styles.compact]
+font_size = 14
+font_family = "Liter, MiSans"
+header_fill = "$surface_alt"
+header_color = "$text"
+body_color = "$background"
+border = { style = "solid", width = 1, color = "$muted" }
+
+[elements.content]
+style = "$compact"
+data = [
+  ["Metric", "Q1", "Q2"],
+  ["Revenue", "100", "150"],
+]
+```
+
+### Chart Data
+
+Use `data` shorthand for category charts.
+
+```toml
+[elements.content]
+kind = "bar"
+title = "Revenue"
+legend = "bottom"
+data = [
+  ["", "Q1", "Q2", "Q3"],
+  ["Revenue", 100.0, 150.0, 125.0],
+]
+```
+
+Scatter and bubble charts use explicit series with `x_values`; do not use this
+category shorthand for them.
+
+### Images
+
+```toml
+[elements.content]
+path = "images/hero.png"
+fit = "cover"
+
+[elements.content.crop]
+left = 0.05
+right = 0.05
+top = 0.0
+bottom = 0.0
+```
+
+## Delivery Bar
+
+- The PPTX is generated successfully.
+- The TOML sources remain editable and are delivered with the PPTX.
+- Assets are local to the deck directory and referenced relatively.
+- The deck does not assume unsupported schema features.
+- Prefer each slide to have a visual structure: image, chart, table, icon,
+  connector, or shape composition.
