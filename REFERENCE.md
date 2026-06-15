@@ -386,6 +386,7 @@ Warnings allow generation but indicate potentially surprising `pptz` semantics:
 - Table text may have low contrast against a solid table or page background.
 - `font_family` looks like a CSS fallback list rather than one PowerPoint
   typeface.
+- Plain text contains repeated spaces that may be used for layout.
 
 `PZ100` is emitted when
 `x < 0 || y < 0 || x + width > deck.width || y + height > deck.height`.
@@ -400,6 +401,9 @@ not inspect image or gradient backgrounds.
 `PZ105` is emitted when `font_family` contains a comma. PPTX typefaces are
 single names; comma-separated CSS fallback lists can produce different
 line-breaking in PowerPoint and preview tools.
+`PZ106` is emitted when a plain text element contains three or more consecutive
+ASCII spaces after other text on the same line. Repeated spaces are unstable for
+cross-object alignment because PowerPoint font metrics differ across viewers.
 
 Negative `x` or `y` bounds are allowed and may produce an outside-canvas
 warning. Negative `width` or `height` bounds are errors.
@@ -535,6 +539,7 @@ text. Messages may change; codes should not. Initial code ranges:
 - `PZ104`: table text may have low contrast against a solid table or page
   background.
 - `PZ105`: `font_family` looks like a CSS fallback list.
+- `PZ106`: text contains repeated spaces that may be used for layout.
 
 Loader validation should collect all diagnostics it can collect before failing,
 so agents can fix multiple issues in one pass. Blocking input errors, such as
@@ -841,3 +846,5 @@ the bounds, reduce font size, shorten the copy, split content across multiple
 text boxes or slides, or add intentional line breaks.
 For labels, identifiers, and short phrases, widen the box or shorten the text
 instead of accepting broken words as the rendered wrap.
+For `PZ106`, replace spacing-based alignment with separate text boxes, table
+cells, or component instances whose labels live inside their own bounds.

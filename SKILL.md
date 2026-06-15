@@ -161,6 +161,17 @@ bounds = [72, 160, 180, 90]
 label = "npm packages"
 ```
 
+### Diagram Safety
+
+- Do not use spaces to align text across multiple visual objects. Use separate
+  text boxes, table cells, or component instances.
+- Treat colored cards, chips, and diagram nodes as semantic objects: each one
+  needs its own label inside the same bounds, or a component that contains both
+  the background shape and label.
+- Use empty shapes only as decoration or background chrome. If a shape
+  represents a step, category, state, metric, or concept, bind visible text to
+  that shape.
+
 ### Rich Text
 
 Use explicit paragraphs/runs for bullets and hyperlinks. Do not encode rich text
@@ -283,5 +294,6 @@ bottom = 0.0
 - The deck does not assume unsupported schema features.
 - Prefer each slide to have a visual structure: image, chart, table, icon,
   connector, or shape composition.
-- Render or preview layout-sensitive decks before delivery; do not leave
-  unreadable table text, clipped text, or broken word wrapping.
+- Render or preview every deck before delivery; do not leave unreadable table
+  text, clipped text, broken wrapping, empty semantic cards, or labels floating
+  outside their cards.

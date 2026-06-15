@@ -15,3 +15,11 @@ bounds = [20, 40, 120, 24]
 font_size = 28
 font_family = "Aptos, Arial"
 text = "This sentence is intentionally much too long for the tiny text box."
+
+[[elements]]
+id = "layout_spaces"
+type = "text"
+bounds = [20, 80, 600, 60]
+
+[elements.content]
+text = "Left          Right"

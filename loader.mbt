@@ -1516,6 +1516,7 @@ fn validate_element(
           ),
         )
       }
+      validate_text_layout_spaces(page_path, base, content, warnings)
       validate_text_fit(bundle, page_path, base, content, warnings)
       validate_text_style_ref(bundle, page_path, base.id, content.style, errors)
       validate_text_content(
@@ -1739,6 +1740,53 @@ fn validate_font_family(
 ///|
 fn font_family_looks_like_fallback_list(value : String) -> Bool {
   value.contains(",")
+}
+
+///|
+fn validate_text_layout_spaces(
+  page_path : String,
+  base : ElementBase,
+  content : TextContent,
+  warnings : Array[Diagnostic],
+) -> Unit {
+  match content.paragraphs {
+    Some(_) => ()
+    None =>
+      if text_has_layout_spaces(content.text) {
+        warnings.push(
+          warning_diagnostic(
+            "PZ106",
+            "text contains repeated spaces that may be used for layout; use separate text boxes, tables, or components",
+            path=page_path,
+            element_id=base.id,
+            field="elements.content.text",
+          ),
+        )
+      }
+  }
+}
+
+///|
+fn text_has_layout_spaces(value : String) -> Bool {
+  let mut seen_non_space_on_line = false
+  let mut spaces = 0
+  for char in value {
+    if char == '\n' {
+      seen_non_space_on_line = false
+      spaces = 0
+    } else if char == ' ' {
+      if seen_non_space_on_line {
+        spaces += 1
+        if spaces >= 3 {
+          return true
+        }
+      }
+    } else {
+      seen_non_space_on_line = true
+      spaces = 0
+    }
+  }
+  false
 }
 
 ///|

@@ -18,10 +18,50 @@ Use for tutorials, lectures, workshops, and teaching decks.
   multiline plain `text` string.
 - Use tables for syntax or concept comparisons.
 - Use connectors for data flow or evaluation flow.
+- Use components for repeated labeled chips/cards. Put each node's background
+  shape and label in the same component or in matching bounds.
 - Use images only when they clarify the concept being taught.
+
+### Safe Diagram Nodes
+
+For learning maps, pipelines, and contrast diagrams, avoid a row of empty shapes
+plus one shared text box. Make each node independently labeled:
+
+```toml
+[components.lesson_chip]
+bounds = [0, 0, 210, 78]
+
+[[components.lesson_chip.elements]]
+id = "bg"
+type = "shape"
+bounds = [0, 0, 210, 78]
+
+[components.lesson_chip.elements.content]
+shape = "round_rect"
+
+[[components.lesson_chip.elements]]
+id = "label"
+type = "text"
+bounds = [12, 16, 186, 42]
+
+[components.lesson_chip.elements.content]
+style = "$body"
+align = ["center", "center"]
+text = "$label"
+
+[[components]]
+id = "syntax_chip"
+use = "$lesson_chip"
+bounds = [115, 170, 210, 78]
+
+[components.props]
+label = "语言核心"
+```
 
 ## Avoid
 
 - Dense paragraphs that should be speaker notes or handout text.
 - Too many new terms on one slide.
 - Exercises without an explicit expected outcome.
+- Text that uses repeated spaces to line up labels over cards or columns.
+- Empty colored shapes that are meant to represent concepts, steps, or states.
