@@ -40,6 +40,7 @@ pub(all) struct Theme {
 
 ///|
 pub(all) struct TextStyle {
+  extends : String?
   font_size : Double?
   font_family : String?
   color : String?
@@ -51,6 +52,7 @@ pub(all) struct TextStyle {
 
 ///|
 pub(all) struct TableStyle {
+  extends : String?
   font_size : Double?
   font_family : String?
   header_fill : String?

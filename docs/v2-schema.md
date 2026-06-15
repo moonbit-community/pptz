@@ -63,6 +63,9 @@ autofit controls. Underline, strikethrough, caps, baseline, and internal slide
 hyperlinks remain future schema extensions.
 `font_family` names one PowerPoint typeface. It does not accept CSS-style
 fallback lists.
+Text styles and table styles may use `extends = "$name"` to inherit fields from
+another style of the same kind. The loader expands inheritance before writing;
+cycles and unresolved parents are validation errors.
 
 Plain text remains valid:
 

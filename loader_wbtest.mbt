@@ -32,6 +32,27 @@ test "load minimal deck resolves ordered pages" {
       "examples/minimal/pages/cover.page.toml",
     ),
   )
+  match loaded.bundle.deck.theme {
+    Some(theme) => {
+      match theme.text_styles["link"].extends {
+        None => ()
+        Some(_) => abort("expected expanded text style")
+      }
+      match theme.text_styles["link"].font_size {
+        Some(size) => assert_eq(size, 24.0)
+        None => abort("expected inherited link font size")
+      }
+      match theme.table_styles["compact"].extends {
+        None => ()
+        Some(_) => abort("expected expanded table style")
+      }
+      match theme.table_styles["compact"].border {
+        Some(border) => assert_eq(border.color, "$muted")
+        None => abort("expected inherited table border")
+      }
+    }
+    None => abort("expected theme")
+  }
   assert_eq(loaded.warnings.length(), 0)
 }
 
@@ -108,6 +129,14 @@ test "loader rejects invalid chart data" {
     "examples/testdata/invalid-chart.pptz.toml",
   )
   assert_true(has_diagnostic_code(diagnostics, "PZ070"))
+}
+
+///|
+test "loader rejects style inheritance cycles" {
+  let diagnostics = load_error_diagnostics(
+    "examples/testdata/style-cycle.pptz.toml",
+  )
+  assert_true(has_diagnostic_code(diagnostics, "PZ030"))
 }
 
 ///|

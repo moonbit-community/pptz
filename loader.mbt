@@ -80,10 +80,14 @@ pub fn load_deck(input_path : String) -> LoadedDeck raise {
   if errors.length() > 0 {
     raise LoadError::Diagnostics(errors)
   }
+  let expanded_deck = expand_deck_theme(deck, deck_path_text, errors)
+  if errors.length() > 0 {
+    raise LoadError::Diagnostics(errors)
+  }
   let bundle = DeckBundle::{
     deck_path: deck_path_text,
     deck_dir: deck_dir_text,
-    deck,
+    deck: expanded_deck,
     pages,
   }
   let warnings = []
@@ -93,6 +97,318 @@ pub fn load_deck(input_path : String) -> LoadedDeck raise {
     raise LoadError::Diagnostics(validation_errors)
   }
   LoadedDeck::{ bundle, warnings }
+}
+
+///|
+fn expand_deck_theme(
+  deck : Deck,
+  deck_path : String,
+  errors : Array[Diagnostic],
+) -> Deck {
+  match deck.theme {
+    None => deck
+    Some(theme) =>
+      Deck::{
+        title: deck.title,
+        size: deck.size,
+        theme: Some(Theme::{
+          colors: theme.colors,
+          text_styles: expand_text_styles(theme, deck_path, errors),
+          table_styles: expand_table_styles(theme, deck_path, errors),
+        }),
+        pages: deck.pages,
+      }
+  }
+}
+
+///|
+fn expand_text_styles(
+  theme : Theme,
+  deck_path : String,
+  errors : Array[Diagnostic],
+) -> Map[String, TextStyle] {
+  let resolved = Map([], capacity=theme.text_styles.length())
+  for name, _ in theme.text_styles {
+    ignore(
+      resolve_text_style(name, theme, resolved, "|\{name}|", deck_path, errors),
+    )
+  }
+  resolved
+}
+
+///|
+fn resolve_text_style(
+  name : String,
+  theme : Theme,
+  resolved : Map[String, TextStyle],
+  stack : String,
+  deck_path : String,
+  errors : Array[Diagnostic],
+) -> TextStyle? {
+  match resolved.get(name) {
+    Some(style) => Some(style)
+    None =>
+      match theme.text_styles.get(name) {
+        None => None
+        Some(style) => {
+          let base = match style.extends {
+            None => None
+            Some(parent_ref) =>
+              match token_name(parent_ref) {
+                None => {
+                  errors.push(
+                    error_diagnostic(
+                      "PZ030",
+                      "text style extends must be a whole-string theme token",
+                      path=deck_path,
+                      field="theme.text_styles.\{name}.extends",
+                    ),
+                  )
+                  None
+                }
+                Some(parent_name) =>
+                  if style_stack_contains(stack, parent_name) {
+                    errors.push(
+                      error_diagnostic(
+                        "PZ030",
+                        "text style inheritance has a cycle",
+                        path=deck_path,
+                        field="theme.text_styles.\{name}.extends",
+                      ),
+                    )
+                    None
+                  } else {
+                    match theme.text_styles.get(parent_name) {
+                      None => {
+                        errors.push(
+                          error_diagnostic(
+                            "PZ030",
+                            "unresolved text style extends token",
+                            path=deck_path,
+                            field="theme.text_styles.\{name}.extends",
+                          ),
+                        )
+                        None
+                      }
+                      Some(_) =>
+                        resolve_text_style(
+                          parent_name,
+                          theme,
+                          resolved,
+                          "\{stack}\{parent_name}|",
+                          deck_path,
+                          errors,
+                        )
+                    }
+                  }
+              }
+          }
+          let expanded = match base {
+            None => text_style_without_extends(style)
+            Some(parent) => merge_text_style(parent, style)
+          }
+          resolved[name] = expanded
+          Some(expanded)
+        }
+      }
+  }
+}
+
+///|
+fn text_style_without_extends(style : TextStyle) -> TextStyle {
+  TextStyle::{
+    extends: None,
+    font_size: style.font_size,
+    font_family: style.font_family,
+    color: style.color,
+    bold: style.bold,
+    italic: style.italic,
+    line_height: style.line_height,
+    letter_spacing: style.letter_spacing,
+  }
+}
+
+///|
+fn merge_text_style(parent : TextStyle, child : TextStyle) -> TextStyle {
+  TextStyle::{
+    extends: None,
+    font_size: option_double_or(child.font_size, parent.font_size),
+    font_family: option_string_or(child.font_family, parent.font_family),
+    color: option_string_or(child.color, parent.color),
+    bold: option_bool_or(child.bold, parent.bold),
+    italic: option_bool_or(child.italic, parent.italic),
+    line_height: option_double_or(child.line_height, parent.line_height),
+    letter_spacing: option_double_or(
+      child.letter_spacing,
+      parent.letter_spacing,
+    ),
+  }
+}
+
+///|
+fn expand_table_styles(
+  theme : Theme,
+  deck_path : String,
+  errors : Array[Diagnostic],
+) -> Map[String, TableStyle] {
+  let resolved = Map([], capacity=theme.table_styles.length())
+  for name, _ in theme.table_styles {
+    ignore(
+      resolve_table_style(name, theme, resolved, "|\{name}|", deck_path, errors),
+    )
+  }
+  resolved
+}
+
+///|
+fn resolve_table_style(
+  name : String,
+  theme : Theme,
+  resolved : Map[String, TableStyle],
+  stack : String,
+  deck_path : String,
+  errors : Array[Diagnostic],
+) -> TableStyle? {
+  match resolved.get(name) {
+    Some(style) => Some(style)
+    None =>
+      match theme.table_styles.get(name) {
+        None => None
+        Some(style) => {
+          let base = match style.extends {
+            None => None
+            Some(parent_ref) =>
+              match token_name(parent_ref) {
+                None => {
+                  errors.push(
+                    error_diagnostic(
+                      "PZ030",
+                      "table style extends must be a whole-string theme token",
+                      path=deck_path,
+                      field="theme.table_styles.\{name}.extends",
+                    ),
+                  )
+                  None
+                }
+                Some(parent_name) =>
+                  if style_stack_contains(stack, parent_name) {
+                    errors.push(
+                      error_diagnostic(
+                        "PZ030",
+                        "table style inheritance has a cycle",
+                        path=deck_path,
+                        field="theme.table_styles.\{name}.extends",
+                      ),
+                    )
+                    None
+                  } else {
+                    match theme.table_styles.get(parent_name) {
+                      None => {
+                        errors.push(
+                          error_diagnostic(
+                            "PZ030",
+                            "unresolved table style extends token",
+                            path=deck_path,
+                            field="theme.table_styles.\{name}.extends",
+                          ),
+                        )
+                        None
+                      }
+                      Some(_) =>
+                        resolve_table_style(
+                          parent_name,
+                          theme,
+                          resolved,
+                          "\{stack}\{parent_name}|",
+                          deck_path,
+                          errors,
+                        )
+                    }
+                  }
+              }
+          }
+          let expanded = match base {
+            None => table_style_without_extends(style)
+            Some(parent) => merge_table_style(parent, style)
+          }
+          resolved[name] = expanded
+          Some(expanded)
+        }
+      }
+  }
+}
+
+///|
+fn table_style_without_extends(style : TableStyle) -> TableStyle {
+  TableStyle::{
+    extends: None,
+    font_size: style.font_size,
+    font_family: style.font_family,
+    header_fill: style.header_fill,
+    header_text_color: style.header_text_color,
+    body_text_color: style.body_text_color,
+    header_color: style.header_color,
+    body_color: style.body_color,
+    border: style.border,
+  }
+}
+
+///|
+fn merge_table_style(parent : TableStyle, child : TableStyle) -> TableStyle {
+  TableStyle::{
+    extends: None,
+    font_size: option_double_or(child.font_size, parent.font_size),
+    font_family: option_string_or(child.font_family, parent.font_family),
+    header_fill: option_string_or(child.header_fill, parent.header_fill),
+    header_text_color: option_string_or(
+      child.header_text_color,
+      parent.header_text_color,
+    ),
+    body_text_color: option_string_or(
+      child.body_text_color,
+      parent.body_text_color,
+    ),
+    header_color: option_string_or(child.header_color, parent.header_color),
+    body_color: option_string_or(child.body_color, parent.body_color),
+    border: option_border_or(child.border, parent.border),
+  }
+}
+
+///|
+fn style_stack_contains(stack : String, name : String) -> Bool {
+  stack.contains("|\{name}|")
+}
+
+///|
+fn option_string_or(value : String?, fallback : String?) -> String? {
+  match value {
+    Some(_) => value
+    None => fallback
+  }
+}
+
+///|
+fn option_double_or(value : Double?, fallback : Double?) -> Double? {
+  match value {
+    Some(_) => value
+    None => fallback
+  }
+}
+
+///|
+fn option_bool_or(value : Bool?, fallback : Bool?) -> Bool? {
+  match value {
+    Some(_) => value
+    None => fallback
+  }
+}
+
+///|
+fn option_border_or(value : Border?, fallback : Border?) -> Border? {
+  match value {
+    Some(_) => value
+    None => fallback
+  }
 }
 
 ///|

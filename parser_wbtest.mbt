@@ -39,6 +39,18 @@ test "parse minimal deck toml" {
         Some(value) => assert_true(value)
         None => abort("expected title bold")
       }
+      match theme.text_styles["title"].extends {
+        Some(value) => assert_eq(value, "$base")
+        None => abort("expected title extends")
+      }
+      match theme.text_styles["link"].extends {
+        Some(value) => assert_eq(value, "$body")
+        None => abort("expected link extends")
+      }
+      match theme.table_styles["compact"].extends {
+        Some(value) => assert_eq(value, "$table_base")
+        None => abort("expected table extends")
+      }
       match theme.table_styles["compact"].header_text_color {
         Some(color) => assert_eq(color, "$text")
         None => abort("expected header text color")

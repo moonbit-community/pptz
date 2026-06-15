@@ -69,6 +69,34 @@ deck-topic/
 
 ## Patterns
 
+### Style Inheritance
+
+Use `extends` to keep theme styles compact. A style can extend another style of
+the same kind; local fields override inherited fields.
+
+```toml
+[theme.text_styles.body]
+font_size = 22
+font_family = "Aptos"
+color = "$text"
+
+[theme.text_styles.caption]
+extends = "$body"
+font_size = 12
+color = "$muted"
+
+[theme.table_styles.base]
+font_size = 14
+font_family = "Aptos"
+border = { style = "solid", width = 1, color = "$line" }
+
+[theme.table_styles.compact]
+extends = "$base"
+header_fill = "$surface_alt"
+header_text_color = "$text"
+body_text_color = "$text"
+```
+
 ### Rich Text
 
 Use explicit paragraphs/runs for bullets and hyperlinks. Do not encode rich text

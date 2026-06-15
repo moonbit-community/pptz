@@ -435,6 +435,10 @@ Theme token handling is deliberately simple:
 - Text style fields may include `font_size`, `font_family`, `color`, `bold`,
   and `italic` in both `theme.text_styles.<name>` and element-local text
   content.
+- Text styles and table styles may include `extends = "$name"` to inherit from
+  another style of the same kind. The loader expands inheritance before
+  validation and writing; cycles or unresolved style parents are `PZ030`
+  diagnostics.
 - `font_family` is a single PowerPoint typeface name. It is not a CSS fallback
   list; comma-separated values may render differently across PowerPoint and
   preview tools.
@@ -577,10 +581,14 @@ muted = "#A8B0C2"
 primary = "#3B82F6"
 accent = "#F59E0B"
 
-[theme.text_styles.title]
-font_size = 56
+[theme.text_styles.body]
+font_size = 22
 font_family = "Aptos"
 color = "$text"
+
+[theme.text_styles.title]
+extends = "$body"
+font_size = 56
 bold = true
 
 [[pages]]

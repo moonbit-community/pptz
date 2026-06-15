@@ -24,6 +24,7 @@ test "deck ast covers minimal deck source" {
       (
         "title",
         TextStyle::{
+          extends: None,
           font_size: Some(56.0),
           font_family: Some("Aptos"),
           color: Some("$text"),

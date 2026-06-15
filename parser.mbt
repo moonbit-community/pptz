@@ -104,9 +104,14 @@ fn parse_text_styles(
     let style_path = "\{path}.\{name}"
     let style_table = expect_table(value, style_path)
     reject_unknown_fields(style_table, style_path, [
-      "font_size", "font_family", "color", "bold", "italic", "line_height", "letter_spacing",
+      "extends", "font_size", "font_family", "color", "bold", "italic", "line_height",
+      "letter_spacing",
     ])
     result[name] = TextStyle::{
+      extends: optional_string(
+        style_table.get("extends"),
+        "\{style_path}.extends",
+      ),
       font_size: optional_double(
         style_table.get("font_size"),
         "\{style_path}.font_size",
@@ -145,8 +150,8 @@ fn parse_table_styles(
         let style_path = "\{path}.\{name}"
         let style_table = expect_table(style_value, style_path)
         reject_unknown_fields(style_table, style_path, [
-          "font_size", "font_family", "header_fill", "header_text_color", "body_text_color",
-          "header_color", "body_color", "border",
+          "extends", "font_size", "font_family", "header_fill", "header_text_color",
+          "body_text_color", "header_color", "body_color", "border",
         ])
         if style_table.get("header_text_color") is Some(_) &&
           style_table.get("header_color") is Some(_) {
@@ -161,6 +166,10 @@ fn parse_table_styles(
           )
         }
         result[name] = TableStyle::{
+          extends: optional_string(
+            style_table.get("extends"),
+            "\{style_path}.extends",
+          ),
           font_size: optional_double(
             style_table.get("font_size"),
             "\{style_path}.font_size",

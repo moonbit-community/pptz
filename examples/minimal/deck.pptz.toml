@@ -10,36 +10,41 @@ muted = "#A8B0C2"
 primary = "#3B82F6"
 accent = "#F59E0B"
 
-[theme.text_styles.title]
-font_size = 56
+[theme.text_styles.base]
 font_family = "Aptos"
 color = "$text"
+line_height = 1.1
+
+[theme.text_styles.title]
+extends = "$base"
+font_size = 56
 bold = true
 
 [theme.text_styles.body]
+extends = "$base"
 font_size = 24
-font_family = "Aptos"
-color = "$text"
 line_height = 1.15
 
 [theme.text_styles.caption]
+extends = "$base"
 font_size = 16
-font_family = "Aptos"
 color = "$muted"
 
 [theme.text_styles.link]
-font_size = 24
-font_family = "Aptos"
+extends = "$body"
 color = "$primary"
 bold = true
 
-[theme.table_styles.compact]
+[theme.table_styles.table_base]
 font_size = 14
 font_family = "Aptos"
+border = { style = "solid", width = 1, color = "$muted" }
+
+[theme.table_styles.compact]
+extends = "$table_base"
 header_fill = "$surface_alt"
 header_text_color = "$text"
 body_text_color = "$text"
-border = { style = "solid", width = 1, color = "$muted" }
 
 [[pages]]
 path = "pages/cover.page.toml"

@@ -262,6 +262,7 @@ pub(all) struct TableSpec {
 } derive(Eq, @debug.Debug)
 
 pub(all) struct TableStyle {
+  extends : String?
   font_size : Double?
   font_family : String?
   header_fill : String?
@@ -324,6 +325,7 @@ pub(all) struct TextRunSpec {
 } derive(Eq, @debug.Debug)
 
 pub(all) struct TextStyle {
+  extends : String?
   font_size : Double?
   font_family : String?
   color : String?

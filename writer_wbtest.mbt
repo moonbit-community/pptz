@@ -693,6 +693,7 @@ fn unsupported_loaded(page : Page) -> LoadedDeck {
             (
               "body",
               TextStyle::{
+                extends: None,
                 font_size: Some(18.0),
                 font_family: Some("Aptos"),
                 color: Some("$text"),
@@ -705,6 +706,7 @@ fn unsupported_loaded(page : Page) -> LoadedDeck {
             (
               "link",
               TextStyle::{
+                extends: None,
                 font_size: Some(18.0),
                 font_family: Some("Aptos"),
                 color: Some("$accent"),
@@ -717,6 +719,7 @@ fn unsupported_loaded(page : Page) -> LoadedDeck {
             (
               "spaced",
               TextStyle::{
+                extends: None,
                 font_size: Some(24.0),
                 font_family: Some("Aptos"),
                 color: Some("$text"),
@@ -731,6 +734,7 @@ fn unsupported_loaded(page : Page) -> LoadedDeck {
             (
               "compact",
               TableStyle::{
+                extends: None,
                 font_size: Some(14.0),
                 font_family: Some("Aptos"),
                 header_fill: Some("#334155"),
