@@ -54,6 +54,8 @@ pub(all) struct TableStyle {
   font_size : Double?
   font_family : String?
   header_fill : String?
+  header_text_color : String?
+  body_text_color : String?
   header_color : String?
   body_color : String?
   border : Border?

@@ -145,9 +145,21 @@ fn parse_table_styles(
         let style_path = "\{path}.\{name}"
         let style_table = expect_table(style_value, style_path)
         reject_unknown_fields(style_table, style_path, [
-          "font_size", "font_family", "header_fill", "header_color", "body_color",
-          "border",
+          "font_size", "font_family", "header_fill", "header_text_color", "body_text_color",
+          "header_color", "body_color", "border",
         ])
+        if style_table.get("header_text_color") is Some(_) &&
+          style_table.get("header_color") is Some(_) {
+          fail(
+            "\{style_path}: use either header_text_color or header_color, not both",
+          )
+        }
+        if style_table.get("body_text_color") is Some(_) &&
+          style_table.get("body_color") is Some(_) {
+          fail(
+            "\{style_path}: use either body_text_color or body_color, not both",
+          )
+        }
         result[name] = TableStyle::{
           font_size: optional_double(
             style_table.get("font_size"),
@@ -160,6 +172,14 @@ fn parse_table_styles(
           header_fill: optional_string(
             style_table.get("header_fill"),
             "\{style_path}.header_fill",
+          ),
+          header_text_color: optional_string(
+            style_table.get("header_text_color"),
+            "\{style_path}.header_text_color",
+          ),
+          body_text_color: optional_string(
+            style_table.get("body_text_color"),
+            "\{style_path}.body_text_color",
           ),
           header_color: optional_string(
             style_table.get("header_color"),

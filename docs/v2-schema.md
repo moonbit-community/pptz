@@ -277,8 +277,11 @@ cells = [
 
 The canonical model covers rows, cells, merge spans, fills, borders, margins,
 anchors, and a table-level theme style token. A table style may define
-`font_size`, `font_family`, `header_fill`, `header_color`, `body_color`, and
-`border`; explicit cell fill or border values override the table style.
+`font_size`, `font_family`, `header_fill`, `header_text_color`,
+`body_text_color`, and `border`; explicit cell fill or border values override
+the table style. Legacy `header_color` and `body_color` are accepted as aliases
+for the corresponding text color fields, but a style must not mix old and new
+names.
 
 Shorthand form:
 

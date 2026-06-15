@@ -19,6 +19,8 @@ operational summaries.
 - Put exact values in table cells when the audience needs comparison; use charts
   when the audience needs trend or shape.
 - Keep table styles compact and consistent across report slides.
+- Use high-contrast `header_text_color` and `body_text_color`; these fields set
+  text color, not row fill.
 - Use captions for source/date/measurement notes when needed.
 
 ## Avoid

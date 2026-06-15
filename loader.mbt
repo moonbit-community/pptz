@@ -285,6 +285,30 @@ fn validate_theme(
               errors,
             )
         }
+        match style.header_text_color {
+          None => ()
+          Some(color) =>
+            validate_color_value(
+              color,
+              theme,
+              deck_path,
+              None,
+              "theme.table_styles.\{name}.header_text_color",
+              errors,
+            )
+        }
+        match style.body_text_color {
+          None => ()
+          Some(color) =>
+            validate_color_value(
+              color,
+              theme,
+              deck_path,
+              None,
+              "theme.table_styles.\{name}.body_text_color",
+              errors,
+            )
+        }
         match style.header_color {
           None => ()
           Some(color) =>
@@ -372,7 +396,14 @@ fn validate_page(
     }
   }
   for element in resolved_page.page.elements {
-    validate_element(bundle, resolved_page.path, element, errors, warnings)
+    validate_element(
+      bundle,
+      resolved_page.path,
+      resolved_page.page.background,
+      element,
+      errors,
+      warnings,
+    )
     validate_connector_refs(
       resolved_page.path,
       element,
@@ -430,6 +461,7 @@ fn validate_background(
 fn validate_element(
   bundle : DeckBundle,
   page_path : String,
+  page_background : Background?,
   element : Element,
   errors : Array[Diagnostic],
   warnings : Array[Diagnostic],
@@ -561,7 +593,9 @@ fn validate_element(
       validate_shadow(bundle, page_path, id, spec.shadow, errors)
     }
     TableElement(base, spec) =>
-      validate_table(bundle, page_path, base, spec, errors)
+      validate_table(
+        bundle, page_path, page_background, base, spec, errors, warnings,
+      )
     ChartElement(base, spec) => validate_chart(page_path, base, spec, errors)
   }
 }
@@ -934,9 +968,11 @@ fn validate_chart_length(
 fn validate_table(
   bundle : DeckBundle,
   page_path : String,
+  page_background : Background?,
   base : ElementBase,
   spec : TableSpec,
   errors : Array[Diagnostic],
+  warnings : Array[Diagnostic],
 ) -> Unit {
   validate_table_style_ref(bundle, page_path, base.id, spec.style, errors)
   if spec.rows.is_empty() {
@@ -982,6 +1018,207 @@ fn validate_table(
     spec.rows.length(),
     errors,
   )
+  validate_table_text_contrast(
+    bundle, page_path, page_background, base, spec, warnings,
+  )
+}
+
+///|
+fn validate_table_text_contrast(
+  bundle : DeckBundle,
+  page_path : String,
+  page_background : Background?,
+  base : ElementBase,
+  spec : TableSpec,
+  warnings : Array[Diagnostic],
+) -> Unit {
+  match theme_table_style(bundle, spec.style) {
+    None => ()
+    Some(style) => {
+      let page_bg = page_solid_background_color(page_background)
+      warn_low_table_contrast(
+        bundle,
+        page_path,
+        base.id,
+        "elements.content.style",
+        table_style_text_color(style, 0),
+        table_header_background_color(style, page_bg),
+        warnings,
+      )
+      warn_low_table_contrast(
+        bundle,
+        page_path,
+        base.id,
+        "elements.content.style",
+        table_style_text_color(style, 1),
+        page_bg,
+        warnings,
+      )
+      for row_index, row in spec.rows {
+        for cell_index, cell in row.cells {
+          match table_cell_solid_fill(cell.fill) {
+            None => ()
+            Some(fill) =>
+              warn_low_table_contrast(
+                bundle,
+                page_path,
+                base.id,
+                "elements.content.rows[\{row_index}].cells[\{cell_index}].fill",
+                table_style_text_color(style, row_index),
+                Some(fill),
+                warnings,
+              )
+          }
+        }
+      }
+    }
+  }
+}
+
+///|
+fn warn_low_table_contrast(
+  bundle : DeckBundle,
+  page_path : String,
+  element_id : String,
+  field : String,
+  foreground : String?,
+  background : String?,
+  warnings : Array[Diagnostic],
+) -> Unit {
+  match (foreground, background) {
+    (Some(foreground), Some(background)) =>
+      if is_low_contrast_color_pair(bundle, foreground, background) {
+        warnings.push(
+          warning_diagnostic(
+            "PZ104",
+            "table text may have low contrast",
+            path=page_path,
+            element_id~,
+            field~,
+          ),
+        )
+      }
+    _ => ()
+  }
+}
+
+///|
+fn page_solid_background_color(background : Background?) -> String? {
+  match background {
+    None => Some("#FFFFFF")
+    Some(SolidBackground(color)) => Some(color)
+    Some(GradientBackground(_)) | Some(ImageBackground(_)) => None
+  }
+}
+
+///|
+fn table_header_background_color(
+  style : TableStyle,
+  page_background : String?,
+) -> String? {
+  match style.header_fill {
+    Some(color) => Some(color)
+    None => page_background
+  }
+}
+
+///|
+fn table_cell_solid_fill(fill : Fill?) -> String? {
+  match fill {
+    Some(SolidFill(color)) => Some(color)
+    _ => None
+  }
+}
+
+///|
+fn is_low_contrast_color_pair(
+  bundle : DeckBundle,
+  foreground : String,
+  background : String,
+) -> Bool {
+  match
+    (
+      resolve_solid_color(bundle, foreground),
+      resolve_solid_color(bundle, background),
+    ) {
+    (Some(foreground), Some(background)) =>
+      match (relative_luminance(foreground), relative_luminance(background)) {
+        (Some(fg), Some(bg)) => contrast_ratio(fg, bg) < 3.0
+        _ => false
+      }
+    _ => false
+  }
+}
+
+///|
+fn resolve_solid_color(bundle : DeckBundle, color : String) -> String? {
+  match token_name(color) {
+    Some(name) =>
+      match bundle.deck.theme {
+        None => None
+        Some(theme) =>
+          match theme.colors.get(name) {
+            Some(value) => if is_hex_color(value) { Some(value) } else { None }
+            None => None
+          }
+      }
+    None => if is_hex_color(color) { Some(color) } else { None }
+  }
+}
+
+///|
+fn relative_luminance(color : String) -> Double? {
+  guard color.length() >= 7 else { return None }
+  match
+    (
+      color_hex_byte(color, 1),
+      color_hex_byte(color, 3),
+      color_hex_byte(color, 5),
+    ) {
+    (Some(red), Some(green), Some(blue)) =>
+      Some(
+        (
+          0.2126 * red.to_double() +
+          0.7152 * green.to_double() +
+          0.0722 * blue.to_double()
+        ) /
+        255.0,
+      )
+    _ => None
+  }
+}
+
+///|
+fn color_hex_byte(color : String, offset : Int) -> Int? {
+  match (color.get_char(offset), color.get_char(offset + 1)) {
+    (Some(hi), Some(lo)) =>
+      match (color_hex_digit(hi), color_hex_digit(lo)) {
+        (Some(hi), Some(lo)) => Some(hi * 16 + lo)
+        _ => None
+      }
+    _ => None
+  }
+}
+
+///|
+fn color_hex_digit(char : Char) -> Int? {
+  let code = char.to_int()
+  if code >= '0'.to_int() && code <= '9'.to_int() {
+    Some(code - '0'.to_int())
+  } else if code >= 'a'.to_int() && code <= 'f'.to_int() {
+    Some(code - 'a'.to_int() + 10)
+  } else if code >= 'A'.to_int() && code <= 'F'.to_int() {
+    Some(code - 'A'.to_int() + 10)
+  } else {
+    None
+  }
+}
+
+///|
+fn contrast_ratio(first : Double, second : Double) -> Double {
+  let lighter = if first > second { first } else { second }
+  let darker = if first > second { second } else { first }
+  (lighter + 0.05) / (darker + 0.05)
 }
 
 ///|

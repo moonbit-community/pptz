@@ -39,6 +39,14 @@ test "parse minimal deck toml" {
         Some(value) => assert_true(value)
         None => abort("expected title bold")
       }
+      match theme.table_styles["compact"].header_text_color {
+        Some(color) => assert_eq(color, "$text")
+        None => abort("expected header text color")
+      }
+      match theme.table_styles["compact"].body_text_color {
+        Some(color) => assert_eq(color, "$text")
+        None => abort("expected body text color")
+      }
     }
     None => abort("expected theme")
   }
@@ -153,6 +161,27 @@ test "parser rejects unknown element type" {
     ),
   )
   assert_true(message.contains("unsupported element type"))
+}
+
+///|
+test "parser rejects mixed table text color aliases" {
+  let message = deck_parse_error(
+    (
+      #|size = [1280, 720]
+      #|pages = [{ path = "pages/cover.page.toml" }]
+      #|
+      #|[theme.colors]
+      #|text = "#111827"
+      #|
+      #|[theme.text_styles.body]
+      #|color = "$text"
+      #|
+      #|[theme.table_styles.compact]
+      #|header_text_color = "$text"
+      #|header_color = "$text"
+    ),
+  )
+  assert_true(message.contains("use either header_text_color or header_color"))
 }
 
 ///|

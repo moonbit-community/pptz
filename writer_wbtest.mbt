@@ -734,8 +734,10 @@ fn unsupported_loaded(page : Page) -> LoadedDeck {
                 font_size: Some(14.0),
                 font_family: Some("Liter, MiSans"),
                 header_fill: Some("#334155"),
-                header_color: Some("#F8FAFC"),
-                body_color: Some("#0F172A"),
+                header_text_color: Some("#F8FAFC"),
+                body_text_color: Some("#0F172A"),
+                header_color: None,
+                body_color: None,
                 border: Some(Border::{
                   style: "solid",
                   width: 1.0,

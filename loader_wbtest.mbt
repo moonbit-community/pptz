@@ -71,6 +71,21 @@ test "loader returns non-blocking warnings" {
 }
 
 ///|
+test "loader warns on low contrast table text" {
+  let loaded = load_deck("examples/testdata/low-contrast-table.pptz.toml") catch {
+    LoadError::Fatal(message) => {
+      println("load fatal: \{message}")
+      abort("load failed")
+    }
+    err => {
+      println("load failed: \{err}")
+      abort("load failed")
+    }
+  }
+  assert_true(has_diagnostic_code(loaded.warnings, "PZ104"))
+}
+
+///|
 test "loader rejects invalid image crop" {
   let diagnostics = load_error_diagnostics(
     "examples/testdata/invalid-crop.pptz.toml",

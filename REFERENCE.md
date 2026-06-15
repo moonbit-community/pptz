@@ -383,6 +383,7 @@ Warnings allow generation but indicate potentially surprising `pptz` semantics:
 - Element bounds extend outside the canvas.
 - Element bounds width or height is zero.
 - Text element content is empty or whitespace-only.
+- Table text may have low contrast against a solid table or page background.
 
 `PZ100` is emitted when
 `x < 0 || y < 0 || x + width > deck.width || y + height > deck.height`.
@@ -391,6 +392,9 @@ An element may produce multiple warnings.
 string trimming. Do not define a custom whitespace character set.
 `PZ103` is an estimated visibility warning, not a full PowerPoint layout engine.
 It should catch obvious text overflow without judging slide content quality.
+`PZ104` is emitted only when table text foreground and background both resolve
+to solid hex colors and their approximate contrast ratio is below 3:1. It does
+not inspect image or gradient backgrounds.
 
 Negative `x` or `y` bounds are allowed and may produce an outside-canvas
 warning. Negative `width` or `height` bounds are errors.
@@ -405,8 +409,10 @@ The loader inspects image dimensions only when needed for PPTX generation
 preconditions such as `cover` or `contain` fit. It should not download remote
 assets.
 The loader should not judge table layout quality, chart data reasonableness,
-color contrast, gradient stop order, or other authoring choices that are not
-required to construct the PPTX.
+gradient stop order, or other authoring choices that are not required to
+construct the PPTX. Low-contrast table text is the narrow exception because it
+is a common silent failure when table text color fields are mistaken for fill
+fields.
 
 Theme token handling is deliberately simple:
 
@@ -502,6 +508,8 @@ text. Messages may change; codes should not. Initial code ranges:
 - `PZ102`: empty or whitespace-only text content.
 - `PZ103`: text may overflow its element bounds. This is an estimate because
   PowerPoint text layout depends on viewer fonts and rendering behavior.
+- `PZ104`: table text may have low contrast against a solid table or page
+  background.
 
 Loader validation should collect all diagnostics it can collect before failing,
 so agents can fix multiple issues in one pass. Blocking input errors, such as
@@ -687,6 +695,9 @@ by the writer. Explicit `col_widths` and `row_heights` may override the equal
 distribution. Weight-based table sizing is outside the v2 shorthand scope. The
 current writer renders rectangular tables, including cells that declare
 `col_span` or `row_span`.
+Theme table styles use `header_text_color` and `body_text_color` for text
+colors. `header_color` and `body_color` remain legacy aliases only; do not use
+them in new sources.
 
 Current chart writer support covers bar, line, pie, doughnut, area, scatter,
 bubble, and radar chart families, with chart title, legend, style,
@@ -791,3 +802,5 @@ All other warnings must be fixed.
 For `PZ103`, prefer fixing the source instead of accepting the warning: enlarge
 the bounds, reduce font size, shorten the copy, split content across multiple
 text boxes or slides, or add intentional line breaks.
+For labels, identifiers, and short phrases, widen the box or shorten the text
+instead of accepting broken words as the rendered wrap.

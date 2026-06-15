@@ -1175,11 +1175,7 @@ fn table_cell_run_properties(
           has_props = true
         }
       }
-      let color = if row_index == 0 {
-        style.header_color
-      } else {
-        style.body_color
-      }
+      let color = table_style_text_color(style, row_index)
       match color {
         None => ()
         Some(color) => {
@@ -1195,6 +1191,21 @@ fn table_cell_run_properties(
       } else {
         None
       }
+    }
+  }
+}
+
+///|
+fn table_style_text_color(style : TableStyle, row_index : Int) -> String? {
+  if row_index == 0 {
+    match style.header_text_color {
+      Some(_) => style.header_text_color
+      None => style.header_color
+    }
+  } else {
+    match style.body_text_color {
+      Some(_) => style.body_text_color
+      None => style.body_color
     }
   }
 }

@@ -37,8 +37,8 @@ bold = true
 font_size = 14
 font_family = "Liter, MiSans"
 header_fill = "$surface_alt"
-header_color = "$text"
-body_color = "$background"
+header_text_color = "$text"
+body_text_color = "$text"
 border = { style = "solid", width = 1, color = "$muted" }
 
 [[pages]]

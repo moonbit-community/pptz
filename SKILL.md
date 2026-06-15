@@ -117,8 +117,8 @@ Define table styles in the deck theme and reference them from table content.
 font_size = 14
 font_family = "Liter, MiSans"
 header_fill = "$surface_alt"
-header_color = "$text"
-body_color = "$background"
+header_text_color = "$text"
+body_text_color = "$text"
 border = { style = "solid", width = 1, color = "$muted" }
 
 [elements.content]
@@ -169,3 +169,5 @@ bottom = 0.0
 - The deck does not assume unsupported schema features.
 - Prefer each slide to have a visual structure: image, chart, table, icon,
   connector, or shape composition.
+- Render or preview layout-sensitive decks before delivery; do not leave
+  unreadable table text, clipped text, or broken word wrapping.
