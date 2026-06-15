@@ -59,6 +59,10 @@ test "parse minimal deck toml" {
         Some(color) => assert_eq(color, "$text")
         None => abort("expected body text color")
       }
+      match theme.chart_styles["report_bar"].kind {
+        Some(kind) => assert_eq(kind, "bar")
+        None => abort("expected chart style kind")
+      }
     }
     None => abort("expected theme")
   }
@@ -308,15 +312,16 @@ test "parse minimal agenda page multiline text" {
   match page.elements[4] {
     ChartElement(base, spec) => {
       assert_eq(base.id, "revenue_chart")
-      assert_eq(spec.kind, "bar")
+      assert_eq(spec.kind, "")
+      match spec.chart_style {
+        Some(style) => assert_eq(style, "$report_bar")
+        None => abort("expected chart style")
+      }
       match spec.title {
         Some(title) => assert_eq(title, "Revenue")
         None => abort("expected chart title")
       }
-      match spec.legend {
-        Some(legend) => assert_eq(legend, "bottom")
-        None => abort("expected chart legend")
-      }
+      assert_eq(spec.series[0].values[1], 150.0)
     }
     _ => abort("expected chart element")
   }

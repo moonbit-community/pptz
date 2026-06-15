@@ -46,6 +46,14 @@ header_fill = "$surface_alt"
 header_text_color = "$text"
 body_text_color = "$text"
 
+[theme.chart_styles.report_bar]
+kind = "bar"
+legend = "bottom"
+style = 4
+data_labels = "outside_end"
+data_table = false
+rounded_corners = false
+
 [[pages]]
 path = "pages/cover.page.toml"
 

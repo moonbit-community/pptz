@@ -73,6 +73,7 @@ pub(all) struct ChartSeriesSpec {
 } derive(Eq, @debug.Debug)
 
 pub(all) struct ChartSpec {
+  chart_style : String?
   kind : String
   title : String?
   legend : String?
@@ -82,6 +83,16 @@ pub(all) struct ChartSpec {
   rounded_corners : Bool?
   categories : Array[String]?
   series : Array[ChartSeriesSpec]
+} derive(Eq, @debug.Debug)
+
+pub(all) struct ChartStyle {
+  extends : String?
+  kind : String?
+  legend : String?
+  style : Int?
+  data_labels : String?
+  data_table : Bool?
+  rounded_corners : Bool?
 } derive(Eq, @debug.Debug)
 
 pub struct CliResponse {
@@ -339,6 +350,7 @@ pub(all) struct Theme {
   colors : Map[String, String]
   text_styles : Map[String, TextStyle]
   table_styles : Map[String, TableStyle]
+  chart_styles : Map[String, ChartStyle]
 } derive(Eq, @debug.Debug)
 
 // Type aliases

@@ -750,6 +750,7 @@ fn unsupported_loaded(page : Page) -> LoadedDeck {
               },
             ),
           ]),
+          chart_styles: Map([], capacity=0),
         }),
         pages: [PageRef::{ path: "pages/unsupported.page.toml" }],
       },
@@ -852,6 +853,7 @@ fn test_merged_table_spec() -> TableSpec {
 ///|
 fn test_chart_spec() -> ChartSpec {
   ChartSpec::{
+    chart_style: None,
     kind: "bar",
     title: Some("Revenue"),
     legend: Some("bottom"),

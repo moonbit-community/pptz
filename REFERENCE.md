@@ -439,6 +439,10 @@ Theme token handling is deliberately simple:
   another style of the same kind. The loader expands inheritance before
   validation and writing; cycles or unresolved style parents are `PZ030`
   diagnostics.
+- Chart styles live under `theme.chart_styles` and may provide chart kind,
+  legend, style number, data-label, data-table, and rounded-corner defaults.
+  Page chart elements use `chart_style = "$name"` and can override any
+  inherited option locally. Chart styles never carry chart data.
 - `font_family` is a single PowerPoint typeface name. It is not a CSS fallback
   list; comma-separated values may render differently across PowerPoint and
   preview tools.
@@ -723,6 +727,8 @@ shorthand. 3D charts, stock charts, surface charts, of-pie charts, and chartEx
 families are outside the current v2 chart slice. The current chart slice uses
 inline chart data in page TOML. External CSV, TOML, or spreadsheet-backed chart
 data is outside the current v2 chart slice.
+Chart elements may reference `theme.chart_styles` through `chart_style`; the
+loader expands the style before validation and writing.
 
 Image `fit` values are `stretch`, `cover`, or `contain`. Omitted `fit` defaults
 to `stretch`. The writer maps `stretch` directly to the requested bounds, uses

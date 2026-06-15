@@ -53,6 +53,24 @@ test "load minimal deck resolves ordered pages" {
     }
     None => abort("expected theme")
   }
+  match loaded.bundle.pages[1].page.elements[4] {
+    ChartElement(_, spec) => {
+      match spec.chart_style {
+        None => ()
+        Some(_) => abort("expected expanded chart style")
+      }
+      assert_eq(spec.kind, "bar")
+      match spec.legend {
+        Some(legend) => assert_eq(legend, "bottom")
+        None => abort("expected inherited chart legend")
+      }
+      match spec.data_labels {
+        Some(pos) => assert_eq(pos, "outside_end")
+        None => abort("expected inherited chart labels")
+      }
+    }
+    _ => abort("expected chart element")
+  }
   assert_eq(loaded.warnings.length(), 0)
 }
 

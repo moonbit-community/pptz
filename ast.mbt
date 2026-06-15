@@ -36,6 +36,7 @@ pub(all) struct Theme {
   colors : Map[String, String]
   text_styles : Map[String, TextStyle]
   table_styles : Map[String, TableStyle]
+  chart_styles : Map[String, ChartStyle]
 } derive(Eq, Debug)
 
 ///|
@@ -61,6 +62,17 @@ pub(all) struct TableStyle {
   header_color : String?
   body_color : String?
   border : Border?
+} derive(Eq, Debug)
+
+///|
+pub(all) struct ChartStyle {
+  extends : String?
+  kind : String?
+  legend : String?
+  style : Int?
+  data_labels : String?
+  data_table : Bool?
+  rounded_corners : Bool?
 } derive(Eq, Debug)
 
 ///|
@@ -298,6 +310,7 @@ pub(all) struct TableCellMargin {
 
 ///|
 pub(all) struct ChartSpec {
+  chart_style : String?
   kind : String
   title : String?
   legend : String?

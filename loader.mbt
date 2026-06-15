@@ -81,6 +81,7 @@ pub fn load_deck(input_path : String) -> LoadedDeck raise {
     raise LoadError::Diagnostics(errors)
   }
   let expanded_deck = expand_deck_theme(deck, deck_path_text, errors)
+  let expanded_pages = expand_pages(expanded_deck, pages, errors)
   if errors.length() > 0 {
     raise LoadError::Diagnostics(errors)
   }
@@ -88,7 +89,7 @@ pub fn load_deck(input_path : String) -> LoadedDeck raise {
     deck_path: deck_path_text,
     deck_dir: deck_dir_text,
     deck: expanded_deck,
-    pages,
+    pages: expanded_pages,
   }
   let warnings = []
   let validation_errors = []
@@ -115,6 +116,7 @@ fn expand_deck_theme(
           colors: theme.colors,
           text_styles: expand_text_styles(theme, deck_path, errors),
           table_styles: expand_table_styles(theme, deck_path, errors),
+          chart_styles: expand_chart_styles(theme, deck_path, errors),
         }),
         pages: deck.pages,
       }
@@ -375,6 +377,255 @@ fn merge_table_style(parent : TableStyle, child : TableStyle) -> TableStyle {
 }
 
 ///|
+fn expand_chart_styles(
+  theme : Theme,
+  deck_path : String,
+  errors : Array[Diagnostic],
+) -> Map[String, ChartStyle] {
+  let resolved = Map([], capacity=theme.chart_styles.length())
+  for name, _ in theme.chart_styles {
+    ignore(
+      resolve_chart_style(name, theme, resolved, "|\{name}|", deck_path, errors),
+    )
+  }
+  resolved
+}
+
+///|
+fn resolve_chart_style(
+  name : String,
+  theme : Theme,
+  resolved : Map[String, ChartStyle],
+  stack : String,
+  deck_path : String,
+  errors : Array[Diagnostic],
+) -> ChartStyle? {
+  match resolved.get(name) {
+    Some(style) => Some(style)
+    None =>
+      match theme.chart_styles.get(name) {
+        None => None
+        Some(style) => {
+          let base = match style.extends {
+            None => None
+            Some(parent_ref) =>
+              match token_name(parent_ref) {
+                None => {
+                  errors.push(
+                    error_diagnostic(
+                      "PZ030",
+                      "chart style extends must be a whole-string theme token",
+                      path=deck_path,
+                      field="theme.chart_styles.\{name}.extends",
+                    ),
+                  )
+                  None
+                }
+                Some(parent_name) =>
+                  if style_stack_contains(stack, parent_name) {
+                    errors.push(
+                      error_diagnostic(
+                        "PZ030",
+                        "chart style inheritance has a cycle",
+                        path=deck_path,
+                        field="theme.chart_styles.\{name}.extends",
+                      ),
+                    )
+                    None
+                  } else {
+                    match theme.chart_styles.get(parent_name) {
+                      None => {
+                        errors.push(
+                          error_diagnostic(
+                            "PZ030",
+                            "unresolved chart style extends token",
+                            path=deck_path,
+                            field="theme.chart_styles.\{name}.extends",
+                          ),
+                        )
+                        None
+                      }
+                      Some(_) =>
+                        resolve_chart_style(
+                          parent_name,
+                          theme,
+                          resolved,
+                          "\{stack}\{parent_name}|",
+                          deck_path,
+                          errors,
+                        )
+                    }
+                  }
+              }
+          }
+          let expanded = match base {
+            None => chart_style_without_extends(style)
+            Some(parent) => merge_chart_style(parent, style)
+          }
+          resolved[name] = expanded
+          Some(expanded)
+        }
+      }
+  }
+}
+
+///|
+fn chart_style_without_extends(style : ChartStyle) -> ChartStyle {
+  ChartStyle::{
+    extends: None,
+    kind: style.kind,
+    legend: style.legend,
+    style: style.style,
+    data_labels: style.data_labels,
+    data_table: style.data_table,
+    rounded_corners: style.rounded_corners,
+  }
+}
+
+///|
+fn merge_chart_style(parent : ChartStyle, child : ChartStyle) -> ChartStyle {
+  ChartStyle::{
+    extends: None,
+    kind: option_string_or(child.kind, parent.kind),
+    legend: option_string_or(child.legend, parent.legend),
+    style: option_int_or(child.style, parent.style),
+    data_labels: option_string_or(child.data_labels, parent.data_labels),
+    data_table: option_bool_or(child.data_table, parent.data_table),
+    rounded_corners: option_bool_or(
+      child.rounded_corners,
+      parent.rounded_corners,
+    ),
+  }
+}
+
+///|
+fn expand_pages(
+  deck : Deck,
+  pages : Array[ResolvedPage],
+  errors : Array[Diagnostic],
+) -> Array[ResolvedPage] {
+  let expanded = []
+  for page in pages {
+    expanded.push(ResolvedPage::{
+      path: page.path,
+      full_path: page.full_path,
+      page: expand_page(deck, page.path, page.page, errors),
+    })
+  }
+  expanded
+}
+
+///|
+fn expand_page(
+  deck : Deck,
+  page_path : String,
+  page : Page,
+  errors : Array[Diagnostic],
+) -> Page {
+  let elements = []
+  for element in page.elements {
+    elements.push(expand_element(deck, page_path, element, errors))
+  }
+  Page::{ page_type: page.page_type, background: page.background, elements }
+}
+
+///|
+fn expand_element(
+  deck : Deck,
+  page_path : String,
+  element : Element,
+  errors : Array[Diagnostic],
+) -> Element {
+  match element {
+    ChartElement(base, spec) =>
+      ChartElement(
+        base,
+        expand_chart_spec(deck, page_path, base.id, spec, errors),
+      )
+    _ => element
+  }
+}
+
+///|
+fn expand_chart_spec(
+  deck : Deck,
+  page_path : String,
+  element_id : String,
+  spec : ChartSpec,
+  errors : Array[Diagnostic],
+) -> ChartSpec {
+  match spec.chart_style {
+    None => spec
+    Some(style_ref) =>
+      match deck.theme {
+        None => {
+          errors.push(
+            error_diagnostic(
+              "PZ030",
+              "chart style token has no deck theme",
+              path=page_path,
+              element_id~,
+              field="elements.content.chart_style",
+            ),
+          )
+          spec
+        }
+        Some(theme) =>
+          match token_name(style_ref) {
+            None => {
+              errors.push(
+                error_diagnostic(
+                  "PZ030",
+                  "chart style must be a whole-string theme token",
+                  path=page_path,
+                  element_id~,
+                  field="elements.content.chart_style",
+                ),
+              )
+              spec
+            }
+            Some(name) =>
+              match theme.chart_styles.get(name) {
+                None => {
+                  errors.push(
+                    error_diagnostic(
+                      "PZ030",
+                      "unresolved chart style token",
+                      path=page_path,
+                      element_id~,
+                      field="elements.content.chart_style",
+                    ),
+                  )
+                  spec
+                }
+                Some(style) => merge_chart_spec(style, spec)
+              }
+          }
+      }
+  }
+}
+
+///|
+fn merge_chart_spec(style : ChartStyle, spec : ChartSpec) -> ChartSpec {
+  ChartSpec::{
+    chart_style: None,
+    kind: if spec.kind.is_empty() {
+      style.kind.unwrap_or("")
+    } else {
+      spec.kind
+    },
+    title: spec.title,
+    legend: option_string_or(spec.legend, style.legend),
+    style: option_int_or(spec.style, style.style),
+    data_labels: option_string_or(spec.data_labels, style.data_labels),
+    data_table: option_bool_or(spec.data_table, style.data_table),
+    rounded_corners: option_bool_or(spec.rounded_corners, style.rounded_corners),
+    categories: spec.categories,
+    series: spec.series,
+  }
+}
+
+///|
 fn style_stack_contains(stack : String, name : String) -> Bool {
   stack.contains("|\{name}|")
 }
@@ -397,6 +648,14 @@ fn option_double_or(value : Double?, fallback : Double?) -> Double? {
 
 ///|
 fn option_bool_or(value : Bool?, fallback : Bool?) -> Bool? {
+  match value {
+    Some(_) => value
+    None => fallback
+  }
+}
+
+///|
+fn option_int_or(value : Int?, fallback : Int?) -> Int? {
   match value {
     Some(_) => value
     None => fallback
@@ -677,7 +936,85 @@ fn validate_theme(
           warnings,
         )
       }
+      for name, style in theme.chart_styles {
+        if !is_identifier(name) {
+          errors.push(
+            error_diagnostic(
+              "PZ030",
+              "theme chart style token name is invalid",
+              path=deck_path,
+              field="theme.chart_styles.\{name}",
+            ),
+          )
+        }
+        validate_chart_style(deck_path, name, style, errors)
+      }
     }
+  }
+}
+
+///|
+fn validate_chart_style(
+  deck_path : String,
+  name : String,
+  style : ChartStyle,
+  errors : Array[Diagnostic],
+) -> Unit {
+  match style.kind {
+    None => ()
+    Some(kind) =>
+      if !chart_kind_supported(kind) {
+        errors.push(
+          error_diagnostic(
+            "PZ070",
+            "unsupported chart kind",
+            path=deck_path,
+            field="theme.chart_styles.\{name}.kind",
+          ),
+        )
+      }
+  }
+  match style.legend {
+    None => ()
+    Some(legend) =>
+      if !chart_legend_supported(legend) {
+        errors.push(
+          error_diagnostic(
+            "PZ070",
+            "unsupported chart legend",
+            path=deck_path,
+            field="theme.chart_styles.\{name}.legend",
+          ),
+        )
+      }
+  }
+  match style.style {
+    None => ()
+    Some(style_number) =>
+      if style_number < 1 || style_number > 48 {
+        errors.push(
+          error_diagnostic(
+            "PZ070",
+            "chart style must be between 1 and 48",
+            path=deck_path,
+            field="theme.chart_styles.\{name}.style",
+          ),
+        )
+      }
+  }
+  match style.data_labels {
+    None => ()
+    Some(pos) =>
+      if !chart_data_label_supported(pos) {
+        errors.push(
+          error_diagnostic(
+            "PZ070",
+            "unsupported chart data_labels position",
+            path=deck_path,
+            field="theme.chart_styles.\{name}.data_labels",
+          ),
+        )
+      }
   }
 }
 

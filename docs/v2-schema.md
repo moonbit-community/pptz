@@ -374,6 +374,7 @@ use the category `data` shorthand.
 - rich text paragraphs, styled runs, bullets, external hyperlinks, body insets,
   and autofit controls;
 - table-level theme styles for header/body text, header fill, and borders;
+- chart style templates for reusable chart options;
 - category chart `data` shorthand normalized into the existing chart AST.
 
 ## 0.2.x Release Boundary

@@ -101,12 +101,8 @@ type = "chart"
 bounds = [110, 480, 440, 160]
 
 [elements.content]
-kind = "bar"
+chart_style = "$report_bar"
 title = "Revenue"
-legend = "bottom"
-style = 4
-data_labels = "outside_end"
-rounded_corners = false
 data = [
   ["", "Q1", "Q2", "Q3"],
   ["Revenue", 100.0, 150.0, 125.0],

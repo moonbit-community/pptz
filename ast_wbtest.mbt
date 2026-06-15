@@ -36,6 +36,7 @@ test "deck ast covers minimal deck source" {
       ),
     ]),
     table_styles: Map([], capacity=0),
+    chart_styles: Map([], capacity=0),
   }
   let deck = Deck::{
     title: Some("MoonBit PPTX Demo"),

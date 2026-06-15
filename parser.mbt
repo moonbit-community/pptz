@@ -65,7 +65,9 @@ fn parse_theme(
   table : Map[String, @toml.TomlValue],
   path : String,
 ) -> Theme raise {
-  reject_unknown_fields(table, path, ["colors", "text_styles", "table_styles"])
+  reject_unknown_fields(table, path, [
+    "colors", "text_styles", "table_styles", "chart_styles",
+  ])
   Theme::{
     colors: parse_string_map(required_table(table, "colors"), "\{path}.colors"),
     text_styles: parse_text_styles(
@@ -75,6 +77,10 @@ fn parse_theme(
     table_styles: parse_table_styles(
       table.get("table_styles"),
       "\{path}.table_styles",
+    ),
+    chart_styles: parse_chart_styles(
+      table.get("chart_styles"),
+      "\{path}.chart_styles",
     ),
   }
 }
@@ -201,6 +207,55 @@ fn parse_table_styles(
           border: parse_optional_border(
             style_table.get("border"),
             "\{style_path}.border",
+          ),
+        }
+      }
+      result
+    }
+  }
+}
+
+///|
+fn parse_chart_styles(
+  value : @toml.TomlValue?,
+  path : String,
+) -> Map[String, ChartStyle] raise {
+  match value {
+    None => Map([], capacity=0)
+    Some(value) => {
+      let table = expect_table(value, path)
+      let result = Map([], capacity=table.length())
+      for name, style_value in table {
+        let style_path = "\{path}.\{name}"
+        let style_table = expect_table(style_value, style_path)
+        reject_unknown_fields(style_table, style_path, [
+          "extends", "kind", "legend", "style", "data_labels", "data_table", "rounded_corners",
+        ])
+        result[name] = ChartStyle::{
+          extends: optional_string(
+            style_table.get("extends"),
+            "\{style_path}.extends",
+          ),
+          kind: optional_string(style_table.get("kind"), "\{style_path}.kind"),
+          legend: optional_string(
+            style_table.get("legend"),
+            "\{style_path}.legend",
+          ),
+          style: optional_int_or_none(
+            style_table.get("style"),
+            "\{style_path}.style",
+          ),
+          data_labels: optional_string(
+            style_table.get("data_labels"),
+            "\{style_path}.data_labels",
+          ),
+          data_table: optional_bool(
+            style_table.get("data_table"),
+            "\{style_path}.data_table",
+          ),
+          rounded_corners: optional_bool(
+            style_table.get("rounded_corners"),
+            "\{style_path}.rounded_corners",
           ),
         }
       }
@@ -841,10 +896,21 @@ fn parse_chart_spec(
   path : String,
 ) -> ChartSpec raise {
   reject_unknown_fields(table, path, [
-    "kind", "title", "legend", "style", "data_labels", "data_table", "rounded_corners",
-    "categories", "series", "data",
+    "chart_style", "kind", "title", "legend", "style", "data_labels", "data_table",
+    "rounded_corners", "categories", "series", "data",
   ])
-  let kind = required_string(table, "\{path}.kind", key="kind")
+  let chart_style = optional_string(
+    table.get("chart_style"),
+    "\{path}.chart_style",
+  )
+  let kind = match table.get("kind") {
+    Some(_) => required_string(table, "\{path}.kind", key="kind")
+    None =>
+      match chart_style {
+        Some(_) => ""
+        None => required_string(table, "\{path}.kind", key="kind")
+      }
+  }
   let (categories, series) = match table.get("data") {
     None =>
       (
@@ -868,6 +934,7 @@ fn parse_chart_spec(
     }
   }
   ChartSpec::{
+    chart_style,
     kind,
     title: optional_string(table.get("title"), "\{path}.title"),
     legend: optional_string(table.get("legend"), "\{path}.legend"),

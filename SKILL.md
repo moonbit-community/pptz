@@ -162,6 +162,25 @@ data = [
 
 ### Chart Data
 
+Put repeated chart options in a theme chart style, then fill title and data on
+each page.
+
+```toml
+[theme.chart_styles.report_bar]
+kind = "bar"
+legend = "bottom"
+style = 4
+data_labels = "outside_end"
+
+[elements.content]
+chart_style = "$report_bar"
+title = "Revenue"
+data = [
+  ["", "Q1", "Q2", "Q3"],
+  ["Revenue", 100.0, 150.0, 125.0],
+]
+```
+
 Use `data` shorthand for category charts.
 
 ```toml
