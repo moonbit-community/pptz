@@ -168,6 +168,10 @@ label = "npm packages"
 - Treat colored cards, chips, and diagram nodes as semantic objects: each one
   needs its own label inside the same bounds, or a component that contains both
   the background shape and label.
+- For node-to-node connectors, prefer element endpoints:
+  `start = { element = "source" }` and `end = { element = "target" }`.
+  `pptz` automatically anchors each endpoint to the facing edge. Add `anchor`
+  only when a specific edge is needed.
 - Use empty shapes only as decoration or background chrome. If a shape
   represents a step, category, state, metric, or concept, bind visible text to
   that shape.

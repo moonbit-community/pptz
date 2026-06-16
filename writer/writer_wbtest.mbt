@@ -192,6 +192,97 @@ test "writer maps expanded connector kinds" {
 }
 
 ///|
+test "writer auto anchors element connectors to facing edges" {
+  let shape_bounds : Map[String, Bounds] = {}
+  shape_bounds["left"] = Bounds::{
+    x: 100.0,
+    y: 100.0,
+    width: 200.0,
+    height: 80.0,
+  }
+  shape_bounds["right"] = Bounds::{
+    x: 500.0,
+    y: 120.0,
+    width: 120.0,
+    height: 100.0,
+  }
+  shape_bounds["bottom"] = Bounds::{
+    x: 140.0,
+    y: 320.0,
+    width: 160.0,
+    height: 80.0,
+  }
+  let left_start = connector_endpoint_point(
+    ElementEndpoint("left"),
+    ElementEndpoint("right"),
+    shape_bounds,
+  ) catch {
+    err => abort("resolve left endpoint failed: \{err}")
+  }
+  assert_eq(left_start.x, 300.0)
+  assert_eq(left_start.y, 140.0)
+  let right_end = connector_endpoint_point(
+    ElementEndpoint("right"),
+    ElementEndpoint("left"),
+    shape_bounds,
+  ) catch {
+    err => abort("resolve right endpoint failed: \{err}")
+  }
+  assert_eq(right_end.x, 500.0)
+  assert_eq(right_end.y, 170.0)
+  let bottom_end = connector_endpoint_point(
+    ElementEndpoint("bottom"),
+    ElementEndpoint("left"),
+    shape_bounds,
+  ) catch {
+    err => abort("resolve bottom endpoint failed: \{err}")
+  }
+  assert_eq(bottom_end.x, 220.0)
+  assert_eq(bottom_end.y, 320.0)
+  shape_bounds["wide"] = Bounds::{
+    x: 200.0,
+    y: 40.0,
+    width: 320.0,
+    height: 120.0,
+  }
+  shape_bounds["lower_right"] = Bounds::{
+    x: 620.0,
+    y: 280.0,
+    width: 160.0,
+    height: 90.0,
+  }
+  let wide_start = connector_endpoint_point(
+    ElementEndpoint("wide"),
+    ElementEndpoint("lower_right"),
+    shape_bounds,
+  ) catch {
+    err => abort("resolve wide endpoint failed: \{err}")
+  }
+  assert_eq(wide_start.x, 360.0)
+  assert_eq(wide_start.y, 160.0)
+}
+
+///|
+test "writer respects explicit connector anchors" {
+  let shape_bounds : Map[String, Bounds] = {}
+  shape_bounds["box"] = Bounds::{
+    x: 100.0,
+    y: 100.0,
+    width: 200.0,
+    height: 80.0,
+  }
+  let point = connector_endpoint_point(
+    AnchoredElementEndpoint("box", BottomAnchor),
+    CoordinateEndpoint(700.0, 100.0),
+    shape_bounds,
+  ) catch {
+    err => abort("resolve anchored endpoint failed: \{err}")
+  }
+  assert_eq(point.x, 200.0)
+  assert_eq(point.y, 180.0)
+}
+
+///|
 test "writer maps expanded icon names" {
   let cases = [
     ("fas:home", "actionButtonHome"),

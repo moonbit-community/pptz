@@ -25,6 +25,7 @@ pub using @model {
   type ComponentInstance,
   type ComponentTemplate,
   type ConnectorEndpoint,
+  type ConnectorAnchor,
   type ConnectorSpec,
   type CropRect,
   type Deck,

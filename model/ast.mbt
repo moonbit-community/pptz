@@ -293,6 +293,17 @@ pub(all) struct ConnectorSpec {
 pub(all) enum ConnectorEndpoint {
   CoordinateEndpoint(Double, Double)
   ElementEndpoint(String)
+  AnchoredElementEndpoint(String, ConnectorAnchor)
+} derive(Eq, Debug)
+
+///|
+pub(all) enum ConnectorAnchor {
+  AutoAnchor
+  CenterAnchor
+  LeftAnchor
+  RightAnchor
+  TopAnchor
+  BottomAnchor
 } derive(Eq, Debug)
 
 ///|

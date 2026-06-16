@@ -227,8 +227,11 @@ Lines and connectors are not shape subtypes.
 
 ## Connector Element
 
-Connectors are a separate element family. The first connector slice supports
-coordinate endpoints and element endpoints.
+Connectors are a separate element family. The connector schema supports
+coordinate endpoints and element endpoints. Element endpoints default to
+automatic edge anchors: `pptz` chooses the facing edge from the endpoint element
+toward the other endpoint, so ordinary node-to-node connectors do not run from
+center to center.
 
 ```toml
 [[elements]]
@@ -237,7 +240,7 @@ type = "connector"
 
 [elements.content]
 kind = "straight"
-start = [220, 180]
+start = { element = "source" }
 end = { element = "target" }
 end_arrow = "triangle"
 
@@ -247,9 +250,17 @@ width = 2.0
 dash = "solid"
 ```
 
-Element endpoints refer to another element by id. The first connector schema
-does not expose raw PowerPoint connection site indices; `pptz` chooses the
-backend connection site.
+Element endpoints refer to another element by id. Use `anchor` only when the
+automatic facing edge is not the intended connection point:
+
+```toml
+start = { element = "source", anchor = "bottom" }
+end = { element = "target", anchor = "top" }
+```
+
+Supported anchor values are `auto`, `center`, `left`, `right`, `top`, and
+`bottom`. The schema does not expose raw PowerPoint connection site indices;
+`pptz` chooses the backend connection site.
 
 ## Table Element
 

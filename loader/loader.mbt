@@ -2823,7 +2823,7 @@ fn validate_connector_endpoint(
   bundle : DeckBundle,
 ) -> Unit {
   match endpoint {
-    ElementEndpoint(target) =>
+    ElementEndpoint(target) | AnchoredElementEndpoint(target, _) =>
       if !ids.contains(target) {
         errors.push(
           error_diagnostic(

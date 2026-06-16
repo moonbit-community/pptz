@@ -47,9 +47,34 @@ fn parse_connector_endpoint(
     }
     Some(value) => {
       let table = expect_table(value, path)
-      reject_unknown_fields(table, path, ["element"])
-      ElementEndpoint(required_string(table, "\{path}.element", key="element"))
+      reject_unknown_fields(table, path, ["element", "anchor"])
+      let element = required_string(table, "\{path}.element", key="element")
+      match
+        parse_optional_connector_anchor(table.get("anchor"), "\{path}.anchor") {
+        None => ElementEndpoint(element)
+        Some(anchor) => AnchoredElementEndpoint(element, anchor)
+      }
     }
+  }
+}
+
+///|
+fn parse_optional_connector_anchor(
+  value : @toml.TomlValue?,
+  path : String,
+) -> ConnectorAnchor? raise {
+  match optional_string(value, path) {
+    None => None
+    Some("auto") => Some(AutoAnchor)
+    Some("center") => Some(CenterAnchor)
+    Some("left") => Some(LeftAnchor)
+    Some("right") => Some(RightAnchor)
+    Some("top") => Some(TopAnchor)
+    Some("bottom") => Some(BottomAnchor)
+    Some(other) =>
+      fail(
+        "\{path}: unsupported connector anchor '\{other}', expected auto, center, left, right, top, or bottom",
+      )
   }
 }
 

@@ -72,8 +72,8 @@ The current writer supports:
   line breaks, rich paragraphs, styled runs, bullets, external hyperlinks,
   body insets, and autofit controls;
 - PowerPoint preset auto-shapes, excluding line and connector presets;
-- straight, bent, and curved connectors with coordinate or element endpoints,
-  stroke, dash, and arrowheads;
+- straight, bent, and curved connectors with coordinate or auto-anchored element
+  endpoints, stroke, dash, and arrowheads;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;
 - outer shadows for shape and connector elements;
 - built-in icon elements for `cube`, `circle`, `square`, `star`, `heart`,

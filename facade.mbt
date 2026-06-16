@@ -35,6 +35,7 @@ pub using @model {
   type ChartStyle,
   type ComponentInstance,
   type ComponentTemplate,
+  type ConnectorAnchor,
   type ConnectorEndpoint,
   type ConnectorSpec,
   type CropRect,

@@ -27,6 +27,7 @@ using @model {
   type Bounds,
   type BulletSpec,
   type ChartSpec,
+  type ConnectorAnchor,
   type ConnectorEndpoint,
   type ConnectorSpec,
   type CropRect,
@@ -1517,8 +1518,8 @@ fn build_connector(
   shape_ids : Map[String, Int],
   shape_bounds : Map[String, Bounds],
 ) -> @slide.Connector raise {
-  let start = connector_endpoint_point(spec.start, shape_bounds)
-  let end = connector_endpoint_point(spec.end, shape_bounds)
+  let start = connector_endpoint_point(spec.start, spec.end, shape_bounds)
+  let end = connector_endpoint_point(spec.end, spec.start, shape_bounds)
   @slide.Connector::{
     id: shape_id,
     name: id,
@@ -1557,22 +1558,104 @@ fn connector_geometry(kind : String) -> @slide.PresetShape raise {
 ///|
 fn connector_endpoint_point(
   endpoint : ConnectorEndpoint,
+  peer : ConnectorEndpoint,
   shape_bounds : Map[String, Bounds],
 ) -> Point2 raise {
   match endpoint {
     CoordinateEndpoint(x, y) => Point2::{ x, y }
     ElementEndpoint(id) =>
+      anchored_element_endpoint_point(id, AutoAnchor, peer, shape_bounds)
+    AnchoredElementEndpoint(id, anchor) =>
+      anchored_element_endpoint_point(id, anchor, peer, shape_bounds)
+  }
+}
+
+///|
+fn anchored_element_endpoint_point(
+  id : String,
+  anchor : ConnectorAnchor,
+  peer : ConnectorEndpoint,
+  shape_bounds : Map[String, Bounds],
+) -> Point2 raise {
+  match shape_bounds.get(id) {
+    Some(bounds) =>
+      connector_anchor_point(
+        bounds,
+        resolved_connector_anchor(anchor, bounds, peer, shape_bounds),
+      )
+    None =>
+      raise WriteError::Capability(
+        "connector endpoint '\{id}' is not a supported connectable element",
+      )
+  }
+}
+
+///|
+fn resolved_connector_anchor(
+  anchor : ConnectorAnchor,
+  bounds : Bounds,
+  peer : ConnectorEndpoint,
+  shape_bounds : Map[String, Bounds],
+) -> ConnectorAnchor raise {
+  match anchor {
+    AutoAnchor => infer_connector_anchor(bounds, peer, shape_bounds)
+    other => other
+  }
+}
+
+///|
+fn infer_connector_anchor(
+  bounds : Bounds,
+  peer : ConnectorEndpoint,
+  shape_bounds : Map[String, Bounds],
+) -> ConnectorAnchor raise {
+  let center = connector_anchor_point(bounds, CenterAnchor)
+  let peer_point = connector_peer_point(peer, shape_bounds)
+  let dx = peer_point.x - center.x
+  let dy = peer_point.y - center.y
+  let half_width = if bounds.width > 0.0 { bounds.width / 2.0 } else { 1.0 }
+  let half_height = if bounds.height > 0.0 { bounds.height / 2.0 } else { 1.0 }
+  if dx.abs() / half_width >= dy.abs() / half_height {
+    if dx >= 0.0 {
+      RightAnchor
+    } else {
+      LeftAnchor
+    }
+  } else if dy >= 0.0 {
+    BottomAnchor
+  } else {
+    TopAnchor
+  }
+}
+
+///|
+fn connector_peer_point(
+  endpoint : ConnectorEndpoint,
+  shape_bounds : Map[String, Bounds],
+) -> Point2 raise {
+  match endpoint {
+    CoordinateEndpoint(x, y) => Point2::{ x, y }
+    ElementEndpoint(id) | AnchoredElementEndpoint(id, _) =>
       match shape_bounds.get(id) {
-        Some(bounds) =>
-          Point2::{
-            x: bounds.x + bounds.width / 2.0,
-            y: bounds.y + bounds.height / 2.0,
-          }
+        Some(bounds) => connector_anchor_point(bounds, CenterAnchor)
         None =>
           raise WriteError::Capability(
             "connector endpoint '\{id}' is not a supported connectable element",
           )
       }
+  }
+}
+
+///|
+fn connector_anchor_point(bounds : Bounds, anchor : ConnectorAnchor) -> Point2 {
+  let center_x = bounds.x + bounds.width / 2.0
+  let center_y = bounds.y + bounds.height / 2.0
+  match anchor {
+    AutoAnchor | CenterAnchor => Point2::{ x: center_x, y: center_y }
+    LeftAnchor => Point2::{ x: bounds.x, y: center_y }
+    RightAnchor => Point2::{ x: bounds.x + bounds.width, y: center_y }
+    TopAnchor => Point2::{ x: center_x, y: bounds.y }
+    BottomAnchor => Point2::{ x: center_x, y: bounds.y + bounds.height }
   }
 }
 
@@ -1583,7 +1666,7 @@ fn connector_connection_end(
 ) -> @slide.ConnectionEnd? raise {
   match endpoint {
     CoordinateEndpoint(_, _) => None
-    ElementEndpoint(id) =>
+    ElementEndpoint(id) | AnchoredElementEndpoint(id, _) =>
       match shape_ids.get(id) {
         Some(shape_id) => Some(@slide.ConnectionEnd::{ shape_id, idx: 0 })
         None =>

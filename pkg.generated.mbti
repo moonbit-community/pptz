@@ -55,6 +55,8 @@ pub using @model {type ComponentInstance}
 
 pub using @model {type ComponentTemplate}
 
+pub using @model {type ConnectorAnchor}
+
 pub using @model {type ConnectorEndpoint}
 
 pub using @model {type ConnectorSpec}

@@ -147,3 +147,30 @@ test "parse minimal shapes page" {
     _ => abort("expected icon element")
   }
 }
+
+///|
+test "parse connector endpoint anchor" {
+  let page = parse_page_toml(
+    (
+      #|[[elements]]
+      #|id = "flow"
+      #|type = "connector"
+      #|
+      #|[elements.content]
+      #|kind = "straight"
+      #|start = { element = "source", anchor = "bottom" }
+      #|end = { element = "target" }
+    ),
+  ) catch {
+    err => abort("parse page failed: \{err}")
+  }
+  match page.elements[0] {
+    ConnectorElement(_, spec) =>
+      match spec.start {
+        AnchoredElementEndpoint(target, BottomAnchor) =>
+          assert_eq(target, "source")
+        _ => abort("expected anchored start endpoint")
+      }
+    _ => abort("expected connector element")
+  }
+}
