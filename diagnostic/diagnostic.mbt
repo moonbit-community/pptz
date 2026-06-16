@@ -13,7 +13,23 @@
 // limitations under the License.
 
 ///|
-fn error_diagnostic(
+pub(all) enum Severity {
+  Error
+  Warning
+} derive(Eq, Debug)
+
+///|
+pub(all) struct Diagnostic {
+  severity : Severity
+  code : String
+  message : String
+  path : String?
+  element_id : String?
+  field : String?
+} derive(Eq, Debug)
+
+///|
+pub fn error_diagnostic(
   code : String,
   message : String,
   path? : String,
@@ -24,7 +40,7 @@ fn error_diagnostic(
 }
 
 ///|
-fn warning_diagnostic(
+pub fn warning_diagnostic(
   code : String,
   message : String,
   path? : String,

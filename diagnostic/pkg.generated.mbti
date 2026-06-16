@@ -1,0 +1,33 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/pptz/diagnostic"
+
+import {
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn error_diagnostic(String, String, path? : String, element_id? : String, field? : String) -> Diagnostic
+
+pub fn warning_diagnostic(String, String, path? : String, element_id? : String, field? : String) -> Diagnostic
+
+// Errors
+
+// Types and methods
+pub(all) struct Diagnostic {
+  severity : Severity
+  code : String
+  message : String
+  path : String?
+  element_id : String?
+  field : String?
+} derive(Eq, @debug.Debug)
+
+pub(all) enum Severity {
+  Error
+  Warning
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

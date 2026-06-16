@@ -13,13 +13,13 @@
 // limitations under the License.
 
 ///|
-fn normal_path(value : String) -> @path.Path {
+pub fn normal_path(value : String) -> @path.Path {
   let path : @path.Path = value
   path.normalize()
 }
 
 ///|
-fn resolve_source_path(base : @path.Path, value : String) -> @path.Path? {
+pub fn resolve_source_path(base : @path.Path, value : String) -> @path.Path? {
   let relative : @path.Path = value
   if relative.is_absolute() || value.is_blank() {
     return None
@@ -36,14 +36,14 @@ fn resolve_source_path(base : @path.Path, value : String) -> @path.Path? {
 }
 
 ///|
-fn source_full_path(base : String, value : String) -> @path.Path {
+pub fn source_full_path(base : String, value : String) -> @path.Path {
   let base_path : @path.Path = base
   let relative : @path.Path = value
   base_path.join(relative).normalize()
 }
 
 ///|
-fn resolve_existing_source_file(
+pub fn resolve_existing_source_file(
   deck_dir : String,
   source_path : String,
 ) -> String? {

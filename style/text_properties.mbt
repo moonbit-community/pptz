@@ -13,7 +13,13 @@
 // limitations under the License.
 
 ///|
-priv struct ResolvedTextProperties {
+using @lexical {token_name}
+
+///|
+using @model {type Deck, type TableStyle, type TextContent, type TextStyle}
+
+///|
+pub(all) struct ResolvedTextProperties {
   font_size : Double?
   font_family : String?
   color : String?
@@ -24,11 +30,11 @@ priv struct ResolvedTextProperties {
 }
 
 ///|
-fn resolve_text_properties(
-  bundle : DeckBundle,
+pub fn resolve_text_properties(
+  deck : Deck,
   content : TextContent,
 ) -> ResolvedTextProperties {
-  let theme_style = theme_text_style(bundle, content.style)
+  let theme_style = theme_text_style(deck, content.style)
   ResolvedTextProperties::{
     font_size: option_or(content.font_size, text_style_font_size(theme_style)),
     font_family: option_or(
@@ -44,16 +50,47 @@ fn resolve_text_properties(
 }
 
 ///|
-fn theme_text_style(bundle : DeckBundle, style : String?) -> TextStyle? {
+pub fn theme_text_style(deck : Deck, style : String?) -> TextStyle? {
   match style {
     None => None
     Some(style_token) =>
       match token_name(style_token) {
         None => None
         Some(name) =>
-          match bundle.deck.theme {
+          match deck.theme {
             None => None
             Some(theme) => theme.text_styles.get(name)
+          }
+      }
+  }
+}
+
+///|
+pub fn table_style_text_color(style : TableStyle, row_index : Int) -> String? {
+  if row_index == 0 {
+    match style.header_text_color {
+      Some(_) => style.header_text_color
+      None => style.header_color
+    }
+  } else {
+    match style.body_text_color {
+      Some(_) => style.body_text_color
+      None => style.body_color
+    }
+  }
+}
+
+///|
+pub fn theme_table_style(deck : Deck, style : String?) -> TableStyle? {
+  match style {
+    None => None
+    Some(style_token) =>
+      match token_name(style_token) {
+        None => None
+        Some(name) =>
+          match deck.theme {
+            None => None
+            Some(theme) => theme.table_styles.get(name)
           }
       }
   }

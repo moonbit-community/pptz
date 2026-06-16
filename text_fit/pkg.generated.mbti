@@ -1,0 +1,22 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/pptz/text_fit"
+
+import {
+  "Milky2018/pptz/model",
+}
+
+// Values
+pub fn estimate_text_fit(@model.Deck, @model.Bounds, @model.TextContent) -> TextFitEstimate
+
+// Errors
+
+// Types and methods
+pub(all) struct TextFitEstimate {
+  height : Double
+  longest_token_width : Double
+}
+
+// Type aliases
+
+// Traits
+

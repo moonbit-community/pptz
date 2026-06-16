@@ -13,6 +13,51 @@
 // limitations under the License.
 
 ///|
+using @lexical {token_name_unchecked}
+
+///|
+using @image_info {image_source_size, is_svg_path, type ImageSourceSize}
+
+///|
+using @loader {type DeckBundle, type LoadedDeck, type ResolvedPage}
+
+///|
+using @model {
+  type Border,
+  type Bounds,
+  type BulletSpec,
+  type ChartSpec,
+  type ConnectorEndpoint,
+  type ConnectorSpec,
+  type CropRect,
+  type Element,
+  type ElementBase,
+  type Fill,
+  type Gradient,
+  type GradientStop,
+  type IconSpec,
+  type ImageFit,
+  type ImageSpec,
+  type ShadowSpec,
+  type ShapeSpec,
+  type TableCellSpec,
+  type TableSpec,
+  type TableStyle,
+  type TextContent,
+  type TextParagraphSpec,
+}
+
+///|
+using @source_path {source_full_path}
+
+///|
+using @style {
+  resolve_text_properties,
+  table_style_text_color,
+  theme_table_style,
+}
+
+///|
 pub(all) suberror WriteError {
   Capability(String)
   Backend(String)
@@ -137,6 +182,19 @@ fn connector_shape_ids(
     }
   }
   result
+}
+
+///|
+fn element_id(element : Element) -> String {
+  match element {
+    TextElement(base, _) => base.id
+    ShapeElement(base, _) => base.id
+    ImageElement(base, _) => base.id
+    ConnectorElement(id, _) => id
+    IconElement(base, _) => base.id
+    TableElement(base, _) => base.id
+    ChartElement(base, _) => base.id
+  }
 }
 
 ///|
@@ -938,7 +996,7 @@ fn table_rows(
 ) -> Array[@slide.TableRow] raise {
   let row_heights = table_row_heights(spec, bounds)
   let column_count = table_column_count(spec)
-  let style = theme_table_style(bundle, spec.style)
+  let style = theme_table_style(bundle.deck, spec.style)
   let mut active_counts = zero_int_array(column_count)
   let mut active_horizontal = false_bool_array(column_count)
   let rows = []
@@ -1192,37 +1250,6 @@ fn table_cell_run_properties(
         None
       }
     }
-  }
-}
-
-///|
-fn table_style_text_color(style : TableStyle, row_index : Int) -> String? {
-  if row_index == 0 {
-    match style.header_text_color {
-      Some(_) => style.header_text_color
-      None => style.header_color
-    }
-  } else {
-    match style.body_text_color {
-      Some(_) => style.body_text_color
-      None => style.body_color
-    }
-  }
-}
-
-///|
-fn theme_table_style(bundle : DeckBundle, style : String?) -> TableStyle? {
-  match style {
-    None => None
-    Some(style_token) =>
-      match token_name(style_token) {
-        None => None
-        Some(name) =>
-          match bundle.deck.theme {
-            None => None
-            Some(theme) => theme.table_styles.get(name)
-          }
-      }
   }
 }
 
@@ -1706,7 +1733,7 @@ fn text_run_properties_from_values(
   tooltip : String?,
 ) -> @slide.RunProperties raise {
   let mut props = @slide.RunProperties::default()
-  let text = resolve_text_properties(bundle, TextContent::{
+  let text = resolve_text_properties(bundle.deck, TextContent::{
     text: "",
     style,
     align: None,
@@ -1762,7 +1789,7 @@ fn text_paragraph_properties(
   content : TextContent,
   props : @slide.ParagraphProperties,
 ) -> @slide.ParagraphProperties {
-  let text = resolve_text_properties(bundle, content)
+  let text = resolve_text_properties(bundle.deck, content)
   match text.line_height {
     None => props
     Some(line_height) =>
@@ -1794,7 +1821,7 @@ fn rich_text_paragraph_properties(
     bold: None,
     italic: None,
   }
-  let text = resolve_text_properties(bundle, style_content)
+  let text = resolve_text_properties(bundle.deck, style_content)
   let mut result = match paragraph.line_height {
     None =>
       match text.line_height {

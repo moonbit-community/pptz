@@ -13,6 +13,26 @@
 // limitations under the License.
 
 ///|
+using @parser {parse_page_toml}
+
+///|
+using @loader {load_deck}
+
+///|
+using @model {
+  type Align,
+  type ChartSeriesSpec,
+  type Deck,
+  type Page,
+  type PageRef,
+  type Size,
+  type TableCellMargin,
+  type TableRowSpec,
+  type TextStyle,
+  type Theme,
+}
+
+///|
 test "render minimal deck as pptx bytes" {
   let loaded = load_deck("examples/minimal/deck.pptz.toml") catch {
     err => abort("load failed: \{err}")

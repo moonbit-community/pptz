@@ -1,0 +1,33 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/pptz/style"
+
+import {
+  "Milky2018/pptz/model",
+}
+
+// Values
+pub fn resolve_text_properties(@model.Deck, @model.TextContent) -> ResolvedTextProperties
+
+pub fn table_style_text_color(@model.TableStyle, Int) -> String?
+
+pub fn theme_table_style(@model.Deck, String?) -> @model.TableStyle?
+
+pub fn theme_text_style(@model.Deck, String?) -> @model.TextStyle?
+
+// Errors
+
+// Types and methods
+pub(all) struct ResolvedTextProperties {
+  font_size : Double?
+  font_family : String?
+  color : String?
+  bold : Bool?
+  italic : Bool?
+  line_height : Double?
+  letter_spacing : Double?
+}
+
+// Type aliases
+
+// Traits
+

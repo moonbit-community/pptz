@@ -1,13 +1,11 @@
 import {
-  "bobzhang/toml",
+  "Milky2018/pptz/diagnostic",
+  "Milky2018/pptz/loader",
+  "Milky2018/pptz/model",
+  "Milky2018/pptz/parser",
+  "Milky2018/pptz/writer",
   "moonbit-community/miniio",
   "moonbitlang/core/argparse",
-  "moonbitlang/x/path",
-  "t-ujiie-g/moon-pptx/oxml",
-  "t-ujiie-g/moon-pptx/chart",
-  "t-ujiie-g/moon-pptx/presentation",
-  "t-ujiie-g/moon-pptx/slide",
-  "t-ujiie-g/moon-pptx/units",
 }
 
 supported_targets = "wasm"

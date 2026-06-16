@@ -1,0 +1,14 @@
+import {
+  "Milky2018/pptz/diagnostic",
+  "Milky2018/pptz/image_info",
+  "Milky2018/pptz/lexical",
+  "Milky2018/pptz/model",
+  "Milky2018/pptz/parser",
+  "Milky2018/pptz/source_path",
+  "Milky2018/pptz/style",
+  "Milky2018/pptz/text_fit",
+  "moonbit-community/miniio",
+  "moonbitlang/x/path",
+}
+
+supported_targets = "wasm"

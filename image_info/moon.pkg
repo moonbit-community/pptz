@@ -1,0 +1,5 @@
+import {
+  "t-ujiie-g/moon-pptx/oxml",
+}
+
+supported_targets = "wasm"

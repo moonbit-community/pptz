@@ -13,6 +13,52 @@
 // limitations under the License.
 
 ///|
+pub using @model {
+  type Align,
+  type Background,
+  type Border,
+  type Bounds,
+  type BulletSpec,
+  type ChartSeriesSpec,
+  type ChartSpec,
+  type ChartStyle,
+  type ComponentInstance,
+  type ComponentTemplate,
+  type ConnectorEndpoint,
+  type ConnectorSpec,
+  type CropRect,
+  type Deck,
+  type Element,
+  type ElementBase,
+  type Fill,
+  type Gradient,
+  type GradientStop,
+  type IconSpec,
+  type ImageFill,
+  type ImageFit,
+  type ImageSpec,
+  type LayoutSlot,
+  type LayoutTemplate,
+  type Page,
+  type PageRef,
+  type ShadowSpec,
+  type ShapeSpec,
+  type Size,
+  type TableCellMargin,
+  type TableCellSpec,
+  type TableRowSpec,
+  type TableSpec,
+  type TableStyle,
+  type TextBodyOptions,
+  type TextContent,
+  type TextInset,
+  type TextParagraphSpec,
+  type TextRunSpec,
+  type TextStyle,
+  type Theme,
+}
+
+///|
 pub fn parse_deck_toml(source : String) -> Deck raise {
   match @toml.parse(source) {
     @toml.TomlTable(table) => parse_deck_table(table)

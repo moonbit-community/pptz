@@ -13,18 +13,24 @@
 // limitations under the License.
 
 ///|
-priv struct TextFitEstimate {
+using @model {type Bounds, type Deck, type TextContent}
+
+///|
+using @style {resolve_text_properties}
+
+///|
+pub(all) struct TextFitEstimate {
   height : Double
   longest_token_width : Double
 }
 
 ///|
-fn estimate_text_fit(
-  bundle : DeckBundle,
+pub fn estimate_text_fit(
+  deck : Deck,
   bounds : Bounds,
   content : TextContent,
 ) -> TextFitEstimate {
-  let font_size = match resolve_text_properties(bundle, content).font_size {
+  let font_size = match resolve_text_properties(deck, content).font_size {
     Some(size) => size
     None => 18.0
   }

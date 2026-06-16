@@ -13,20 +13,64 @@
 // limitations under the License.
 
 ///|
-pub(all) enum Severity {
-  Error
-  Warning
-} derive(Eq, Debug)
+using @diagnostic {error_diagnostic, warning_diagnostic, type Diagnostic}
 
 ///|
-pub(all) struct Diagnostic {
-  severity : Severity
-  code : String
-  message : String
-  path : String?
-  element_id : String?
-  field : String?
-} derive(Eq, Debug)
+using @image_info {image_source_size}
+
+///|
+using @lexical {is_hex_color, is_identifier, token_name}
+
+///|
+using @model {
+  type Background,
+  type Border,
+  type Bounds,
+  type ChartSeriesSpec,
+  type ChartSpec,
+  type ChartStyle,
+  type ComponentInstance,
+  type ComponentTemplate,
+  type ConnectorEndpoint,
+  type CropRect,
+  type Deck,
+  type Element,
+  type ElementBase,
+  type Fill,
+  type Gradient,
+  type ImageFit,
+  type ImageSpec,
+  type LayoutSlot,
+  type LayoutTemplate,
+  type Page,
+  type ShadowSpec,
+  type TableCellMargin,
+  type TableCellSpec,
+  type TableRowSpec,
+  type TableSpec,
+  type TableStyle,
+  type TextContent,
+  type TextParagraphSpec,
+  type TextRunSpec,
+  type TextStyle,
+  type Theme,
+}
+
+///|
+using @parser {parse_deck_toml, parse_page_toml}
+
+///|
+using @source_path {
+  normal_path,
+  resolve_existing_source_file,
+  resolve_source_path,
+}
+
+///|
+using @style {table_style_text_color, theme_table_style}
+
+///|
+using @text_fit {estimate_text_fit}
 
 ///|
 pub(all) suberror LoadError {
@@ -2169,7 +2213,7 @@ fn validate_table_text_contrast(
   spec : TableSpec,
   warnings : Array[Diagnostic],
 ) -> Unit {
-  match theme_table_style(bundle, spec.style) {
+  match theme_table_style(bundle.deck, spec.style) {
     None => ()
     Some(style) => {
       let page_bg = page_solid_background_color(page_background)
@@ -2458,6 +2502,24 @@ fn validate_table_grid(
     active_horizontal = next_horizontal
   }
   expected_columns
+}
+
+///|
+fn zero_int_array(count : Int) -> Array[Int] {
+  let result = []
+  for _ in 0..<count {
+    result.push(0)
+  }
+  result
+}
+
+///|
+fn false_bool_array(count : Int) -> Array[Bool] {
+  let result = []
+  for _ in 0..<count {
+    result.push(false)
+  }
+  result
 }
 
 ///|
@@ -2805,7 +2867,7 @@ fn validate_text_fit(
     content.text.trim().is_empty() {
     return
   }
-  let estimate = estimate_text_fit(bundle, bounds, content)
+  let estimate = estimate_text_fit(bundle.deck, bounds, content)
   if estimate.height > bounds.height * 1.05 ||
     estimate.longest_token_width > bounds.width {
     warnings.push(

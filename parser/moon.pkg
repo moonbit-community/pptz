@@ -1,0 +1,10 @@
+import {
+  "bobzhang/toml",
+  "Milky2018/pptz/model",
+}
+
+import {
+  "moonbit-community/miniio",
+} for "wbtest"
+
+supported_targets = "wasm"

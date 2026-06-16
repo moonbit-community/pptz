@@ -1,0 +1,41 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/pptz/loader"
+
+import {
+  "Milky2018/pptz/diagnostic",
+  "Milky2018/pptz/model",
+  "moonbitlang/core/debug",
+}
+
+// Values
+pub fn load_deck(String) -> LoadedDeck raise
+
+// Errors
+pub(all) suberror LoadError {
+  Fatal(String)
+  Diagnostics(Array[@diagnostic.Diagnostic])
+} derive(@debug.Debug)
+
+// Types and methods
+pub(all) struct DeckBundle {
+  deck_path : String
+  deck_dir : String
+  deck : @model.Deck
+  pages : Array[ResolvedPage]
+} derive(Eq, @debug.Debug)
+
+pub(all) struct LoadedDeck {
+  bundle : DeckBundle
+  warnings : Array[@diagnostic.Diagnostic]
+} derive(Eq, @debug.Debug)
+
+pub(all) struct ResolvedPage {
+  path : String
+  full_path : String
+  page : @model.Page
+} derive(Eq, @debug.Debug)
+
+// Type aliases
+
+// Traits
+

@@ -1,0 +1,21 @@
+import {
+  "Milky2018/pptz/image_info",
+  "Milky2018/pptz/lexical",
+  "Milky2018/pptz/loader",
+  "Milky2018/pptz/model",
+  "Milky2018/pptz/source_path",
+  "Milky2018/pptz/style",
+  "moonbit-community/miniio",
+  "moonbitlang/x/path",
+  "t-ujiie-g/moon-pptx/oxml",
+  "t-ujiie-g/moon-pptx/chart",
+  "t-ujiie-g/moon-pptx/presentation",
+  "t-ujiie-g/moon-pptx/slide",
+  "t-ujiie-g/moon-pptx/units",
+}
+
+import {
+  "Milky2018/pptz/parser",
+} for "wbtest"
+
+supported_targets = "wasm"

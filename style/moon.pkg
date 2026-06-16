@@ -1,0 +1,6 @@
+import {
+  "Milky2018/pptz/lexical",
+  "Milky2018/pptz/model",
+}
+
+supported_targets = "wasm"

@@ -1,0 +1,20 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "Milky2018/pptz/image_info"
+
+// Values
+pub fn image_source_size(String, FixedArray[Byte]) -> ImageSourceSize?
+
+pub fn is_svg_path(String) -> Bool
+
+// Errors
+
+// Types and methods
+pub(all) struct ImageSourceSize {
+  width : Double
+  height : Double
+}
+
+// Type aliases
+
+// Traits
+

@@ -1,38 +1,18 @@
 // Generated using `moon info`, DON'T EDIT IT
-package "Milky2018/pptz"
+package "Milky2018/pptz/parser"
 
 import {
-  "Milky2018/pptz/diagnostic",
-  "Milky2018/pptz/loader",
   "Milky2018/pptz/model",
-  "Milky2018/pptz/writer",
 }
 
 // Values
-pub fn dispatch(ArrayView[String]) -> CliResponse
-
-pub fn load_deck(String) -> @loader.LoadedDeck raise
-
 pub fn parse_deck_toml(String) -> @model.Deck raise
 
 pub fn parse_page_toml(String) -> @model.Page raise
 
-pub fn render_pptx(@loader.LoadedDeck) -> FixedArray[Byte] raise
-
-pub fn usage() -> String
-
-pub fn version() -> String
-
-pub fn write_pptx_file(@loader.LoadedDeck, String) -> Unit raise
-
 // Errors
 
 // Types and methods
-pub struct CliResponse {
-  exit_code : Int
-  stdout : String
-  stderr : String
-}
 
 // Type aliases
 pub using @model {type Align}
@@ -63,10 +43,6 @@ pub using @model {type CropRect}
 
 pub using @model {type Deck}
 
-pub using @loader {type DeckBundle}
-
-pub using @diagnostic {type Diagnostic}
-
 pub using @model {type Element}
 
 pub using @model {type ElementBase}
@@ -89,17 +65,9 @@ pub using @model {type LayoutSlot}
 
 pub using @model {type LayoutTemplate}
 
-pub using @loader {type LoadError}
-
-pub using @loader {type LoadedDeck}
-
 pub using @model {type Page}
 
 pub using @model {type PageRef}
-
-pub using @loader {type ResolvedPage}
-
-pub using @diagnostic {type Severity}
 
 pub using @model {type ShadowSpec}
 
@@ -130,8 +98,6 @@ pub using @model {type TextRunSpec}
 pub using @model {type TextStyle}
 
 pub using @model {type Theme}
-
-pub using @writer {type WriteError}
 
 // Traits
 
