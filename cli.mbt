@@ -21,7 +21,7 @@ pub struct CliResponse {
 
 ///|
 pub fn version() -> String {
-  "0.3.2"
+  "0.4.0"
 }
 
 ///|

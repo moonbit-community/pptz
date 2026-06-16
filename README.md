@@ -15,7 +15,7 @@ moon runwasm Milky2018/pptz <deck.toml> [--out <output.pptx>]
 For reproducible runs, pin the published version:
 
 ```bash
-moon runwasm Milky2018/pptz@0.3.2 <deck.toml> [--out <output.pptx>]
+moon runwasm Milky2018/pptz@0.4.0 <deck.toml> [--out <output.pptx>]
 ```
 
 Run the command from the deck project directory and use relative paths. The
