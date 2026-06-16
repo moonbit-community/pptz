@@ -670,8 +670,11 @@ fn build_textbox(
 ) -> @slide.AutoShape raise {
   let bounds = base.bounds
   let mut text_body = text_body(bundle, content)
-  let mut body_props = @slide.BodyProperties::default()
-  let mut has_body_props = false
+  let mut body_props = @slide.BodyProperties::{
+    ..@slide.BodyProperties::default(),
+    auto_fit: Some(default_text_auto_fit()),
+  }
+  let mut has_body_props = true
   match content.align {
     None => ()
     Some(align) => {
@@ -1994,11 +1997,7 @@ fn text_bullet(bullet : BulletSpec) -> @slide.Bullet raise {
 fn text_auto_fit(value : String) -> @slide.AutoFit raise {
   match value {
     "none" => @slide.AutoFit::NoAutoFit
-    "shrink" =>
-      @slide.AutoFit::NormAutoFit(
-        @units.Percentage(100.0),
-        @units.Percentage(0.0),
-      )
+    "shrink" => default_text_auto_fit()
     "shape" => @slide.AutoFit::SpAutoFit
     "resize_shape" => @slide.AutoFit::SpAutoFit
     other =>
@@ -2006,6 +2005,11 @@ fn text_auto_fit(value : String) -> @slide.AutoFit raise {
         "text body auto_fit '\{other}' is not implemented",
       )
   }
+}
+
+///|
+fn default_text_auto_fit() -> @slide.AutoFit {
+  @slide.AutoFit::NormAutoFit(@units.Percentage(100.0), @units.Percentage(0.0))
 }
 
 ///|

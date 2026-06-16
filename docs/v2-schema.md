@@ -77,15 +77,15 @@ text = "Hello"
 
 Rich text uses explicit paragraphs and runs. Do not mix `text` and
 `paragraphs` in the same text element.
+Text boxes default to shrink autofit so text stays inside the element bounds.
+Set `auto_fit = "none"` to disable it, or `auto_fit = "shape"` when the text
+box may resize to fit its text.
 
 ```toml
 [elements.content]
 style = "$body"
 align = ["left", "top"]
 wrap = true
-
-[elements.content.body]
-auto_fit = "shape"
 
 [elements.content.body.inset]
 left = 8
@@ -387,7 +387,7 @@ use the category `data` shorthand.
 `0.3.0` promotes authoring ergonomics for real content decks:
 
 - rich text paragraphs, styled runs, bullets, external hyperlinks, body insets,
-  and autofit controls;
+  and shrink autofit enabled by default;
 - table-level theme styles for header/body text, header fill, and borders;
 - chart style templates for reusable chart options;
 - layout templates with text slots and default elements;

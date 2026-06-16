@@ -457,6 +457,60 @@ test "writer maps text wrap false" {
 }
 
 ///|
+test "writer enables shrink autofit for text by default" {
+  let page = parse_page_toml(
+    (
+      #|[[elements]]
+      #|id = "default_autofit"
+      #|type = "text"
+      #|bounds = [80, 120, 240, 60]
+      #|
+      #|[elements.content]
+      #|text = "Default autofit"
+    ),
+  ) catch {
+    err => abort("parse text page failed: \{err}")
+  }
+  let loaded = unsupported_loaded(page)
+  let bytes = render_pptx(loaded) catch {
+    err => abort("render failed: \{err}")
+  }
+  let prs = @presentation.Presentation::open(bytes) catch {
+    err => abort("open generated pptx failed: \{err}")
+  }
+  assert_slide_xml_contains(prs, 1, "<a:normAutofit")
+  assert_slide_xml_contains(prs, 1, "fontScale=\"100000\"")
+}
+
+///|
+test "writer can disable default text autofit" {
+  let page = parse_page_toml(
+    (
+      #|[[elements]]
+      #|id = "manual_overflow"
+      #|type = "text"
+      #|bounds = [80, 120, 240, 60]
+      #|
+      #|[elements.content]
+      #|text = "No autofit"
+      #|
+      #|[elements.content.body]
+      #|auto_fit = "none"
+    ),
+  ) catch {
+    err => abort("parse text page failed: \{err}")
+  }
+  let loaded = unsupported_loaded(page)
+  let bytes = render_pptx(loaded) catch {
+    err => abort("render failed: \{err}")
+  }
+  let prs = @presentation.Presentation::open(bytes) catch {
+    err => abort("open generated pptx failed: \{err}")
+  }
+  assert_slide_xml_contains(prs, 1, "<a:noAutofit/>")
+}
+
+///|
 test "writer renders text letter spacing" {
   let loaded = unsupported_loaded(
     page_with_element(

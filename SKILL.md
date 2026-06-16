@@ -182,15 +182,15 @@ label = "npm packages"
 
 Use explicit paragraphs/runs for bullets and hyperlinks. Do not encode rich text
 as Markdown inside `text`.
+Text boxes shrink text to fit their bounds by default. Set `auto_fit = "none"`
+only when exact font metrics matter more than overflow protection; use
+`auto_fit = "shape"` only when resizing the text box is acceptable.
 
 ```toml
 [elements.content]
 style = "$body"
 align = ["left", "top"]
 wrap = true
-
-[elements.content.body]
-auto_fit = "shape"
 
 [elements.content.body.inset]
 left = 8

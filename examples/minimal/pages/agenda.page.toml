@@ -25,9 +25,6 @@ style = "$body"
 align = ["left", "top"]
 wrap = true
 
-[elements.content.body]
-auto_fit = "shape"
-
 [elements.content.body.inset]
 left = 8
 right = 8
