@@ -31,6 +31,7 @@ using @model {
   type ChartStyle,
   type ComponentInstance,
   type ComponentTemplate,
+  type ConnectorAnchor,
   type ConnectorEndpoint,
   type CropRect,
   type Deck,
@@ -1444,6 +1445,7 @@ fn validate_page(
       validate_background(bundle, resolved_page.path, background, errors)
   }
   let ids = Map([], capacity=resolved_page.page.elements.length())
+  let bounds_by_id = Map([], capacity=resolved_page.page.elements.length())
   for element in resolved_page.page.elements {
     let id = element_id(element)
     if !is_identifier(id) {
@@ -1472,8 +1474,10 @@ fn validate_page(
     }
     match element_base(element) {
       None => ()
-      Some(base) =>
+      Some(base) => {
+        bounds_by_id[base.id] = base.bounds
         validate_bounds(bundle, resolved_page.path, base, errors, warnings)
+      }
     }
   }
   for element in resolved_page.page.elements {
@@ -1489,6 +1493,7 @@ fn validate_page(
       resolved_page.path,
       element,
       ids,
+      bounds_by_id,
       errors,
       warnings,
       bundle,
@@ -2780,6 +2785,7 @@ fn validate_connector_refs(
   page_path : String,
   element : Element,
   ids : Map[String, Bool],
+  bounds_by_id : Map[String, Bounds],
   errors : Array[Diagnostic],
   warnings : Array[Diagnostic],
   bundle : DeckBundle,
@@ -2806,9 +2812,234 @@ fn validate_connector_refs(
         warnings,
         bundle,
       )
+      if spec.kind == "straight" {
+        validate_connector_crossings(
+          page_path,
+          id,
+          spec.start,
+          spec.end,
+          bounds_by_id,
+          warnings,
+        )
+      }
     }
     _ => ()
   }
+}
+
+///|
+fn validate_connector_crossings(
+  page_path : String,
+  element_id : String,
+  start_endpoint : ConnectorEndpoint,
+  end_endpoint : ConnectorEndpoint,
+  bounds_by_id : Map[String, Bounds],
+  warnings : Array[Diagnostic],
+) -> Unit {
+  match
+    (
+      connector_endpoint_point(start_endpoint, end_endpoint, bounds_by_id),
+      connector_endpoint_point(end_endpoint, start_endpoint, bounds_by_id),
+    ) {
+    (Some(start), Some(end)) =>
+      for crossed_id, bounds in bounds_by_id {
+        if !connector_endpoint_targets(start_endpoint, crossed_id) &&
+          !connector_endpoint_targets(end_endpoint, crossed_id) &&
+          segment_crosses_bounds(start, end, bounds) {
+          warnings.push(
+            warning_diagnostic(
+              "PZ107",
+              "connector line crosses element '\{crossed_id}'",
+              path=page_path,
+              element_id~,
+              field="elements.content",
+            ),
+          )
+        }
+      }
+    _ => ()
+  }
+}
+
+///|
+fn connector_endpoint_targets(
+  endpoint : ConnectorEndpoint,
+  id : String,
+) -> Bool {
+  match endpoint {
+    CoordinateEndpoint(_, _) => false
+    ElementEndpoint(target) | AnchoredElementEndpoint(target, _) => target == id
+  }
+}
+
+///|
+fn connector_endpoint_point(
+  endpoint : ConnectorEndpoint,
+  peer : ConnectorEndpoint,
+  bounds_by_id : Map[String, Bounds],
+) -> Point2? {
+  match endpoint {
+    CoordinateEndpoint(x, y) => Some(Point2::{ x, y })
+    ElementEndpoint(id) =>
+      anchored_connector_endpoint_point(id, AutoAnchor, peer, bounds_by_id)
+    AnchoredElementEndpoint(id, anchor) =>
+      anchored_connector_endpoint_point(id, anchor, peer, bounds_by_id)
+  }
+}
+
+///|
+fn anchored_connector_endpoint_point(
+  id : String,
+  anchor : ConnectorAnchor,
+  peer : ConnectorEndpoint,
+  bounds_by_id : Map[String, Bounds],
+) -> Point2? {
+  match bounds_by_id.get(id) {
+    None => None
+    Some(bounds) => {
+      let resolved_anchor = match anchor {
+        AutoAnchor => infer_connector_anchor(bounds, peer, bounds_by_id)
+        other => Some(other)
+      }
+      match resolved_anchor {
+        None => None
+        Some(anchor) => Some(connector_anchor_point(bounds, anchor))
+      }
+    }
+  }
+}
+
+///|
+fn infer_connector_anchor(
+  bounds : Bounds,
+  peer : ConnectorEndpoint,
+  bounds_by_id : Map[String, Bounds],
+) -> ConnectorAnchor? {
+  match connector_peer_point(peer, bounds_by_id) {
+    None => None
+    Some(peer_point) => {
+      let center = connector_anchor_point(bounds, CenterAnchor)
+      let dx = peer_point.x - center.x
+      let dy = peer_point.y - center.y
+      let half_width = if bounds.width > 0.0 { bounds.width / 2.0 } else { 1.0 }
+      let half_height = if bounds.height > 0.0 {
+        bounds.height / 2.0
+      } else {
+        1.0
+      }
+      if dx.abs() / half_width >= dy.abs() / half_height {
+        if dx >= 0.0 {
+          Some(RightAnchor)
+        } else {
+          Some(LeftAnchor)
+        }
+      } else if dy >= 0.0 {
+        Some(BottomAnchor)
+      } else {
+        Some(TopAnchor)
+      }
+    }
+  }
+}
+
+///|
+fn connector_peer_point(
+  endpoint : ConnectorEndpoint,
+  bounds_by_id : Map[String, Bounds],
+) -> Point2? {
+  match endpoint {
+    CoordinateEndpoint(x, y) => Some(Point2::{ x, y })
+    ElementEndpoint(id) | AnchoredElementEndpoint(id, _) =>
+      match bounds_by_id.get(id) {
+        None => None
+        Some(bounds) => Some(connector_anchor_point(bounds, CenterAnchor))
+      }
+  }
+}
+
+///|
+fn connector_anchor_point(bounds : Bounds, anchor : ConnectorAnchor) -> Point2 {
+  let center_x = bounds.x + bounds.width / 2.0
+  let center_y = bounds.y + bounds.height / 2.0
+  match anchor {
+    AutoAnchor | CenterAnchor => Point2::{ x: center_x, y: center_y }
+    LeftAnchor => Point2::{ x: bounds.x, y: center_y }
+    RightAnchor => Point2::{ x: bounds.x + bounds.width, y: center_y }
+    TopAnchor => Point2::{ x: center_x, y: bounds.y }
+    BottomAnchor => Point2::{ x: center_x, y: bounds.y + bounds.height }
+  }
+}
+
+///|
+priv struct Point2 {
+  x : Double
+  y : Double
+}
+
+///|
+fn segment_crosses_bounds(
+  start : Point2,
+  end : Point2,
+  bounds : Bounds,
+) -> Bool {
+  if bounds.width <= 0.0 || bounds.height <= 0.0 {
+    false
+  } else if point_inside_bounds(start, bounds) ||
+    point_inside_bounds(end, bounds) {
+    true
+  } else {
+    let top_left = Point2::{ x: bounds.x, y: bounds.y }
+    let top_right = Point2::{ x: bounds.x + bounds.width, y: bounds.y }
+    let bottom_left = Point2::{ x: bounds.x, y: bounds.y + bounds.height }
+    let bottom_right = Point2::{
+      x: bounds.x + bounds.width,
+      y: bounds.y + bounds.height,
+    }
+    segments_intersect(start, end, top_left, top_right) ||
+    segments_intersect(start, end, top_right, bottom_right) ||
+    segments_intersect(start, end, bottom_right, bottom_left) ||
+    segments_intersect(start, end, bottom_left, top_left)
+  }
+}
+
+///|
+fn point_inside_bounds(point : Point2, bounds : Bounds) -> Bool {
+  point.x >= bounds.x &&
+  point.x <= bounds.x + bounds.width &&
+  point.y >= bounds.y &&
+  point.y <= bounds.y + bounds.height
+}
+
+///|
+fn segments_intersect(a : Point2, b : Point2, c : Point2, d : Point2) -> Bool {
+  let o1 = orientation(a, b, c)
+  let o2 = orientation(a, b, d)
+  let o3 = orientation(c, d, a)
+  let o4 = orientation(c, d, b)
+  if o1 == 0.0 && point_on_segment(c, a, b) {
+    true
+  } else if o2 == 0.0 && point_on_segment(d, a, b) {
+    true
+  } else if o3 == 0.0 && point_on_segment(a, c, d) {
+    true
+  } else if o4 == 0.0 && point_on_segment(b, c, d) {
+    true
+  } else {
+    (o1 > 0.0) != (o2 > 0.0) && (o3 > 0.0) != (o4 > 0.0)
+  }
+}
+
+///|
+fn orientation(a : Point2, b : Point2, c : Point2) -> Double {
+  (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x)
+}
+
+///|
+fn point_on_segment(point : Point2, a : Point2, b : Point2) -> Bool {
+  point.x >= a.x.min(b.x) &&
+  point.x <= a.x.max(b.x) &&
+  point.y >= a.y.min(b.y) &&
+  point.y <= a.y.max(b.y)
 }
 
 ///|

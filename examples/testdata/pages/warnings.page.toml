@@ -23,3 +23,36 @@ bounds = [20, 80, 600, 60]
 
 [elements.content]
 text = "Left          Right"
+
+[[elements]]
+id = "left_node"
+type = "shape"
+bounds = [20, 180, 100, 60]
+
+[elements.content]
+shape = "round_rect"
+
+[[elements]]
+id = "middle_node"
+type = "shape"
+bounds = [180, 180, 100, 60]
+
+[elements.content]
+shape = "round_rect"
+
+[[elements]]
+id = "right_node"
+type = "shape"
+bounds = [340, 180, 100, 60]
+
+[elements.content]
+shape = "round_rect"
+
+[[elements]]
+id = "crossing_connector"
+type = "connector"
+
+[elements.content]
+kind = "straight"
+start = { element = "left_node" }
+end = { element = "right_node" }

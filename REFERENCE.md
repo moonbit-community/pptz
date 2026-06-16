@@ -386,6 +386,7 @@ Warnings allow generation but indicate potentially surprising `pptz` semantics:
 - `font_family` looks like a CSS fallback list rather than one PowerPoint
   typeface.
 - Plain text contains repeated spaces that may be used for layout.
+- A connector line crosses an element that is not one of its endpoints.
 
 `PZ100` is emitted when
 `x < 0 || y < 0 || x + width > deck.width || y + height > deck.height`.
@@ -403,6 +404,10 @@ line-breaking in PowerPoint and preview tools.
 `PZ106` is emitted when a plain text element contains three or more consecutive
 ASCII spaces after other text on the same line. Repeated spaces are unstable for
 cross-object alignment because PowerPoint font metrics differ across viewers.
+`PZ107` is emitted when a connector's rendered straight segment intersects the
+bounds of another element that is not its start or end endpoint. This catches
+high-risk diagram layouts such as three nodes in a row with the first node
+connected directly to the third.
 
 Negative `x` or `y` bounds are allowed and may produce an outside-canvas
 warning. Negative `width` or `height` bounds are errors.
@@ -539,6 +544,7 @@ text. Messages may change; codes should not. Initial code ranges:
   background.
 - `PZ105`: `font_family` looks like a CSS fallback list.
 - `PZ106`: text contains repeated spaces that may be used for layout.
+- `PZ107`: connector line crosses a non-endpoint element.
 
 Loader validation should collect all diagnostics it can collect before failing,
 so agents can fix multiple issues in one pass. Blocking input errors, such as
@@ -699,12 +705,14 @@ Lines and connectors are not shape subtypes in v2. They are represented by a
 separate `connector` element family so connector-specific semantics can grow
 without overloading preset auto shapes.
 The current writer supports straight, bent, and curved connectors with both
-coordinate endpoints and element endpoints. Supported connector kinds are
-`straight`, `bent2`, `bent3`, `bent4`, `bent5`, `curved2`, `curved3`,
+coordinate endpoints and auto-anchored element endpoints. Supported connector
+kinds are `straight`, `bent2`, `bent3`, `bent4`, `bent5`, `curved2`, `curved3`,
 `curved4`, and `curved5`. Coordinate endpoints use explicit slide coordinates.
-Element endpoints refer to another text or shape element by id and let `pptz`
-choose the backend connection site; the connector schema does not expose raw
-PowerPoint connection site indices.
+Element endpoints refer to another element by id; by default `pptz` anchors each
+endpoint to the facing edge of the referenced element. Use `anchor = "left"`,
+`"right"`, `"top"`, `"bottom"`, `"center"`, or `"auto"` only when overriding the
+default. The connector schema does not expose raw PowerPoint connection site
+indices.
 Shape borders, connector lines, and later table cell borders share a basic
 stroke primitive for color, width, and dash style. Connector arrowheads are
 connector-specific fields such as `start_arrow` and `end_arrow`; they are not
@@ -845,5 +853,8 @@ the bounds, reduce font size, shorten the copy, split content across multiple
 text boxes or slides, or add intentional line breaks.
 For labels, identifiers, and short phrases, widen the box or shorten the text
 instead of accepting broken words as the rendered wrap.
+For `PZ107`, prefer rerouting the diagram: connect adjacent nodes, move the
+intermediate node, use explicit anchors, or split the relationship into multiple
+connectors.
 For `PZ106`, replace spacing-based alignment with separate text boxes, table
 cells, or component instances whose labels live inside their own bounds.

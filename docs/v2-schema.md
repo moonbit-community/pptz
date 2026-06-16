@@ -262,6 +262,10 @@ Supported anchor values are `auto`, `center`, `left`, `right`, `top`, and
 `bottom`. The schema does not expose raw PowerPoint connection site indices;
 `pptz` chooses the backend connection site.
 
+The loader emits a warning when a connector's straight segment crosses a
+non-endpoint element, such as three nodes in a row with the first node connected
+directly to the third.
+
 ## Table Element
 
 Tables have a canonical PowerPoint table form and an optional shorthand. The

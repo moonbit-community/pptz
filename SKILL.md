@@ -172,6 +172,8 @@ label = "npm packages"
   `start = { element = "source" }` and `end = { element = "target" }`.
   `pptz` automatically anchors each endpoint to the facing edge. Add `anchor`
   only when a specific edge is needed.
+- Do not draw a direct connector through a third node. `pptz` warns when a
+  connector crosses a non-endpoint element; reroute the diagram instead.
 - Use empty shapes only as decoration or background chrome. If a shape
   represents a step, category, state, metric, or concept, bind visible text to
   that shape.
