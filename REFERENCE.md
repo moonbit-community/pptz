@@ -303,11 +303,10 @@ Build `pptz` in this order:
    image elements, image crop rectangles, and basic theme color/text-style
    resolution with element-local overrides. Valid AST features outside this
    subset may fail as writer capability errors.
-   MVP text styling follows the `moon-pptx@0.4.0` text builder surface:
+   Current text styling follows the `moon-pptx@0.5.1` text builder surface:
    `font_size`, `font_family`, `color`, `bold`, `italic`, `line_height`,
-   paragraph spacing, bullets, external hyperlinks, body insets, autofit, and
-   `wrap`. `letter_spacing` remains a schema/AST concept but is outside the
-   current `moon-pptx@0.4.0` writer surface.
+   `letter_spacing`, paragraph spacing, bullets, external hyperlinks, body
+   insets, autofit, and `wrap`.
    The MVP writer must not silently ignore declared fields that it cannot map
    to `moon-pptx`. Fail with a writer capability error instead.
    Current status: `writer.mbt` generates valid PPTX bytes for deck size,
@@ -323,8 +322,8 @@ Build `pptz` in this order:
    data-label, data-table, rounded-corner options, and category chart data
    shorthand, image elements with `stretch`, `cover`, `contain`, explicit
    crop, SVG pictures, and basic theme color/text-style resolution including
-   `line_height`. It returns capability errors for schema-valid features that
-   are still outside the implemented writer subset.
+   `line_height` and `letter_spacing`. It returns capability errors for
+   schema-valid features that are still outside the implemented writer subset.
 
 Compiler Reliability status:
 

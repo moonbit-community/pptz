@@ -1741,8 +1741,9 @@ fn text_run_properties_from_values(
   if text.italic == Some(true) {
     props = props.with_italic()
   }
-  if text.letter_spacing is Some(_) {
-    raise WriteError::Capability("letter_spacing is not implemented")
+  match text.letter_spacing {
+    None => ()
+    Some(spacing) => props = props.with_character_spacing(@units.Pt(spacing))
   }
   match hyperlink {
     None => ()

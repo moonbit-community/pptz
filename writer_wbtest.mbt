@@ -346,6 +346,34 @@ test "writer maps text wrap false" {
 }
 
 ///|
+test "writer renders text letter spacing" {
+  let loaded = unsupported_loaded(
+    page_with_element(
+      TextElement(test_base("spacing_text"), TextContent::{
+        text: "Spacing",
+        style: Some("$spaced"),
+        align: None,
+        wrap: None,
+        body: None,
+        paragraphs: None,
+        font_size: None,
+        font_family: None,
+        color: None,
+        bold: None,
+        italic: None,
+      }),
+    ),
+  )
+  let bytes = render_pptx(loaded) catch {
+    err => abort("render failed: \{err}")
+  }
+  let prs = @presentation.Presentation::open(bytes) catch {
+    err => abort("open generated pptx failed: \{err}")
+  }
+  assert_slide_xml_contains(prs, 1, "spc=\"100\"")
+}
+
+///|
 test "writer renders rich text paragraphs runs and body options" {
   let page = parse_page_toml(
     (
@@ -563,26 +591,6 @@ test "writer reports capability errors for unsupported schema-valid features" {
       ),
     ),
     "border style 'zigzag'",
-  )
-  expect_capability(
-    unsupported_loaded(
-      page_with_element(
-        TextElement(test_base("spacing_text"), TextContent::{
-          text: "Spacing",
-          style: Some("$spaced"),
-          align: None,
-          wrap: None,
-          body: None,
-          paragraphs: None,
-          font_size: None,
-          font_family: None,
-          color: None,
-          bold: None,
-          italic: None,
-        }),
-      ),
-    ),
-    "letter_spacing",
   )
 }
 
