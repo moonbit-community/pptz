@@ -42,7 +42,7 @@ deck-topic/
 4. Compile from the deck directory:
 
    ```bash
-   moon runwasm Milky2018/pptz@0.4.1 deck.pptz.yaml --out dist/deck.pptx
+   moon runwasm Milky2018/pptz@0.5.0 deck.pptz.yaml --out dist/deck.pptx
    ```
 
    When working inside this repository, use the local package instead:
