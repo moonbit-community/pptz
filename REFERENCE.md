@@ -310,17 +310,18 @@ Build `pptz` in this order:
    ordered pages, optional solid/gradient/image backgrounds, text elements
    with wrapping, line breaks, rich paragraphs, styled runs, bullets, external
    hyperlinks, body insets, and autofit controls, preset auto-shape elements
-   excluding line and connector presets, straight, bent, and curved connectors
-   with coordinate or element endpoints, solid/no-fill/gradient shape fills,
-   alpha colors, solid and dashed shape borders, outer shadows for shape and
-   connector elements, built-in icon elements, table elements with explicit or
-   evenly distributed column widths and row heights including merge spans and
-   theme table styles, inline chart elements with title, legend, style,
-   data-label, data-table, rounded-corner options, and category chart data
-   shorthand, image elements with `stretch`, `cover`, `contain`, explicit
-   crop, SVG pictures, and basic theme color/text-style resolution including
-   `line_height` and `letter_spacing`. It returns capability errors for
-   schema-valid features that are still outside the implemented writer subset.
+   with optional embedded text, excluding line and connector presets, straight,
+   bent, and curved connectors with coordinate or element endpoints,
+   solid/no-fill/gradient shape fills, alpha colors, solid and dashed shape
+   borders, outer shadows for shape and connector elements, built-in icon
+   elements, table elements with explicit or evenly distributed column widths
+   and row heights including merge spans and theme table styles, inline chart
+   elements with title, legend, style, data-label, data-table, rounded-corner
+   options, and category chart data shorthand, image elements with `stretch`,
+   `cover`, `contain`, explicit crop, SVG pictures, and basic theme
+   color/text-style resolution including `line_height` and `letter_spacing`.
+   It returns capability errors for schema-valid features that are still
+   outside the implemented writer subset.
 
 Compiler Reliability status:
 
@@ -390,8 +391,11 @@ Warnings allow generation but indicate potentially surprising `pptz` semantics:
 An element may produce multiple warnings.
 `PZ102` uses MoonBit's library-provided trim behavior or equivalent standard
 string trimming. Do not define a custom whitespace character set.
-`PZ103` is an estimated visibility warning, not a full PowerPoint layout engine.
-It should catch obvious text overflow without judging slide content quality.
+`PZ103` is an estimated visibility error by default, not a full PowerPoint
+layout engine. It blocks obvious text overflow before PPTX generation using
+the text's available area after `body.inset` is applied. Set
+`body.overflow: "warn"` to downgrade it to a warning, or `"allow"` to suppress
+it only after inspecting the rendered PPTX.
 `PZ104` is emitted only when table text foreground and background both resolve
 to solid hex colors and their approximate contrast ratio is below 3:1. It does
 not inspect image or gradient backgrounds.
@@ -534,8 +538,9 @@ text. Messages may change; codes should not. Initial code ranges:
 - `PZ101`: invalid or zero-size element bounds. Negative width or height is an
   error; zero width or height is a warning.
 - `PZ102`: empty or whitespace-only text content.
-- `PZ103`: text may overflow its element bounds. This is an estimate because
-  PowerPoint text layout depends on viewer fonts and rendering behavior.
+- `PZ103`: text may overflow its available text area after `body.inset`. This
+  is an error by default because PowerPoint text layout depends on viewer fonts
+  and rendering behavior.
 - `PZ104`: table text may have low contrast against a solid table or page
   background.
 - `PZ105`: `font_family` looks like a CSS fallback list.
@@ -681,6 +686,12 @@ elements:
     content:
       shape: "rect"
       fill: { type: "solid", color: "$surface" }
+      text:
+        style: "$body"
+        align: ["center", "center"]
+        body:
+          inset: { left: 16, right: 16, top: 12, bottom: 12 }
+        text: "Panel label"
 ```
 
 Planned v2 shape semantics expand shape subtypes toward the `moon-pptx`
@@ -836,9 +847,12 @@ A warning is acceptable only when the agent can state:
 
 All other warnings must be fixed.
 
-For `PZ103`, prefer fixing the source instead of accepting the warning: enlarge
-the bounds, reduce font size, shorten the copy, split content across multiple
-text boxes or slides, or add intentional line breaks.
+For `PZ103`, fix the source: enlarge the bounds, reduce font size, shorten the
+copy, reduce `body.inset`, split content across multiple text boxes or slides,
+or add intentional line breaks. For labeled cards and diagram nodes, prefer
+shape `content.text` so the text is checked against the same object that owns
+the fill and border. Use `body.overflow: "warn"` or `"allow"` only after
+inspecting the rendered PPTX.
 For labels, identifiers, and short phrases, widen the box or shorten the text
 instead of accepting broken words as the rendered wrap.
 For `PZ107`, prefer rerouting the diagram: connect adjacent nodes, move the

@@ -22,6 +22,8 @@ using @style {resolve_text_properties}
 pub(all) struct TextFitEstimate {
   height : Double
   longest_token_width : Double
+  available_width : Double
+  available_height : Double
 }
 
 ///|
@@ -34,6 +36,7 @@ pub fn estimate_text_fit(
     Some(size) => size
     None => 18.0
   }
+  let fit_bounds = text_fit_bounds(bounds, content)
   let font_px = font_size / 72.0 * 96.0
   let line_height = font_px * 1.1
   let mut line_count = 0
@@ -42,7 +45,7 @@ pub fn estimate_text_fit(
     let (lines, token_width) = estimated_wrapped_lines(
       paragraph.to_owned(),
       font_px,
-      bounds.width.max(1.0),
+      fit_bounds.width.max(1.0),
       wrap=content.wrap != Some(false),
     )
     line_count += lines
@@ -56,6 +59,31 @@ pub fn estimate_text_fit(
   TextFitEstimate::{
     height: line_count.to_double() * line_height,
     longest_token_width,
+    available_width: fit_bounds.width,
+    available_height: fit_bounds.height,
+  }
+}
+
+///|
+fn text_fit_bounds(bounds : Bounds, content : TextContent) -> Bounds {
+  match content.body {
+    None => bounds
+    Some(body) =>
+      match body.inset {
+        None => bounds
+        Some(inset) => {
+          let left = inset.left.unwrap_or(0.0)
+          let right = inset.right.unwrap_or(0.0)
+          let top = inset.top.unwrap_or(0.0)
+          let bottom = inset.bottom.unwrap_or(0.0)
+          Bounds::{
+            x: bounds.x + left,
+            y: bounds.y + top,
+            width: (bounds.width - left - right).max(1.0),
+            height: (bounds.height - top - bottom).max(1.0),
+          }
+        }
+      }
   }
 }
 

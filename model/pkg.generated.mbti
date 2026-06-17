@@ -213,6 +213,7 @@ pub(all) struct ShapeSpec {
   fill : Fill?
   border : Border?
   shadow : ShadowSpec?
+  text : TextContent?
 } derive(Eq, @debug.Debug)
 
 pub(all) struct Size {
@@ -263,6 +264,7 @@ pub(all) struct TableStyle {
 pub(all) struct TextBodyOptions {
   inset : TextInset?
   auto_fit : String?
+  overflow : String?
 } derive(Eq, @debug.Debug)
 
 pub(all) struct TextContent {

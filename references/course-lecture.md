@@ -18,8 +18,8 @@ Use for tutorials, lectures, workshops, and teaching decks.
   multiline plain `text` string.
 - Use tables for syntax or concept comparisons.
 - Use connectors for data flow or evaluation flow.
-- Use components for repeated labeled chips/cards. Put each node's background
-  shape and label in the same component or in matching bounds.
+- Use components for repeated labeled chips/cards. Put each node's label in the
+  node shape's `content.text`.
 - Use images only when they clarify the concept being taught.
 
 ### Safe Diagram Nodes
@@ -32,18 +32,17 @@ components:
   lesson_chip:
     bounds: [0, 0, 210, 78]
     elements:
-      - id: "bg"
+      - id: "chip"
         type: "shape"
         bounds: [0, 0, 210, 78]
         content:
           shape: "round_rect"
-      - id: "label"
-        type: "text"
-        bounds: [12, 16, 186, 42]
-        content:
-          style: "$body"
-          align: ["center", "center"]
-          text: "$label"
+          text:
+            style: "$body"
+            align: ["center", "center"]
+            body:
+              inset: { left: 12, right: 12, top: 8, bottom: 8 }
+            text: "$label"
 ```
 
 ```yaml

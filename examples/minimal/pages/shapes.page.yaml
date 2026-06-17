@@ -20,6 +20,14 @@ elements:
           - { at: 1.0, color: "$surface_alt" }
       border: { style: "solid", width: 2, color: "$primary" }
       shadow: { color: "#00000066", blur: 14, distance: 5, direction: 45 }
+      text:
+        style: "$body"
+        font_size: 22
+        color: "$muted"
+        wrap: true
+        body:
+          inset: { left: 40, right: 40, top: 45, bottom: 40 }
+        text: "Current writer support:\nrect, round_rect, ellipse,\ncommon presets,\nalpha, gradients, dash borders.\n"
   -
     id: "circle"
     type: "shape"
@@ -59,11 +67,6 @@ elements:
     content:
       name: "fas:cube"
       fill: { type: "solid", color: "$accent" }
-  -
-    id: "body"
-    type: "text"
-    bounds: [130, 215, 420, 210]
-    content: { style: "$body", font_size: 22, color: "$muted", wrap: true, text: "Current writer support:\nrect, round_rect, ellipse,\ncommon presets,\nalpha, gradients, dash borders.\n" }
   -
     id: "caption"
     type: "text"

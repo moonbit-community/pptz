@@ -14,6 +14,8 @@ pub fn estimate_text_fit(@model.Deck, @model.Bounds, @model.TextContent) -> Text
 pub(all) struct TextFitEstimate {
   height : Double
   longest_token_width : Double
+  available_width : Double
+  available_height : Double
 }
 
 // Type aliases

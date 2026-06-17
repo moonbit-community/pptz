@@ -669,6 +669,26 @@ fn build_textbox(
   shape_id : Int,
 ) -> @slide.AutoShape raise {
   let bounds = base.bounds
+  let text_body = text_body_with_properties(bundle, content)
+  @slide.AutoShape::textbox(
+    shape_id,
+    base.id,
+    to_emu(bounds.x),
+    to_emu(bounds.y),
+    to_emu(bounds.width),
+    to_emu(bounds.height),
+    content.text,
+  )
+  .with_text_body(text_body)
+  .with_no_fill()
+  .with_no_stroke()
+}
+
+///|
+fn text_body_with_properties(
+  bundle : DeckBundle,
+  content : TextContent,
+) -> @slide.TextBody raise {
   let mut text_body = text_body(bundle, content)
   let mut body_props = @slide.BodyProperties::{
     ..@slide.BodyProperties::default(),
@@ -735,18 +755,7 @@ fn build_textbox(
       body_properties: Some(body_props),
     }
   }
-  @slide.AutoShape::textbox(
-    shape_id,
-    base.id,
-    to_emu(bounds.x),
-    to_emu(bounds.y),
-    to_emu(bounds.width),
-    to_emu(bounds.height),
-    content.text,
-  )
-  .with_text_body(text_body)
-  .with_no_fill()
-  .with_no_stroke()
+  text_body
 }
 
 ///|
@@ -939,6 +948,11 @@ fn build_auto_shape(
         ..shape,
         effects: Some(to_effect_list(bundle, shadow)),
       }
+  }
+  match spec.text {
+    None => ()
+    Some(text) =>
+      shape = shape.with_text_body(text_body_with_properties(bundle, text))
   }
   shape
 }

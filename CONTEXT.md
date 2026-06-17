@@ -62,6 +62,17 @@ PPTX, not on design documents alone.
 A small reusable `pptz` concept, such as bounds, fill, stroke, text run
 properties, image crop, or effect, used consistently across element families.
 
+## Shape text
+
+Text owned by a shape and rendered in the same PowerPoint auto-shape as its
+fill and stroke. It is the preferred representation for labeled cards, chips,
+and diagram nodes.
+
+## Semantic card or node
+
+A shape that represents a concept, step, state, or item. Its visible label
+belongs in the shape's `content.text`, not in a separate overlaid text element.
+
 ## Basic stroke
 
 A shared line styling primitive for borders and connectors that covers color,

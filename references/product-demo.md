@@ -18,7 +18,8 @@ showcases where the audience needs to understand value and workflow.
 - Use images for real product states when available; use shapes only for
   abstract flows.
 - Use rich text hyperlinks for docs, demos, or install links.
-- Use icon/shape cards for differentiators, but keep card text short.
+- Use icon/shape cards for differentiators, with card labels in each shape's
+  `content.text`; keep card text short.
 - Use charts sparingly and only for proof.
 
 ## Avoid

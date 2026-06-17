@@ -70,8 +70,10 @@ The current writer supports:
 - optional solid, gradient, or image page backgrounds;
 - text elements with theme text styles, local overrides, text wrapping,
   line breaks, rich paragraphs, styled runs, bullets, external hyperlinks,
-  body insets, and shrink autofit enabled by default;
-- PowerPoint preset auto-shapes, excluding line and connector presets;
+  body insets, shrink autofit enabled by default, and strict overflow
+  validation unless `body.overflow` explicitly downgrades it;
+- PowerPoint preset auto-shapes with optional embedded text, excluding line and
+  connector presets;
 - straight, bent, and curved connectors with coordinate or auto-anchored element
   endpoints, stroke, dash, and arrowheads;
 - solid fills, gradient fills, no-fill shapes, and solid or dashed borders;

@@ -45,6 +45,7 @@ using @model {
   type LayoutTemplate,
   type Page,
   type ShadowSpec,
+  type ShapeSpec,
   type TableCellMargin,
   type TableCellSpec,
   type TableRowSpec,
@@ -794,7 +795,34 @@ fn apply_component_props(
   match element {
     TextElement(base, content) =>
       TextElement(base, apply_text_props(content, props))
+    ShapeElement(base, spec) =>
+      ShapeElement(base, apply_shape_props(spec, props))
     _ => element
+  }
+}
+
+///|
+fn apply_shape_props(
+  spec : ShapeSpec,
+  props : Map[String, String],
+) -> ShapeSpec {
+  ShapeSpec::{
+    shape: spec.shape,
+    fill: spec.fill,
+    border: spec.border,
+    shadow: spec.shadow,
+    text: apply_text_props_optional(spec.text, props),
+  }
+}
+
+///|
+fn apply_text_props_optional(
+  content : TextContent?,
+  props : Map[String, String],
+) -> TextContent? {
+  match content {
+    None => None
+    Some(content) => Some(apply_text_props(content, props))
   }
 }
 
@@ -1553,49 +1581,10 @@ fn validate_element(
   warnings : Array[Diagnostic],
 ) -> Unit {
   match element {
-    TextElement(base, content) => {
-      if content.text.trim().is_empty() {
-        warnings.push(
-          warning_diagnostic(
-            "PZ102",
-            "text is empty or whitespace-only",
-            path=page_path,
-            element_id=base.id,
-            field="elements.content.text",
-          ),
-        )
-      }
-      validate_text_layout_spaces(page_path, base, content, warnings)
-      validate_text_fit(bundle, page_path, base, content, warnings)
-      validate_text_style_ref(bundle, page_path, base.id, content.style, errors)
-      validate_text_content(
-        bundle,
-        page_path,
-        base.id,
-        content,
-        errors,
-        warnings,
+    TextElement(base, content) =>
+      validate_text_block(
+        bundle, page_path, base, content, "elements.content", errors, warnings,
       )
-      validate_font_family(
-        page_path,
-        Some(base.id),
-        "elements.content.font_family",
-        content.font_family,
-        warnings,
-      )
-      match content.color {
-        None => ()
-        Some(color) =>
-          validate_page_color(
-            bundle,
-            page_path,
-            Some(base.id),
-            "elements.content.color",
-            color,
-            errors,
-          )
-      }
-    }
     ShapeElement(base, spec) => {
       match spec.fill {
         None | Some(NoFill) => ()
@@ -1628,6 +1617,13 @@ fn validate_element(
             "elements.content.border.color",
             border.color,
             errors,
+          )
+      }
+      match spec.text {
+        None => ()
+        Some(text) =>
+          validate_text_block(
+            bundle, page_path, base, text, "elements.content.text", errors, warnings,
           )
       }
       validate_shadow(bundle, page_path, base.id, spec.shadow, errors)
@@ -1702,11 +1698,82 @@ fn validate_element(
 }
 
 ///|
+fn validate_text_block(
+  bundle : DeckBundle,
+  page_path : String,
+  base : ElementBase,
+  content : TextContent,
+  field_prefix : String,
+  errors : Array[Diagnostic],
+  warnings : Array[Diagnostic],
+) -> Unit {
+  if content.text.trim().is_empty() {
+    warnings.push(
+      warning_diagnostic(
+        "PZ102",
+        "text is empty or whitespace-only",
+        path=page_path,
+        element_id=base.id,
+        field="\{field_prefix}.text",
+      ),
+    )
+  }
+  validate_text_layout_spaces(page_path, base, content, field_prefix, warnings)
+  validate_text_overflow_policy(
+    page_path,
+    base.id,
+    field_prefix,
+    content,
+    errors,
+  )
+  validate_text_fit(
+    bundle, page_path, base, content, field_prefix, errors, warnings,
+  )
+  validate_text_style_ref_at(
+    bundle,
+    page_path,
+    base.id,
+    content.style,
+    "\{field_prefix}.style",
+    errors,
+  )
+  validate_text_content(
+    bundle,
+    page_path,
+    base.id,
+    content,
+    field_prefix,
+    errors,
+    warnings,
+  )
+  validate_font_family(
+    page_path,
+    Some(base.id),
+    "\{field_prefix}.font_family",
+    content.font_family,
+    warnings,
+  )
+  match content.color {
+    None => ()
+    Some(color) =>
+      validate_page_color(
+        bundle,
+        page_path,
+        Some(base.id),
+        "\{field_prefix}.color",
+        color,
+        errors,
+      )
+  }
+}
+
+///|
 fn validate_text_content(
   bundle : DeckBundle,
   page_path : String,
   element_id : String,
   content : TextContent,
+  field_prefix : String,
   errors : Array[Diagnostic],
   warnings : Array[Diagnostic],
 ) -> Unit {
@@ -1714,7 +1781,7 @@ fn validate_text_content(
     None => ()
     Some(paragraphs) =>
       for paragraph_index, paragraph in paragraphs {
-        let paragraph_field = "elements.content.paragraphs[\{paragraph_index}]"
+        let paragraph_field = "\{field_prefix}.paragraphs[\{paragraph_index}]"
         validate_text_style_ref_at(
           bundle,
           page_path,
@@ -1796,6 +1863,7 @@ fn validate_text_layout_spaces(
   page_path : String,
   base : ElementBase,
   content : TextContent,
+  field_prefix : String,
   warnings : Array[Diagnostic],
 ) -> Unit {
   match content.paragraphs {
@@ -1808,7 +1876,7 @@ fn validate_text_layout_spaces(
             "text contains repeated spaces that may be used for layout; use separate text boxes, tables, or components",
             path=page_path,
             element_id=base.id,
-            field="elements.content.text",
+            field="\{field_prefix}.text",
           ),
         )
       }
@@ -3090,6 +3158,8 @@ fn validate_text_fit(
   page_path : String,
   base : ElementBase,
   content : TextContent,
+  field_prefix : String,
+  errors : Array[Diagnostic],
   warnings : Array[Diagnostic],
 ) -> Unit {
   let bounds = base.bounds
@@ -3099,17 +3169,67 @@ fn validate_text_fit(
     return
   }
   let estimate = estimate_text_fit(bundle.deck, bounds, content)
-  if estimate.height > bounds.height * 1.05 ||
-    estimate.longest_token_width > bounds.width {
-    warnings.push(
-      warning_diagnostic(
-        "PZ103",
-        "text may overflow its bounds",
-        path=page_path,
-        element_id=base.id,
-        field="elements.content.text",
-      ),
-    )
+  if estimate.height > estimate.available_height * 1.05 ||
+    estimate.longest_token_width > estimate.available_width {
+    match text_overflow_policy(content) {
+      "allow" => ()
+      "warn" =>
+        warnings.push(
+          warning_diagnostic(
+            "PZ103",
+            "text may overflow its available text area",
+            path=page_path,
+            element_id=base.id,
+            field="\{field_prefix}.text",
+          ),
+        )
+      "error" =>
+        errors.push(
+          error_diagnostic(
+            "PZ103",
+            "text may overflow its available text area",
+            path=page_path,
+            element_id=base.id,
+            field="\{field_prefix}.text",
+          ),
+        )
+      _ => ()
+    }
+  }
+}
+
+///|
+fn validate_text_overflow_policy(
+  page_path : String,
+  element_id : String,
+  field_prefix : String,
+  content : TextContent,
+  errors : Array[Diagnostic],
+) -> Unit {
+  match text_overflow_policy(content) {
+    "error" | "warn" | "allow" => ()
+    other =>
+      errors.push(
+        error_diagnostic(
+          "PZ030",
+          "text body overflow '\{other}' is not implemented",
+          path=page_path,
+          element_id~,
+          field="\{field_prefix}.body.overflow",
+        ),
+      )
+  }
+}
+
+///|
+fn text_overflow_policy(content : TextContent) -> String {
+  match content.body {
+    None => "error"
+    Some(body) =>
+      match body.overflow {
+        None => "error"
+        Some(value) => value
+      }
   }
 }
 
@@ -3157,19 +3277,6 @@ fn validate_bounds(
       ),
     )
   }
-}
-
-///|
-fn validate_text_style_ref(
-  bundle : DeckBundle,
-  page_path : String,
-  element_id : String,
-  style : String?,
-  errors : Array[Diagnostic],
-) -> Unit {
-  validate_text_style_ref_at(
-    bundle, page_path, element_id, style, "elements.content.style", errors,
-  )
 }
 
 ///|

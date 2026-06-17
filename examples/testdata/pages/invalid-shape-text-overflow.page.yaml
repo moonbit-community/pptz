@@ -1,0 +1,11 @@
+elements:
+  - id: "overflow_card"
+    type: "shape"
+    bounds: [20, 40, 180, 70]
+    content:
+      shape: "round_rect"
+      text:
+        font_size: 28
+        body:
+          inset: { left: 14, right: 14, top: 12, bottom: 12 }
+        text: "Shape text should also be checked for overflow."

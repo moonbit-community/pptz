@@ -51,6 +51,17 @@ fn parse_text_content(
 }
 
 ///|
+fn parse_optional_text_content(
+  value : SourceValue?,
+  path : String,
+) -> TextContent? raise {
+  match value {
+    None => None
+    Some(value) => Some(parse_text_content(expect_table(value, path), path))
+  }
+}
+
+///|
 fn parse_optional_text_body_options(
   value : SourceValue?,
   path : String,
@@ -59,10 +70,11 @@ fn parse_optional_text_body_options(
     None => None
     Some(value) => {
       let table = expect_table(value, path)
-      reject_unknown_fields(table, path, ["inset", "auto_fit"])
+      reject_unknown_fields(table, path, ["inset", "auto_fit", "overflow"])
       Some({
         inset: parse_optional_text_inset(table.get("inset"), "\{path}.inset"),
         auto_fit: optional_string(table.get("auto_fit"), "\{path}.auto_fit"),
+        overflow: optional_string(table.get("overflow"), "\{path}.overflow"),
       })
     }
   }

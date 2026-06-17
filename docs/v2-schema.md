@@ -77,9 +77,12 @@ content:
 
 Rich text uses explicit paragraphs and runs. Do not mix `text` and
 `paragraphs` in the same text element.
-Text boxes default to shrink autofit so text stays inside the element bounds.
-Set `auto_fit: "none"` to disable it, or `auto_fit: "shape"` when the text
-box may resize to fit its text.
+Text must fit its declared text area, after `body.inset` is subtracted from the
+element bounds. Loader validation treats obvious overflow as an error by
+default. Set `body.overflow: "warn"` to keep generating with a diagnostic, or
+`"allow"` only after inspecting the rendered PPTX. `auto_fit` still controls
+the PowerPoint text body behavior: set `auto_fit: "none"` to disable shrink
+behavior, or `auto_fit: "shape"` when the text box may resize to fit its text.
 
 ```yaml
 content:
@@ -88,6 +91,7 @@ content:
   wrap: true
   body:
     inset: { left: 8, right: 8, top: 4, bottom: 4 }
+    overflow: "error"
   paragraphs:
     - text: "Agenda item"
       space_after: 6
@@ -195,6 +199,12 @@ elements:
       shape: "round_rect"
       fill: { type: "solid", color: "$accent" }
       stroke: { color: "$ink", width: 2.0, dash: "solid" }
+      text:
+        style: "$body"
+        align: ["center", "center"]
+        body:
+          inset: { left: 12, right: 12, top: 8, bottom: 8 }
+        text: "Badge"
 ```
 
 Lines and connectors are not shape subtypes.

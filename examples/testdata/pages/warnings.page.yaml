@@ -8,7 +8,11 @@ elements:
     id: "overflow"
     type: "text"
     bounds: [20, 40, 120, 24]
-    content: { font_size: 28, font_family: "Aptos, Arial", text: "This sentence is intentionally much too long for the tiny text box." }
+    content:
+      font_size: 28
+      font_family: "Aptos, Arial"
+      body: { overflow: "warn" }
+      text: "This sentence is intentionally much too long for the tiny text box."
   -
     id: "layout_spaces"
     type: "text"

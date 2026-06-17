@@ -17,11 +17,14 @@ fn parse_shape_spec(
   table : Map[String, SourceValue],
   path : String,
 ) -> ShapeSpec raise {
-  reject_unknown_fields(table, path, ["shape", "fill", "border", "shadow"])
+  reject_unknown_fields(table, path, [
+    "shape", "fill", "border", "shadow", "text",
+  ])
   {
     shape: required_string(table, "\{path}.shape", key="shape"),
     fill: parse_optional_fill(table.get("fill"), "\{path}.fill"),
     border: parse_optional_border(table.get("border"), "\{path}.border"),
     shadow: parse_optional_shadow(table.get("shadow"), "\{path}.shadow"),
+    text: parse_optional_text_content(table.get("text"), "\{path}.text"),
   }
 }

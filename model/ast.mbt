@@ -191,6 +191,7 @@ pub(all) struct TextContent {
 pub(all) struct TextBodyOptions {
   inset : TextInset?
   auto_fit : String?
+  overflow : String?
 } derive(Eq, Debug)
 
 ///|
@@ -247,6 +248,7 @@ pub(all) struct ShapeSpec {
   fill : Fill?
   border : Border?
   shadow : ShadowSpec?
+  text : TextContent?
 } derive(Eq, Debug)
 
 ///|

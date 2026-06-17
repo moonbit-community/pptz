@@ -17,12 +17,13 @@ presentations.
 ## pptz Patterns
 
 - Use `shape` + `connector` for architecture diagrams instead of embedding
-  screenshots of diagrams.
+  screenshots of diagrams. Give each node its label through the shape's
+  `content.text`.
 - Use rich text runs only where emphasis or hyperlinks matter; keep code blocks
   as plain text boxes with monospaced `font_family`.
 - Use tables for capability matrices and compatibility grids.
 - Keep diagram and card labels short enough to render without splitting words;
-  widen the bounds when the label is part of the concept name.
+  widen the shape bounds when the label is part of the concept name.
 - Use chart shorthand only for real numeric evidence, not decorative charts.
 
 ## Avoid

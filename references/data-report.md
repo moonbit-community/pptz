@@ -18,6 +18,8 @@ operational summaries.
 - Use chart `data` shorthand for category charts.
 - Put exact values in table cells when the audience needs comparison; use charts
   when the audience needs trend or shape.
+- Use shape `content.text` for KPI cards, stat callouts, and funnel stages so
+  each label belongs to the card or stage shape.
 - Keep table styles compact and consistent across report slides.
 - Use high-contrast `header_text_color` and `body_text_color`; these fields set
   text color, not row fill.

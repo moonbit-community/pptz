@@ -1,0 +1,7 @@
+elements:
+  - id: "overflow"
+    type: "text"
+    bounds: [20, 40, 120, 24]
+    content:
+      font_size: 28
+      text: "This sentence is intentionally much too long for the tiny text box."

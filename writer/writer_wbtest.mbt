@@ -415,6 +415,7 @@ test "writer maps preset shape names" {
           fill: Some(SolidFill("#3B82F6")),
           border: None,
           shadow: None,
+          text: None,
         }),
       ),
     )
@@ -426,6 +427,45 @@ test "writer maps preset shape names" {
     }
     assert_slide_xml_contains(prs, 1, "prst=\"\{xml_name}\"")
   }
+}
+
+///|
+test "writer renders text inside shape" {
+  let page = parse_page_yaml(
+    (
+      #|elements:
+      #|  - id: "card"
+      #|    type: "shape"
+      #|    bounds: [80, 120, 520, 280]
+      #|    content:
+      #|      shape: "round_rect"
+      #|      fill: { type: "solid", color: "#0F172A" }
+      #|      border: { style: "solid", width: 1, color: "#475569" }
+      #|      text:
+      #|        font_size: 28
+      #|        font_family: "Aptos Mono"
+      #|        color: "#F8FAFC"
+      #|        align: ["left", "top"]
+      #|        body:
+      #|          inset: { left: 28, right: 28, top: 24, bottom: 24 }
+      #|        text: |-
+      #|          enum Result[T, E] {
+      #|            Ok(T)
+      #|            Err(E)
+      #|          }
+    ),
+  ) catch {
+    err => abort("parse shape text page failed: \{err}")
+  }
+  let bytes = render_pptx(unsupported_loaded(page)) catch {
+    err => abort("render shape text failed: \{err}")
+  }
+  let prs = @presentation.Presentation::open(bytes) catch {
+    err => abort("open generated shape text pptx failed: \{err}")
+  }
+  assert_slide_xml_contains(prs, 1, "prst=\"roundRect\"")
+  assert_slide_xml_contains(prs, 1, "<a:t>enum Result[T, E] {</a:t>")
+  assert_slide_xml_contains(prs, 1, "lIns=\"266700\"")
 }
 
 ///|
@@ -711,6 +751,7 @@ test "writer reports capability errors for unsupported schema-valid features" {
           fill: None,
           border: None,
           shadow: None,
+          text: None,
         }),
       ),
     ),
@@ -724,6 +765,7 @@ test "writer reports capability errors for unsupported schema-valid features" {
           fill: None,
           border: None,
           shadow: None,
+          text: None,
         }),
       ),
     ),
@@ -737,6 +779,7 @@ test "writer reports capability errors for unsupported schema-valid features" {
           fill: None,
           border: Some(Border::{ style: "zigzag", width: 2.0, color: "#F4F6FB" }),
           shadow: None,
+          text: None,
         }),
       ),
     ),

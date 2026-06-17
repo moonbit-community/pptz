@@ -1,0 +1,9 @@
+elements:
+  - id: "inset_overflow"
+    type: "text"
+    bounds: [20, 40, 280, 96]
+    content:
+      font_size: 24
+      body:
+        inset: { left: 20, right: 20, top: 42, bottom: 42 }
+      text: "Two visible lines should not fit after top and bottom inset."

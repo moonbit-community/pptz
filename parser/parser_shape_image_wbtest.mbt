@@ -88,7 +88,7 @@ test "parse minimal shapes page" {
   let page = parse_page_yaml(source) catch {
     err => abort("parse page failed: \{err}")
   }
-  assert_eq(page.elements.length(), 9)
+  assert_eq(page.elements.length(), 8)
   match page.elements[1] {
     ShapeElement(base, spec) => {
       assert_eq(base.id, "panel")
@@ -142,6 +142,52 @@ test "parse minimal shapes page" {
       assert_eq(spec.name, "fas:cube")
     }
     _ => abort("expected icon element")
+  }
+}
+
+///|
+test "parse shape text" {
+  let page = parse_page_yaml(
+    (
+      #|elements:
+      #|  - id: "card"
+      #|    type: "shape"
+      #|    bounds: [80, 120, 520, 280]
+      #|    content:
+      #|      shape: "round_rect"
+      #|      fill: { type: "solid", color: "#0F172A" }
+      #|      border: { style: "solid", width: 1, color: "#475569" }
+      #|      text:
+      #|        font_size: 28
+      #|        font_family: "Aptos Mono"
+      #|        color: "#F8FAFC"
+      #|        align: ["left", "top"]
+      #|        body:
+      #|          inset: { left: 28, right: 28, top: 24, bottom: 24 }
+      #|        text: |-
+      #|          enum Result[T, E] {
+      #|            Ok(T)
+      #|            Err(E)
+      #|          }
+    ),
+  ) catch {
+    err => abort("parse shape text failed: \{err}")
+  }
+  match page.elements[0] {
+    ShapeElement(base, spec) => {
+      assert_eq(base.id, "card")
+      match spec.text {
+        Some(text) => {
+          assert_true(text.text.contains("enum Result"))
+          match text.font_family {
+            Some(family) => assert_eq(family, "Aptos Mono")
+            None => abort("expected font family")
+          }
+        }
+        None => abort("expected shape text")
+      }
+    }
+    _ => abort("expected shape element")
   }
 }
 

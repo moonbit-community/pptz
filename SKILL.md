@@ -140,12 +140,19 @@ components:
   stat_card:
     bounds: [0, 0, 180, 90]
     elements:
-      - id: "label"
-        type: "text"
-        bounds: [16, 14, 148, 24]
+      - id: "card"
+        type: "shape"
+        bounds: [0, 0, 180, 90]
         content:
-          style: "$caption"
-          text: "$label"
+          shape: "round_rect"
+          fill: { type: "solid", color: "$surface" }
+          border: { style: "solid", width: 1, color: "$muted" }
+          text:
+            style: "$caption"
+            align: ["center", "center"]
+            body:
+              inset: { left: 12, right: 12, top: 10, bottom: 10 }
+            text: "$label"
 ```
 
 ```yaml
@@ -162,8 +169,8 @@ components:
 - Do not use spaces to align text across multiple visual objects. Use separate
   text boxes, table cells, or component instances.
 - Treat colored cards, chips, and diagram nodes as semantic objects: each one
-  needs its own label inside the same bounds, or a component that contains both
-  the background shape and label.
+  should usually be a `shape` with `content.text`, so the border, fill, and
+  visible label share one bounds rectangle.
 - For node-to-node connectors, prefer element endpoints:
   `start: { element: "source" }` and `end: { element: "target" }`.
   `pptz` automatically anchors each endpoint to the facing edge. Add `anchor`
@@ -171,16 +178,19 @@ components:
 - Do not draw a direct connector through a third node. `pptz` warns when a
   connector crosses a non-endpoint element; reroute the diagram instead.
 - Use empty shapes only as decoration or background chrome. If a shape
-  represents a step, category, state, metric, or concept, bind visible text to
-  that shape.
+  represents a step, category, state, metric, or concept, put the visible text
+  in that shape's `content.text`.
 
 ### Rich Text
 
 Use explicit paragraphs/runs for bullets and hyperlinks. Do not encode rich text
 as Markdown inside `text`.
-Text boxes shrink text to fit their bounds by default. Set `auto_fit: "none"`
-only when exact font metrics matter more than overflow protection; use
-`auto_fit: "shape"` only when resizing the text box is acceptable.
+Text must fit its declared text area after `body.inset` is subtracted from the
+element bounds. The loader rejects obvious overflow by default; use
+`body.overflow: "warn"` only when a human has verified the rendered PPTX and
+accepts the risk. Set `auto_fit: "none"` only when exact font metrics matter
+more than PowerPoint shrink behavior; use `auto_fit: "shape"` only when resizing
+the text box is acceptable.
 
 ```yaml
 content:

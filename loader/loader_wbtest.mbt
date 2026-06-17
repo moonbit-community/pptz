@@ -171,6 +171,30 @@ test "loader rejects invalid image crop" {
 }
 
 ///|
+test "loader rejects overflowing text by default" {
+  let diagnostics = load_error_diagnostics(
+    "examples/testdata/invalid-overflow.pptz.yaml",
+  )
+  assert_true(has_diagnostic_code(diagnostics, "PZ103"))
+}
+
+///|
+test "loader accounts for text body inset when checking overflow" {
+  let diagnostics = load_error_diagnostics(
+    "examples/testdata/invalid-inset-overflow.pptz.yaml",
+  )
+  assert_true(has_diagnostic_code(diagnostics, "PZ103"))
+}
+
+///|
+test "loader rejects overflowing shape text by default" {
+  let diagnostics = load_error_diagnostics(
+    "examples/testdata/invalid-shape-text-overflow.pptz.yaml",
+  )
+  assert_true(has_diagnostic_code(diagnostics, "PZ103"))
+}
+
+///|
 test "loader rejects invalid table structure" {
   let diagnostics = load_error_diagnostics(
     "examples/testdata/invalid-table.pptz.yaml",
