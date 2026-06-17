@@ -14,7 +14,7 @@
 
 ///|
 fn parse_shape_spec(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> ShapeSpec raise {
   reject_unknown_fields(table, path, ["shape", "fill", "border", "shadow"])

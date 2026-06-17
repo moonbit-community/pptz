@@ -49,7 +49,7 @@ pub fn dispatch(args : ArrayView[String]) -> CliResponse {
 fn cli_command() -> @argparse.Command {
   @argparse.Command(
     "pptz",
-    about="PowerPoint Zero, compile TOML presentation sources to PPTX",
+    about="PowerPoint Zero, compile YAML presentation sources to PPTX",
     version=version(),
     options=[
       @argparse.OptionArg("out", long="out", about="Output PPTX path.", default_values=[
@@ -59,7 +59,7 @@ fn cli_command() -> @argparse.Command {
     positionals=[
       @argparse.PositionArg(
         "deck",
-        about="Input TOML deck file.",
+        about="Input YAML deck file.",
         num_args=@argparse.ValueRange::single(),
       ),
     ],

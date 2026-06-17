@@ -14,12 +14,12 @@
 
 ///|
 fn deck_parse_error(source : String) -> String {
-  ignore(parse_deck_toml(source) catch { err => return "\{err}" })
+  ignore(parse_deck_yaml(source) catch { err => return "\{err}" })
   abort("expected parse failure")
 }
 
 ///|
 fn page_parse_error(source : String) -> String {
-  ignore(parse_page_toml(source) catch { err => return "\{err}" })
+  ignore(parse_page_yaml(source) catch { err => return "\{err}" })
   abort("expected parse failure")
 }

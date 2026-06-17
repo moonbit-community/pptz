@@ -14,7 +14,7 @@
 
 ///|
 fn parse_optional_shadow(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> ShadowSpec? raise {
   match value {
@@ -35,20 +35,17 @@ fn parse_optional_shadow(
 }
 
 ///|
-fn parse_optional_align(
-  value : @toml.TomlValue?,
-  path : String,
-) -> Align? raise {
+fn parse_optional_align(value : SourceValue?, path : String) -> Align? raise {
   match value {
     None => None
-    Some(TomlArray([TomlString(horizontal), TomlString(vertical)])) =>
+    Some(SourceArray([SourceString(horizontal), SourceString(vertical)])) =>
       Some({ horizontal, vertical })
     Some(_) => fail("\{path}: expected [horizontal, vertical]")
   }
 }
 
 ///|
-fn parse_optional_fill(value : @toml.TomlValue?, path : String) -> Fill? raise {
+fn parse_optional_fill(value : SourceValue?, path : String) -> Fill? raise {
   match value {
     None => None
     Some(value) => {
@@ -73,10 +70,7 @@ fn parse_optional_fill(value : @toml.TomlValue?, path : String) -> Fill? raise {
 }
 
 ///|
-fn parse_optional_border(
-  value : @toml.TomlValue?,
-  path : String,
-) -> Border? raise {
+fn parse_optional_border(value : SourceValue?, path : String) -> Border? raise {
   match value {
     None => None
     Some(value) => {

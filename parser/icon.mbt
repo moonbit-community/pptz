@@ -14,7 +14,7 @@
 
 ///|
 fn parse_icon_spec(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> IconSpec raise {
   reject_unknown_fields(table, path, ["name", "fill"])

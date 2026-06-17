@@ -1,0 +1,75 @@
+page_type: "content"
+background: { type: "solid", color: "$background" }
+elements:
+  -
+    id: "heading"
+    type: "text"
+    bounds: [80, 70, 900, 70]
+    content: { style: "$title", font_size: 44, text: "Shapes and Borders" }
+  -
+    id: "panel"
+    type: "shape"
+    bounds: [90, 170, 500, 320]
+    content:
+      shape: "round_rect"
+      fill:
+        type: "gradient"
+        direction: 90
+        stops:
+          - { at: 0.0, color: "$surface" }
+          - { at: 1.0, color: "$surface_alt" }
+      border: { style: "solid", width: 2, color: "$primary" }
+      shadow: { color: "#00000066", blur: 14, distance: 5, direction: 45 }
+  -
+    id: "circle"
+    type: "shape"
+    bounds: [710, 175, 260, 260]
+    content:
+      shape: "ellipse"
+      fill: { type: "solid", color: "#F59E0BCC" }
+  -
+    id: "outline"
+    type: "shape"
+    bounds: [835, 300, 260, 260]
+    content:
+      shape: "ellipse"
+      fill: { type: "none" }
+      border: { style: "dash", width: 3, color: "$text" }
+  -
+    id: "diamond"
+    type: "shape"
+    bounds: [620, 210, 90, 90]
+    content:
+      shape: "diamond"
+      fill: { type: "solid", color: "$primary" }
+  -
+    id: "flow"
+    type: "connector"
+    content:
+      kind: "straight"
+      start: { element: "panel" }
+      end: { element: "circle" }
+      end_arrow: "triangle"
+      stroke: { dash: "dash", width: 2, color: "$primary" }
+      shadow: { color: "#00000066", blur: 8, distance: 3, direction: 45 }
+  -
+    id: "cube_icon"
+    type: "icon"
+    bounds: [985, 195, 80, 80]
+    content:
+      name: "fas:cube"
+      fill: { type: "solid", color: "$accent" }
+  -
+    id: "body"
+    type: "text"
+    bounds: [130, 215, 420, 210]
+    content: { style: "$body", font_size: 22, color: "$muted", wrap: true, text: "Current writer support:\nrect, round_rect, ellipse,\ncommon presets,\nalpha, gradients, dash borders.\n" }
+  -
+    id: "caption"
+    type: "text"
+    bounds: [740, 565, 400, 70]
+    content:
+      style: "$caption"
+      italic: true
+      align: ["center", "center"]
+      text: "This slide has no unsupported features."

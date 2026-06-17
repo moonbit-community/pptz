@@ -13,23 +13,35 @@
 // limitations under the License.
 
 ///|
-pub fn parse_deck_toml(source : String) -> Deck raise {
-  match @toml.parse(source) {
-    TomlTable(table) => parse_deck_table(table)
-    _ => fail("deck: expected top-level table")
+pub fn parse_deck_yaml(source : String) -> Deck raise {
+  match parse_yaml_document(source, "deck") {
+    SourceTable(table) => parse_deck_table(table)
+    _ => fail("deck: expected top-level mapping")
   }
 }
 
 ///|
-pub fn parse_page_toml(source : String) -> Page raise {
-  match @toml.parse(source) {
-    TomlTable(table) => parse_page_table(table)
-    _ => fail("page: expected top-level table")
+pub fn parse_page_yaml(source : String) -> Page raise {
+  match parse_yaml_document(source, "page") {
+    SourceTable(table) => parse_page_table(table)
+    _ => fail("page: expected top-level mapping")
   }
 }
 
 ///|
-fn parse_deck_table(table : Map[String, @toml.TomlValue]) -> Deck raise {
+pub fn parse_deck_source(source : String, source_path : String) -> Deck raise {
+  ignore(source_path)
+  parse_deck_yaml(source)
+}
+
+///|
+pub fn parse_page_source(source : String, source_path : String) -> Page raise {
+  ignore(source_path)
+  parse_page_yaml(source)
+}
+
+///|
+fn parse_deck_table(table : Map[String, SourceValue]) -> Deck raise {
   reject_unknown_fields(table, "deck", [
     "title", "size", "theme", "layouts", "components", "pages",
   ])
@@ -44,7 +56,7 @@ fn parse_deck_table(table : Map[String, @toml.TomlValue]) -> Deck raise {
 }
 
 ///|
-fn parse_page_table(table : Map[String, @toml.TomlValue]) -> Page raise {
+fn parse_page_table(table : Map[String, SourceValue]) -> Page raise {
   reject_unknown_fields(table, "page", [
     "page_type", "layout", "slots", "background", "components", "elements",
   ])
@@ -60,13 +72,13 @@ fn parse_page_table(table : Map[String, @toml.TomlValue]) -> Page raise {
 
 ///|
 fn parse_string_map(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> Map[String, String] raise {
   let result = Map([], capacity=table.length())
   for key, value in table {
     match value {
-      TomlString(text) => result[key] = text
+      SourceString(text) => result[key] = text
       _ => fail("\{path}.\{key}: expected string")
     }
   }
@@ -75,7 +87,7 @@ fn parse_string_map(
 
 ///|
 fn parse_string_map_optional(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> Map[String, String] raise {
   match value {
@@ -86,7 +98,7 @@ fn parse_string_map_optional(
 
 ///|
 fn parse_page_refs(
-  values : Array[@toml.TomlValue],
+  values : Array[SourceValue],
   path : String,
 ) -> Array[PageRef] raise {
   let refs = []

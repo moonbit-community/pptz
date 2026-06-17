@@ -29,7 +29,7 @@ test "version exits successfully" {
 
 ///|
 test "compile command validates arguments before implementation" {
-  let response = dispatch(["examples/minimal/deck.pptz.toml", "extra"][0:])
+  let response = dispatch(["examples/minimal/deck.pptz.yaml", "extra"][0:])
   assert_eq(response.exit_code, 2)
   assert_true(response.stderr.contains("unexpected value"))
 }
@@ -38,7 +38,22 @@ test "compile command validates arguments before implementation" {
 test "compile command writes pptx" {
   let output = "examples/testdata/out/dispatch-demo.pptx"
   let response = dispatch(
-    ["examples/minimal/deck.pptz.toml", "--out", output][0:],
+    ["examples/minimal/deck.pptz.yaml", "--out", output][0:],
+  )
+  assert_eq(response.exit_code, 0)
+  assert_eq(response.stdout, "wrote \{output}")
+  assert_eq(response.stderr, "")
+  assert_true(@miniio.is_file(output) catch { _ => false })
+  @miniio.remove_file(output) catch {
+    _ => ()
+  }
+}
+
+///|
+test "compile command writes pptx from yaml deck" {
+  let output = "examples/testdata/out/dispatch-yaml-demo.pptx"
+  let response = dispatch(
+    ["examples/testdata/yaml-deck.pptz.yaml", "--out", output][0:],
   )
   assert_eq(response.exit_code, 0)
   assert_eq(response.stdout, "wrote \{output}")
@@ -51,7 +66,7 @@ test "compile command writes pptx" {
 
 ///|
 test "compile command defaults output path" {
-  let response = dispatch(["examples/minimal/deck.pptz.toml"][0:])
+  let response = dispatch(["examples/minimal/deck.pptz.yaml"][0:])
   assert_eq(response.exit_code, 0)
   assert_eq(response.stdout, "wrote output.pptx")
   assert_true(@miniio.is_file("output.pptx") catch { _ => false })
@@ -67,7 +82,7 @@ test "compile command reports writer capability errors" {
     _ => ()
   }
   let response = dispatch(
-    ["examples/testdata/unsupported-icon.pptz.toml", "--out", output][0:],
+    ["examples/testdata/unsupported-icon.pptz.yaml", "--out", output][0:],
   )
   assert_eq(response.exit_code, 1)
   assert_eq(response.stdout, "")

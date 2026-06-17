@@ -14,7 +14,7 @@
 
 ///|
 test "load minimal deck resolves ordered pages" {
-  let loaded = load_deck("examples/minimal/deck.pptz.toml") catch {
+  let loaded = load_deck("examples/minimal/deck.pptz.yaml") catch {
     LoadError::Fatal(message) => {
       println("load fatal: \{message}")
       abort("load failed")
@@ -26,10 +26,10 @@ test "load minimal deck resolves ordered pages" {
   }
   assert_eq(loaded.bundle.deck.size.width, 1280.0)
   assert_eq(loaded.bundle.pages.length(), 4)
-  assert_eq(loaded.bundle.pages[0].path, "pages/cover.page.toml")
+  assert_eq(loaded.bundle.pages[0].path, "pages/cover.page.yaml")
   assert_true(
     loaded.bundle.pages[0].full_path.has_suffix(
-      "examples/minimal/pages/cover.page.toml",
+      "examples/minimal/pages/cover.page.yaml",
     ),
   )
   match loaded.bundle.deck.theme {
@@ -87,9 +87,32 @@ test "load minimal deck resolves ordered pages" {
 }
 
 ///|
+test "load yaml deck resolves yaml page" {
+  let loaded = load_deck("examples/testdata/yaml-deck.pptz.yaml") catch {
+    LoadError::Fatal(message) => {
+      println("load fatal: \{message}")
+      abort("load failed")
+    }
+    err => {
+      println("load failed: \{err}")
+      abort("load failed")
+    }
+  }
+  assert_eq(loaded.bundle.deck.size.width, 1280.0)
+  assert_eq(loaded.bundle.pages.length(), 1)
+  assert_eq(loaded.bundle.pages[0].path, "pages/yaml.page.yaml")
+  assert_true(
+    loaded.bundle.pages[0].full_path.has_suffix(
+      "examples/testdata/pages/yaml.page.yaml",
+    ),
+  )
+  assert_eq(loaded.bundle.pages[0].page.elements.length(), 6)
+}
+
+///|
 test "loader rejects page paths outside deck directory" {
   let diagnostics = load_error_diagnostics(
-    "examples/testdata/outside-page.pptz.toml",
+    "examples/testdata/outside-page.pptz.yaml",
   )
   assert_true(has_diagnostic_code(diagnostics, "PZ010"))
 }
@@ -97,14 +120,14 @@ test "loader rejects page paths outside deck directory" {
 ///|
 test "loader rejects decks without pages" {
   let diagnostics = load_error_diagnostics(
-    "examples/testdata/no-pages.pptz.toml",
+    "examples/testdata/no-pages.pptz.yaml",
   )
   assert_true(has_diagnostic_code(diagnostics, "PZ010"))
 }
 
 ///|
 test "loader returns non-blocking warnings" {
-  let loaded = load_deck("examples/testdata/warnings.pptz.toml") catch {
+  let loaded = load_deck("examples/testdata/warnings.pptz.yaml") catch {
     LoadError::Fatal(message) => {
       println("load fatal: \{message}")
       abort("load failed")
@@ -126,7 +149,7 @@ test "loader returns non-blocking warnings" {
 
 ///|
 test "loader warns on low contrast table text" {
-  let loaded = load_deck("examples/testdata/low-contrast-table.pptz.toml") catch {
+  let loaded = load_deck("examples/testdata/low-contrast-table.pptz.yaml") catch {
     LoadError::Fatal(message) => {
       println("load fatal: \{message}")
       abort("load failed")
@@ -142,7 +165,7 @@ test "loader warns on low contrast table text" {
 ///|
 test "loader rejects invalid image crop" {
   let diagnostics = load_error_diagnostics(
-    "examples/testdata/invalid-crop.pptz.toml",
+    "examples/testdata/invalid-crop.pptz.yaml",
   )
   assert_true(has_diagnostic_code(diagnostics, "PZ041"))
 }
@@ -150,7 +173,7 @@ test "loader rejects invalid image crop" {
 ///|
 test "loader rejects invalid table structure" {
   let diagnostics = load_error_diagnostics(
-    "examples/testdata/invalid-table.pptz.toml",
+    "examples/testdata/invalid-table.pptz.yaml",
   )
   assert_true(has_diagnostic_code(diagnostics, "PZ060"))
 }
@@ -158,7 +181,7 @@ test "loader rejects invalid table structure" {
 ///|
 test "loader rejects invalid chart data" {
   let diagnostics = load_error_diagnostics(
-    "examples/testdata/invalid-chart.pptz.toml",
+    "examples/testdata/invalid-chart.pptz.yaml",
   )
   assert_true(has_diagnostic_code(diagnostics, "PZ070"))
 }
@@ -166,7 +189,7 @@ test "loader rejects invalid chart data" {
 ///|
 test "loader rejects style inheritance cycles" {
   let diagnostics = load_error_diagnostics(
-    "examples/testdata/style-cycle.pptz.toml",
+    "examples/testdata/style-cycle.pptz.yaml",
   )
   assert_true(has_diagnostic_code(diagnostics, "PZ030"))
 }

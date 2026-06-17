@@ -1,0 +1,21 @@
+title: YAML Deck
+size: [1280, 720]
+theme:
+  colors:
+    background: "#0F172A"
+    text: "#F8FAFC"
+    primary: "#38BDF8"
+  text_styles:
+    title:
+      font_size: 44
+      font_family: Aptos
+      color: "$text"
+      bold: true
+    body:
+      font_size: 24
+      font_family: Aptos
+      color: "$text"
+  table_styles: {}
+  chart_styles: {}
+pages:
+  - path: pages/yaml.page.yaml

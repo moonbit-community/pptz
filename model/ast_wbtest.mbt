@@ -45,8 +45,8 @@ test "deck ast covers minimal deck source" {
     layouts: Map([], capacity=0),
     components: Map([], capacity=0),
     pages: [
-      PageRef::{ path: "pages/cover.page.toml" },
-      PageRef::{ path: "pages/agenda.page.toml" },
+      PageRef::{ path: "pages/cover.page.yaml" },
+      PageRef::{ path: "pages/agenda.page.yaml" },
     ],
   }
   assert_eq(deck.size.width, 1280.0)

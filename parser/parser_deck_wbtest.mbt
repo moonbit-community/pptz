@@ -13,11 +13,11 @@
 // limitations under the License.
 
 ///|
-test "parse minimal deck toml" {
-  let source = @miniio.read_text_file("examples/minimal/deck.pptz.toml") catch {
+test "parse minimal deck yaml" {
+  let source = @miniio.read_text_file("examples/minimal/deck.pptz.yaml") catch {
     err => abort("read deck failed: \{err}")
   }
-  let deck = parse_deck_toml(source) catch {
+  let deck = parse_deck_yaml(source) catch {
     err => abort("parse deck failed: \{err}")
   }
   match deck.title {
@@ -27,7 +27,7 @@ test "parse minimal deck toml" {
   assert_eq(deck.size.width, 1280.0)
   assert_eq(deck.size.height, 720.0)
   assert_eq(deck.pages.length(), 4)
-  assert_eq(deck.pages[0].path, "pages/cover.page.toml")
+  assert_eq(deck.pages[0].path, "pages/cover.page.yaml")
   match deck.theme {
     Some(theme) => {
       assert_eq(theme.colors["text"], "#F4F6FB")
@@ -71,28 +71,78 @@ test "parse minimal deck toml" {
 }
 
 ///|
+test "parse yaml deck and page" {
+  let deck_source = @miniio.read_text_file(
+    "examples/testdata/yaml-deck.pptz.yaml",
+  ) catch {
+    err => abort("read yaml deck failed: \{err}")
+  }
+  let deck = parse_deck_yaml(deck_source) catch {
+    err => abort("parse yaml deck failed: \{err}")
+  }
+  match deck.title {
+    Some(title) => assert_eq(title, "YAML Deck")
+    None => abort("expected title")
+  }
+  assert_eq(deck.size.width, 1280.0)
+  assert_eq(deck.pages.length(), 1)
+  assert_eq(deck.pages[0].path, "pages/yaml.page.yaml")
+  match deck.theme {
+    Some(theme) => {
+      assert_eq(theme.colors["primary"], "#38BDF8")
+      match theme.text_styles["title"].font_size {
+        Some(size) => assert_eq(size, 44.0)
+        None => abort("expected title font size")
+      }
+    }
+    None => abort("expected theme")
+  }
+  let page_source = @miniio.read_text_file(
+    "examples/testdata/pages/yaml.page.yaml",
+  ) catch {
+    err => abort("read yaml page failed: \{err}")
+  }
+  let page = parse_page_yaml(page_source) catch {
+    err => abort("parse yaml page failed: \{err}")
+  }
+  assert_eq(page.elements.length(), 6)
+  match page.elements[5] {
+    ConnectorElement(_, spec) => {
+      match spec.start {
+        ElementEndpoint(id) => assert_eq(id, "source")
+        _ => abort("expected element start")
+      }
+      match spec.end {
+        ElementEndpoint(id) => assert_eq(id, "target")
+        _ => abort("expected element end")
+      }
+    }
+    _ => abort("expected connector")
+  }
+}
+
+///|
 test "parse decimal geometry" {
-  let deck = parse_deck_toml(
+  let deck = parse_deck_yaml(
     (
-      #|size = [1280.5, 720.25]
-      #|pages = [{ path = "pages/cover.page.toml" }]
+      #|size: [1280.5, 720.25]
+      #|pages:
+      #|  - path: "pages/cover.page.yaml"
     ),
   ) catch {
     err => abort("parse deck failed: \{err}")
   }
   assert_eq(deck.size.width, 1280.5)
   assert_eq(deck.size.height, 720.25)
-  let page = parse_page_toml(
+  let page = parse_page_yaml(
     (
-      #|page_type = "content"
-      #|
-      #|[[elements]]
-      #|id = "title"
-      #|type = "text"
-      #|bounds = [10.5, 20.25, 300.75, 80.5]
-      #|
-      #|[elements.content]
-      #|text = "Hello"
+      #|page_type: "content"
+      #|elements:
+      #|  - id: "title"
+      #|    type: "text"
+      #|    bounds: [10.5, 20.25, 300.75, 80.5]
+      #|    content:
+      #|      text: "Hello"
     ),
   ) catch {
     err => abort("parse page failed: \{err}")

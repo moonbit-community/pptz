@@ -1,7 +1,7 @@
 # Milky2018/pptz
 
 `pptz` is PowerPoint Zero, a portable MoonBit presentation compiler. It reads a
-TOML deck file, validates the deck and referenced page files, and writes a PPTX
+YAML deck file, validates the deck and referenced page files, and writes a PPTX
 through a wasm CLI.
 
 ## Usage
@@ -9,13 +9,13 @@ through a wasm CLI.
 Use the published package:
 
 ```bash
-moon runwasm Milky2018/pptz <deck.toml> [--out <output.pptx>]
+moon runwasm Milky2018/pptz <deck.pptz.yaml> [--out <output.pptx>]
 ```
 
 For reproducible runs, pin the published version:
 
 ```bash
-moon runwasm Milky2018/pptz@0.4.1 <deck.toml> [--out <output.pptx>]
+moon runwasm Milky2018/pptz@0.4.1 <deck.pptz.yaml> [--out <output.pptx>]
 ```
 
 Run the command from the deck project directory and use relative paths. The
@@ -25,7 +25,7 @@ current working tree may not be visible.
 While developing this repository, run the top-level package:
 
 ```bash
-moon runwasm . examples/minimal/deck.pptz.toml --out examples/minimal/dist/demo.pptx
+moon runwasm . examples/minimal/deck.pptz.yaml --out examples/minimal/dist/demo.pptx
 ```
 
 If `--out` is omitted, the output path defaults to `output.pptx`.
@@ -54,13 +54,13 @@ npx skills add https://github.com/moonbit-community/pptz.git --global
 ```
 
 After installation, ask your agent to use `pptz` when you need a
-PPTX deck generated from TOML sources. The skill will guide the agent to:
+PPTX deck generated from YAML sources. The skill will guide the agent to:
 
-- design a deck directory with `deck.pptz.toml`, `pages/`, optional `images/`,
+- design a deck directory with `deck.pptz.yaml`, `pages/`, optional `images/`,
   and `dist/`;
 - keep sources within the writer's supported feature set;
 - compile the deck with `moon runwasm Milky2018/pptz`;
-- deliver both the TOML sources and generated `.pptx`.
+- deliver both the editable sources and generated `.pptx`.
 
 ## Current Writer Scope
 
@@ -86,8 +86,8 @@ The current writer supports:
 - inline chart elements for `bar`, `line`, `pie`, `doughnut`, `area`,
   `scatter`, `bubble`, and `radar`, with title, legend, style, data labels,
   data table, rounded-corner options, and a category chart data shorthand;
-- raster image elements with `fit = "stretch"`, `fit = "cover"`, or
-  `fit = "contain"`;
+- raster image elements with `fit: "stretch"`, `fit: "cover"`, or
+  `fit: "contain"`;
 - image crop rectangles;
 - SVG image elements, using an internal transparent PNG fallback required by
   `moon-pptx`.
@@ -104,13 +104,19 @@ but covers the features the writer can render today.
 
 ```bash
 cd examples/minimal
-moon runwasm Milky2018/pptz deck.pptz.toml --out dist/demo.pptx
+moon runwasm Milky2018/pptz deck.pptz.yaml --out dist/demo.pptx
+```
+
+The YAML smoke fixture is in `examples/testdata`:
+
+```bash
+moon runwasm Milky2018/pptz examples/testdata/yaml-deck.pptz.yaml --out examples/testdata/out/yaml-demo.pptx
 ```
 
 For local development against the checkout instead of the published wasm:
 
 ```bash
-moon runwasm . examples/minimal/deck.pptz.toml --out examples/minimal/dist/demo.pptx
+moon runwasm . examples/minimal/deck.pptz.yaml --out examples/minimal/dist/demo.pptx
 ```
 
 ## Validation

@@ -1,2 +1,0 @@
-size = [1280, 720]
-pages = [{ path = "../minimal/pages/cover.page.toml" }]

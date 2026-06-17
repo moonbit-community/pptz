@@ -1,0 +1,63 @@
+background:
+  type: solid
+  color: "$background"
+elements:
+  - id: title
+    type: text
+    bounds: [80, 70, 760, 80]
+    content:
+      style: "$title"
+      text: YAML slide
+
+  - id: source
+    type: shape
+    bounds: [120, 210, 260, 110]
+    content:
+      shape: round_rect
+      fill:
+        type: solid
+        color: "#1E293B"
+      border:
+        style: solid
+        width: 2
+        color: "$primary"
+
+  - id: target
+    type: shape
+    bounds: [540, 210, 260, 110]
+    content:
+      shape: round_rect
+      fill:
+        type: solid
+        color: "$primary"
+
+  - id: label_source
+    type: text
+    bounds: [140, 245, 220, 40]
+    content:
+      style: "$body"
+      align: [center, center]
+      text: Source
+
+  - id: label_target
+    type: text
+    bounds: [560, 245, 220, 40]
+    content:
+      style: "$body"
+      align: [center, center]
+      color: "#0F172A"
+      text: Target
+
+  - id: flow
+    type: connector
+    content:
+      kind: straight
+      start:
+        element: source
+      end:
+        element: target
+      end_arrow: triangle
+      stroke:
+        color: "$primary"
+        width: 2
+        dash: solid

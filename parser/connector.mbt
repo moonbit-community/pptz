@@ -14,7 +14,7 @@
 
 ///|
 fn parse_connector_spec(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> ConnectorSpec raise {
   reject_unknown_fields(table, path, [
@@ -36,12 +36,12 @@ fn parse_connector_spec(
 
 ///|
 fn parse_connector_endpoint(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> ConnectorEndpoint raise {
   match value {
     None => fail("\{path}: missing required value")
-    Some(TomlArray(items)) => {
+    Some(SourceArray(items)) => {
       let values = parse_size(items, path)
       CoordinateEndpoint(values.width, values.height)
     }
@@ -60,7 +60,7 @@ fn parse_connector_endpoint(
 
 ///|
 fn parse_optional_connector_anchor(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> ConnectorAnchor? raise {
   match optional_string(value, path) {
@@ -79,10 +79,7 @@ fn parse_optional_connector_anchor(
 }
 
 ///|
-fn parse_optional_stroke(
-  value : @toml.TomlValue?,
-  path : String,
-) -> Border? raise {
+fn parse_optional_stroke(value : SourceValue?, path : String) -> Border? raise {
   match value {
     None => None
     Some(value) => {

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-fn parse_size(values : Array[@toml.TomlValue], path : String) -> Size raise {
+fn parse_size(values : Array[SourceValue], path : String) -> Size raise {
   guard values.length() == 2 else { fail("\{path}: expected [width, height]") }
   {
     width: expect_double(values[0], "\{path}[0]"),
@@ -22,7 +22,7 @@ fn parse_size(values : Array[@toml.TomlValue], path : String) -> Size raise {
 }
 
 ///|
-fn parse_bounds(values : Array[@toml.TomlValue], path : String) -> Bounds raise {
+fn parse_bounds(values : Array[SourceValue], path : String) -> Bounds raise {
   guard values.length() == 4 else {
     fail("\{path}: expected [x, y, width, height]")
   }
@@ -36,7 +36,7 @@ fn parse_bounds(values : Array[@toml.TomlValue], path : String) -> Bounds raise 
 
 ///|
 fn required_string(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
   key? : String = path,
 ) -> String raise {
@@ -48,7 +48,7 @@ fn required_string(
 
 ///|
 fn required_double(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
   key? : String = path,
 ) -> Double raise {
@@ -60,43 +60,40 @@ fn required_double(
 
 ///|
 fn required_array(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
   key? : String = path,
-) -> Array[@toml.TomlValue] raise {
+) -> Array[SourceValue] raise {
   match table.get(key) {
-    Some(TomlArray(values)) => values
+    Some(SourceArray(values)) => values
     Some(_) => fail("\{path}: expected array")
     None => fail("\{path}: missing required array")
   }
 }
 
 ///|
-fn expect_array(
-  value : @toml.TomlValue,
-  path : String,
-) -> Array[@toml.TomlValue] raise {
+fn expect_array(value : SourceValue, path : String) -> Array[SourceValue] raise {
   match value {
-    TomlArray(values) => values
+    SourceArray(values) => values
     _ => fail("\{path}: expected array")
   }
 }
 
 ///|
 fn parse_optional_double_array(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> Array[Double]? raise {
   match value {
     None => None
-    Some(TomlArray(values)) => Some(parse_double_array(values, path))
+    Some(SourceArray(values)) => Some(parse_double_array(values, path))
     Some(_) => fail("\{path}: expected array")
   }
 }
 
 ///|
 fn parse_double_array(
-  values : Array[@toml.TomlValue],
+  values : Array[SourceValue],
   path : String,
 ) -> Array[Double] raise {
   let result = []
@@ -108,12 +105,12 @@ fn parse_double_array(
 
 ///|
 fn parse_optional_string_array(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> Array[String]? raise {
   match value {
     None => None
-    Some(TomlArray(values)) => {
+    Some(SourceArray(values)) => {
       let result = []
       for index, item in values {
         result.push(expect_string(item, "\{path}[\{index}]"))
@@ -126,9 +123,9 @@ fn parse_optional_string_array(
 
 ///|
 fn[T] parse_named_table_map(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
-  parse : (Map[String, @toml.TomlValue], String) -> T raise,
+  parse : (Map[String, SourceValue], String) -> T raise,
 ) -> Map[String, T] raise {
   let result = Map([], capacity=table.length())
   for name, value in table {
@@ -140,9 +137,9 @@ fn[T] parse_named_table_map(
 
 ///|
 fn[T] parse_optional_named_table_map(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
-  parse : (Map[String, @toml.TomlValue], String) -> T raise,
+  parse : (Map[String, SourceValue], String) -> T raise,
 ) -> Map[String, T] raise {
   match value {
     None => Map([], capacity=0)
@@ -152,10 +149,10 @@ fn[T] parse_optional_named_table_map(
 
 ///|
 fn required_table(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
   key? : String = path,
-) -> Map[String, @toml.TomlValue] raise {
+) -> Map[String, SourceValue] raise {
   match table.get(key) {
     Some(value) => expect_table(value, path)
     None => fail("\{path}: missing required table")
@@ -163,7 +160,7 @@ fn required_table(
 }
 
 ///|
-fn optional_string(value : @toml.TomlValue?, path : String) -> String? raise {
+fn optional_string(value : SourceValue?, path : String) -> String? raise {
   match value {
     None => None
     Some(value) => Some(expect_string(value, path))
@@ -171,7 +168,7 @@ fn optional_string(value : @toml.TomlValue?, path : String) -> String? raise {
 }
 
 ///|
-fn optional_double(value : @toml.TomlValue?, path : String) -> Double? raise {
+fn optional_double(value : SourceValue?, path : String) -> Double? raise {
   match value {
     None => None
     Some(value) => Some(expect_double(value, path))
@@ -180,7 +177,7 @@ fn optional_double(value : @toml.TomlValue?, path : String) -> Double? raise {
 
 ///|
 fn optional_int(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
   default~ : Int,
 ) -> Int raise {
@@ -191,7 +188,7 @@ fn optional_int(
 }
 
 ///|
-fn optional_int_or_none(value : @toml.TomlValue?, path : String) -> Int? raise {
+fn optional_int_or_none(value : SourceValue?, path : String) -> Int? raise {
   match value {
     None => None
     Some(value) => Some(expect_int(value, path))
@@ -199,53 +196,53 @@ fn optional_int_or_none(value : @toml.TomlValue?, path : String) -> Int? raise {
 }
 
 ///|
-fn optional_bool(value : @toml.TomlValue?, path : String) -> Bool? raise {
+fn optional_bool(value : SourceValue?, path : String) -> Bool? raise {
   match value {
     None => None
-    Some(TomlBoolean(value)) => Some(value)
+    Some(SourceBoolean(value)) => Some(value)
     Some(_) => fail("\{path}: expected boolean")
   }
 }
 
 ///|
-fn expect_string(value : @toml.TomlValue, path : String) -> String raise {
+fn expect_string(value : SourceValue, path : String) -> String raise {
   match value {
-    TomlString(text) => text
+    SourceString(text) => text
     _ => fail("\{path}: expected string")
   }
 }
 
 ///|
-fn expect_double(value : @toml.TomlValue, path : String) -> Double raise {
+fn expect_double(value : SourceValue, path : String) -> Double raise {
   match value {
-    TomlInteger(number) => number.to_double()
-    TomlFloat(number) => number
+    SourceInteger(number) => number.to_double()
+    SourceFloat(number) => number
     _ => fail("\{path}: expected number")
   }
 }
 
 ///|
-fn expect_int(value : @toml.TomlValue, path : String) -> Int raise {
+fn expect_int(value : SourceValue, path : String) -> Int raise {
   match value {
-    TomlInteger(number) => number.to_int()
+    SourceInteger(number) => number.to_int()
     _ => fail("\{path}: expected integer")
   }
 }
 
 ///|
 fn expect_table(
-  value : @toml.TomlValue,
+  value : SourceValue,
   path : String,
-) -> Map[String, @toml.TomlValue] raise {
+) -> Map[String, SourceValue] raise {
   match value {
-    TomlTable(table) => table
+    SourceTable(table) => table
     _ => fail("\{path}: expected table")
   }
 }
 
 ///|
 fn reject_unknown_fields(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
   allowed : Array[String],
 ) -> Unit raise {

@@ -16,9 +16,10 @@
 test "parser rejects unknown fields" {
   let message = deck_parse_error(
     (
-      #|size = [1280, 720]
-      #|pages = [{ path = "pages/cover.page.toml" }]
-      #|camelCase = true
+      #|size: [1280, 720]
+      #|pages:
+      #|  - path: "pages/cover.page.yaml"
+      #|camelCase: true
     ),
   )
   assert_true(message.contains("unknown field"))
@@ -28,14 +29,13 @@ test "parser rejects unknown fields" {
 test "parser reports nested unknown field path" {
   let message = page_parse_error(
     (
-      #|[[elements]]
-      #|id = "title"
-      #|type = "text"
-      #|bounds = [0, 0, 100, 100]
-      #|
-      #|[elements.content]
-      #|text = "Hello"
-      #|extra = true
+      #|elements:
+      #|  - id: "title"
+      #|    type: "text"
+      #|    bounds: [0, 0, 100, 100]
+      #|    content:
+      #|      text: "Hello"
+      #|      extra: true
     ),
   )
   assert_true(message.contains("elements[0].content.extra: unknown field"))
@@ -45,15 +45,15 @@ test "parser reports nested unknown field path" {
 test "parser rejects paragraph text and runs together" {
   let message = page_parse_error(
     (
-      #|[[elements]]
-      #|id = "title"
-      #|type = "text"
-      #|bounds = [0, 0, 100, 100]
-      #|
-      #|[elements.content]
-      #|paragraphs = [
-      #|  { text = "Hello", runs = [{ text = "World" }] },
-      #|]
+      #|elements:
+      #|  - id: "title"
+      #|    type: "text"
+      #|    bounds: [0, 0, 100, 100]
+      #|    content:
+      #|      paragraphs:
+      #|        - text: "Hello"
+      #|          runs:
+      #|            - text: "World"
     ),
   )
   assert_true(message.contains("use either text or runs, not both"))
@@ -63,10 +63,10 @@ test "parser rejects paragraph text and runs together" {
 test "parser rejects unknown element type" {
   let message = page_parse_error(
     (
-      #|[[elements]]
-      #|id = "mystery"
-      #|type = "video"
-      #|bounds = [0, 0, 100, 100]
+      #|elements:
+      #|  - id: "mystery"
+      #|    type: "video"
+      #|    bounds: [0, 0, 100, 100]
     ),
   )
   assert_true(message.contains("unsupported element type"))
@@ -76,18 +76,19 @@ test "parser rejects unknown element type" {
 test "parser rejects mixed table text color aliases" {
   let message = deck_parse_error(
     (
-      #|size = [1280, 720]
-      #|pages = [{ path = "pages/cover.page.toml" }]
-      #|
-      #|[theme.colors]
-      #|text = "#111827"
-      #|
-      #|[theme.text_styles.body]
-      #|color = "$text"
-      #|
-      #|[theme.table_styles.compact]
-      #|header_text_color = "$text"
-      #|header_color = "$text"
+      #|size: [1280, 720]
+      #|pages:
+      #|  - path: "pages/cover.page.yaml"
+      #|theme:
+      #|  colors:
+      #|    text: "#111827"
+      #|  text_styles:
+      #|    body:
+      #|      color: "$text"
+      #|  table_styles:
+      #|    compact:
+      #|      header_text_color: "$text"
+      #|      header_color: "$text"
     ),
   )
   assert_true(message.contains("use either header_text_color or header_color"))

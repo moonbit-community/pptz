@@ -14,7 +14,7 @@
 
 ///|
 fn parse_optional_background(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> Background? raise {
   match value {
@@ -25,7 +25,7 @@ fn parse_optional_background(
 
 ///|
 fn parse_background_table(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> Background raise {
   match required_string(table, "\{path}.type", key="type") {
@@ -53,7 +53,7 @@ fn parse_background_table(
 
 ///|
 fn parse_gradient(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> Gradient raise {
   {
@@ -67,7 +67,7 @@ fn parse_gradient(
 
 ///|
 fn parse_gradient_stops(
-  values : Array[@toml.TomlValue],
+  values : Array[SourceValue],
   path : String,
 ) -> Array[GradientStop] raise {
   let stops = []

@@ -14,24 +14,25 @@
 
 ///|
 test "parse table content rows and data shorthand" {
-  let page = parse_page_toml(
+  let page = parse_page_yaml(
     (
-      #|[[elements]]
-      #|id = "summary"
-      #|type = "table"
-      #|bounds = [80, 120, 720, 300]
-      #|
-      #|[elements.content]
-      #|style = "$compact"
-      #|col_widths = [240, 240]
-      #|row_heights = [48, 48]
-      #|rows = [
-      #|  { cells = [
-      #|    { text = "Metric", fill = { type = "solid", color = "$surface" }, border = { style = "solid", width = 1, color = "$text" }, align = ["center", "center"], margin = { left = 4, right = 4 } },
-      #|    "Q1",
-      #|  ] },
-      #|  { cells = ["Revenue", "100"] },
-      #|]
+      #|elements:
+      #|  - id: "summary"
+      #|    type: "table"
+      #|    bounds: [80, 120, 720, 300]
+      #|    content:
+      #|      style: "$compact"
+      #|      col_widths: [240, 240]
+      #|      row_heights: [48, 48]
+      #|      rows:
+      #|        - cells:
+      #|            - text: "Metric"
+      #|              fill: { type: "solid", color: "$surface" }
+      #|              border: { style: "solid", width: 1, color: "$text" }
+      #|              align: ["center", "center"]
+      #|              margin: { left: 4, right: 4 }
+      #|            - "Q1"
+      #|        - cells: ["Revenue", "100"]
     ),
   ) catch {
     err => abort("parse table page failed: \{err}")
@@ -60,18 +61,16 @@ test "parse table content rows and data shorthand" {
     }
     _ => abort("expected table element")
   }
-  let shorthand = parse_page_toml(
+  let shorthand = parse_page_yaml(
     (
-      #|[[elements]]
-      #|id = "shorthand"
-      #|type = "table"
-      #|bounds = [0, 0, 300, 120]
-      #|
-      #|[elements.content]
-      #|data = [
-      #|  ["Metric", "Q1"],
-      #|  ["Revenue", "100"],
-      #|]
+      #|elements:
+      #|  - id: "shorthand"
+      #|    type: "table"
+      #|    bounds: [0, 0, 300, 120]
+      #|    content:
+      #|      data:
+      #|        - ["Metric", "Q1"]
+      #|        - ["Revenue", "100"]
     ),
   ) catch {
     err => abort("parse shorthand table failed: \{err}")
@@ -84,20 +83,18 @@ test "parse table content rows and data shorthand" {
 
 ///|
 test "parse chart data shorthand" {
-  let page = parse_page_toml(
+  let page = parse_page_yaml(
     (
-      #|[[elements]]
-      #|id = "chart"
-      #|type = "chart"
-      #|bounds = [80, 120, 720, 360]
-      #|
-      #|[elements.content]
-      #|kind = "line"
-      #|data = [
-      #|  ["", "Q1", "Q2", "Q3"],
-      #|  ["Revenue", 100, 200, 150],
-      #|  ["Users", 10.0, 24.0, 32.0],
-      #|]
+      #|elements:
+      #|  - id: "chart"
+      #|    type: "chart"
+      #|    bounds: [80, 120, 720, 360]
+      #|    content:
+      #|      kind: "line"
+      #|      data:
+      #|        - ["", "Q1", "Q2", "Q3"]
+      #|        - ["Revenue", 100, 200, 150]
+      #|        - ["Users", 10.0, 24.0, 32.0]
     ),
   ) catch {
     err => abort("parse chart shorthand failed: \{err}")
@@ -118,26 +115,24 @@ test "parse chart data shorthand" {
 
 ///|
 test "parse chart content" {
-  let page = parse_page_toml(
+  let page = parse_page_yaml(
     (
-      #|[[elements]]
-      #|id = "revenue_chart"
-      #|type = "chart"
-      #|bounds = [80, 120, 720, 360]
-      #|
-      #|[elements.content]
-      #|kind = "bar"
-      #|title = "Quarterly revenue"
-      #|legend = "bottom"
-      #|style = 5
-      #|data_labels = "outside_end"
-      #|data_table = true
-      #|rounded_corners = false
-      #|categories = ["Q1", "Q2", "Q3"]
-      #|
-      #|[[elements.content.series]]
-      #|name = "Revenue"
-      #|values = [100.0, 200.0, 150.0]
+      #|elements:
+      #|  - id: "revenue_chart"
+      #|    type: "chart"
+      #|    bounds: [80, 120, 720, 360]
+      #|    content:
+      #|      kind: "bar"
+      #|      title: "Quarterly revenue"
+      #|      legend: "bottom"
+      #|      style: 5
+      #|      data_labels: "outside_end"
+      #|      data_table: true
+      #|      rounded_corners: false
+      #|      categories: ["Q1", "Q2", "Q3"]
+      #|      series:
+      #|        - name: "Revenue"
+      #|          values: [100.0, 200.0, 150.0]
     ),
   ) catch {
     err => abort("parse chart page failed: \{err}")

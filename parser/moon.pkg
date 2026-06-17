@@ -1,6 +1,6 @@
 import {
-  "bobzhang/toml",
   "Milky2018/pptz/model",
+  "moonbit-community/yaml",
 }
 
 import {

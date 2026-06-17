@@ -14,7 +14,7 @@
 
 ///|
 fn parse_chart_spec(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> ChartSpec raise {
   reject_unknown_fields(table, path, [
@@ -77,11 +77,11 @@ fn parse_chart_spec(
 
 ///|
 fn parse_chart_data(
-  value : @toml.TomlValue,
+  value : SourceValue,
   path : String,
 ) -> (Array[String]?, Array[ChartSeriesSpec]) raise {
   match value {
-    TomlArray(rows) => {
+    SourceArray(rows) => {
       if rows.length() < 2 {
         fail("\{path}: expected a header row and at least one series row")
       }
@@ -121,18 +121,18 @@ fn parse_chart_data(
 
 ///|
 fn expect_chart_data_row(
-  value : @toml.TomlValue,
+  value : SourceValue,
   path : String,
-) -> Array[@toml.TomlValue] raise {
+) -> Array[SourceValue] raise {
   match value {
-    TomlArray(values) => values
+    SourceArray(values) => values
     _ => fail("\{path}: expected array")
   }
 }
 
 ///|
 fn parse_chart_series_array(
-  values : Array[@toml.TomlValue],
+  values : Array[SourceValue],
   path : String,
 ) -> Array[ChartSeriesSpec] raise {
   let series = []

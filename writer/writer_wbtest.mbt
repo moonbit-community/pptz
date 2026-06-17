@@ -13,7 +13,7 @@
 // limitations under the License.
 
 ///|
-using @parser {parse_page_toml}
+using @parser {parse_page_yaml}
 
 ///|
 using @loader {load_deck}
@@ -34,7 +34,7 @@ using @model {
 
 ///|
 test "render minimal deck as pptx bytes" {
-  let loaded = load_deck("examples/minimal/deck.pptz.toml") catch {
+  let loaded = load_deck("examples/minimal/deck.pptz.yaml") catch {
     err => abort("load failed: \{err}")
   }
   let bytes = render_pptx(loaded) catch {
@@ -314,7 +314,7 @@ test "writer maps expanded icon names" {
 ///|
 test "writer preserves existing output when render fails" {
   let output = "examples/testdata/out/atomic-demo.pptx"
-  let loaded = load_deck("examples/minimal/deck.pptz.toml") catch {
+  let loaded = load_deck("examples/minimal/deck.pptz.yaml") catch {
     err => abort("load failed: \{err}")
   }
   write_pptx_file(loaded, output) catch {
@@ -359,7 +359,7 @@ test "writer preserves existing output when render fails" {
 
 ///|
 test "writer renders image page backgrounds behind elements" {
-  let loaded = load_deck("examples/testdata/image-background.pptz.toml") catch {
+  let loaded = load_deck("examples/testdata/image-background.pptz.yaml") catch {
     err => abort("load failed: \{err}")
   }
   let bytes = render_pptx(loaded) catch {
@@ -458,15 +458,14 @@ test "writer maps text wrap false" {
 
 ///|
 test "writer enables shrink autofit for text by default" {
-  let page = parse_page_toml(
+  let page = parse_page_yaml(
     (
-      #|[[elements]]
-      #|id = "default_autofit"
-      #|type = "text"
-      #|bounds = [80, 120, 240, 60]
-      #|
-      #|[elements.content]
-      #|text = "Default autofit"
+      #|elements:
+      #|  - id: "default_autofit"
+      #|    type: "text"
+      #|    bounds: [80, 120, 240, 60]
+      #|    content:
+      #|      text: "Default autofit"
     ),
   ) catch {
     err => abort("parse text page failed: \{err}")
@@ -484,18 +483,16 @@ test "writer enables shrink autofit for text by default" {
 
 ///|
 test "writer can disable default text autofit" {
-  let page = parse_page_toml(
+  let page = parse_page_yaml(
     (
-      #|[[elements]]
-      #|id = "manual_overflow"
-      #|type = "text"
-      #|bounds = [80, 120, 240, 60]
-      #|
-      #|[elements.content]
-      #|text = "No autofit"
-      #|
-      #|[elements.content.body]
-      #|auto_fit = "none"
+      #|elements:
+      #|  - id: "manual_overflow"
+      #|    type: "text"
+      #|    bounds: [80, 120, 240, 60]
+      #|    content:
+      #|      text: "No autofit"
+      #|      body:
+      #|        auto_fit: "none"
     ),
   ) catch {
     err => abort("parse text page failed: \{err}")
@@ -540,48 +537,38 @@ test "writer renders text letter spacing" {
 
 ///|
 test "writer renders rich text paragraphs runs and body options" {
-  let page = parse_page_toml(
+  let page = parse_page_yaml(
     (
-      #|[[elements]]
-      #|id = "copy"
-      #|type = "text"
-      #|bounds = [80, 120, 640, 240]
-      #|
-      #|[elements.content]
-      #|style = "$body"
-      #|align = ["left", "top"]
-      #|wrap = true
-      #|
-      #|[elements.content.body]
-      #|auto_fit = "shape"
-      #|
-      #|[elements.content.body.inset]
-      #|left = 12
-      #|right = 12
-      #|top = 8
-      #|bottom = 8
-      #|
-      #|[[elements.content.paragraphs]]
-      #|text = "Overview"
-      #|space_after = 6
-      #|margin_left = 18
-      #|indent = -9
-      #|
-      #|[elements.content.paragraphs.bullet]
-      #|kind = "char"
-      #|char = "-"
-      #|
-      #|[[elements.content.paragraphs]]
-      #|space_before = 4
-      #|
-      #|[[elements.content.paragraphs.runs]]
-      #|text = "Read "
-      #|
-      #|[[elements.content.paragraphs.runs]]
-      #|text = "docs"
-      #|style = "$link"
-      #|hyperlink = "https://example.com"
-      #|tooltip = "Documentation"
+      #|elements:
+      #|  - id: "copy"
+      #|    type: "text"
+      #|    bounds: [80, 120, 640, 240]
+      #|    content:
+      #|      style: "$body"
+      #|      align: ["left", "top"]
+      #|      wrap: true
+      #|      body:
+      #|        auto_fit: "shape"
+      #|        inset:
+      #|          left: 12
+      #|          right: 12
+      #|          top: 8
+      #|          bottom: 8
+      #|      paragraphs:
+      #|        - text: "Overview"
+      #|          space_after: 6
+      #|          margin_left: 18
+      #|          indent: -9
+      #|          bullet:
+      #|            kind: "char"
+      #|            char: "-"
+      #|        - space_before: 4
+      #|          runs:
+      #|            - text: "Read "
+      #|            - text: "docs"
+      #|              style: "$link"
+      #|              hyperlink: "https://example.com"
+      #|              tooltip: "Documentation"
     ),
   ) catch {
     err => abort("parse rich text page failed: \{err}")
@@ -677,19 +664,17 @@ test "writer applies table styles" {
 
 ///|
 test "writer renders chart data shorthand" {
-  let page = parse_page_toml(
+  let page = parse_page_yaml(
     (
-      #|[[elements]]
-      #|id = "chart"
-      #|type = "chart"
-      #|bounds = [80, 120, 720, 360]
-      #|
-      #|[elements.content]
-      #|kind = "bar"
-      #|data = [
-      #|  ["", "Q1", "Q2"],
-      #|  ["Revenue", 100, 200],
-      #|]
+      #|elements:
+      #|  - id: "chart"
+      #|    type: "chart"
+      #|    bounds: [80, 120, 720, 360]
+      #|    content:
+      #|      kind: "bar"
+      #|      data:
+      #|        - ["", "Q1", "Q2"]
+      #|        - ["Revenue", 100, 200]
     ),
   ) catch {
     err => abort("parse chart shorthand failed: \{err}")
@@ -853,7 +838,7 @@ fn expect_capability(loaded : LoadedDeck, message : String) -> Unit raise {
 fn unsupported_loaded(page : Page) -> LoadedDeck {
   LoadedDeck::{
     bundle: DeckBundle::{
-      deck_path: "examples/minimal/deck.pptz.toml",
+      deck_path: "examples/minimal/deck.pptz.yaml",
       deck_dir: "examples/minimal",
       deck: Deck::{
         title: Some("Unsupported"),
@@ -930,12 +915,12 @@ fn unsupported_loaded(page : Page) -> LoadedDeck {
         }),
         layouts: Map([], capacity=0),
         components: Map([], capacity=0),
-        pages: [PageRef::{ path: "pages/unsupported.page.toml" }],
+        pages: [PageRef::{ path: "pages/unsupported.page.yaml" }],
       },
       pages: [
         ResolvedPage::{
-          path: "pages/unsupported.page.toml",
-          full_path: "examples/minimal/pages/unsupported.page.toml",
+          path: "pages/unsupported.page.yaml",
+          full_path: "examples/minimal/pages/unsupported.page.yaml",
           page,
         },
       ],

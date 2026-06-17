@@ -27,35 +27,32 @@ Use for tutorials, lectures, workshops, and teaching decks.
 For learning maps, pipelines, and contrast diagrams, avoid a row of empty shapes
 plus one shared text box. Make each node independently labeled:
 
-```toml
-[components.lesson_chip]
-bounds = [0, 0, 210, 78]
+```yaml
+components:
+  lesson_chip:
+    bounds: [0, 0, 210, 78]
+    elements:
+      - id: "bg"
+        type: "shape"
+        bounds: [0, 0, 210, 78]
+        content:
+          shape: "round_rect"
+      - id: "label"
+        type: "text"
+        bounds: [12, 16, 186, 42]
+        content:
+          style: "$body"
+          align: ["center", "center"]
+          text: "$label"
+```
 
-[[components.lesson_chip.elements]]
-id = "bg"
-type = "shape"
-bounds = [0, 0, 210, 78]
-
-[components.lesson_chip.elements.content]
-shape = "round_rect"
-
-[[components.lesson_chip.elements]]
-id = "label"
-type = "text"
-bounds = [12, 16, 186, 42]
-
-[components.lesson_chip.elements.content]
-style = "$body"
-align = ["center", "center"]
-text = "$label"
-
-[[components]]
-id = "syntax_chip"
-use = "$lesson_chip"
-bounds = [115, 170, 210, 78]
-
-[components.props]
-label = "语言核心"
+```yaml
+components:
+  - id: "syntax_chip"
+    use: "$lesson_chip"
+    bounds: [115, 170, 210, 78]
+    props:
+      label: "语言核心"
 ```
 
 ## Avoid

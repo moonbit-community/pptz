@@ -13,10 +13,7 @@
 // limitations under the License.
 
 ///|
-fn parse_optional_theme(
-  value : @toml.TomlValue?,
-  path : String,
-) -> Theme? raise {
+fn parse_optional_theme(value : SourceValue?, path : String) -> Theme? raise {
   match value {
     None => None
     Some(value) => Some(parse_theme(expect_table(value, path), path))
@@ -24,10 +21,7 @@ fn parse_optional_theme(
 }
 
 ///|
-fn parse_theme(
-  table : Map[String, @toml.TomlValue],
-  path : String,
-) -> Theme raise {
+fn parse_theme(table : Map[String, SourceValue], path : String) -> Theme raise {
   reject_unknown_fields(table, path, [
     "colors", "text_styles", "table_styles", "chart_styles",
   ])
@@ -50,7 +44,7 @@ fn parse_theme(
 
 ///|
 fn parse_text_styles(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> Map[String, TextStyle] raise {
   parse_named_table_map(table, path, parse_text_style)
@@ -58,7 +52,7 @@ fn parse_text_styles(
 
 ///|
 fn parse_text_style(
-  style_table : Map[String, @toml.TomlValue],
+  style_table : Map[String, SourceValue],
   style_path : String,
 ) -> TextStyle raise {
   reject_unknown_fields(style_table, style_path, [
@@ -94,7 +88,7 @@ fn parse_text_style(
 
 ///|
 fn parse_table_styles(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> Map[String, TableStyle] raise {
   parse_optional_named_table_map(value, path, parse_table_style)
@@ -102,7 +96,7 @@ fn parse_table_styles(
 
 ///|
 fn parse_table_style(
-  style_table : Map[String, @toml.TomlValue],
+  style_table : Map[String, SourceValue],
   style_path : String,
 ) -> TableStyle raise {
   reject_unknown_fields(style_table, style_path, [
@@ -161,7 +155,7 @@ fn parse_table_style(
 
 ///|
 fn parse_chart_styles(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> Map[String, ChartStyle] raise {
   parse_optional_named_table_map(value, path, parse_chart_style)
@@ -169,7 +163,7 @@ fn parse_chart_styles(
 
 ///|
 fn parse_chart_style(
-  style_table : Map[String, @toml.TomlValue],
+  style_table : Map[String, SourceValue],
   style_path : String,
 ) -> ChartStyle raise {
   reject_unknown_fields(style_table, style_path, [

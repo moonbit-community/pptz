@@ -13,9 +13,9 @@ pub fn dispatch(ArrayView[String]) -> CliResponse
 
 pub fn load_deck(String) -> @loader.LoadedDeck raise
 
-pub fn parse_deck_toml(String) -> @model.Deck raise
+pub fn parse_deck_yaml(String) -> @model.Deck raise
 
-pub fn parse_page_toml(String) -> @model.Page raise
+pub fn parse_page_yaml(String) -> @model.Page raise
 
 pub fn render_pptx(@loader.LoadedDeck) -> FixedArray[Byte] raise
 

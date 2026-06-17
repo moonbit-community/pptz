@@ -3,16 +3,22 @@ package "Milky2018/pptz/parser"
 
 import {
   "Milky2018/pptz/model",
+  "moonbitlang/core/debug",
 }
 
 // Values
-pub fn parse_deck_toml(String) -> @model.Deck raise
+pub fn parse_deck_source(String, String) -> @model.Deck raise
 
-pub fn parse_page_toml(String) -> @model.Page raise
+pub fn parse_deck_yaml(String) -> @model.Deck raise
+
+pub fn parse_page_source(String, String) -> @model.Page raise
+
+pub fn parse_page_yaml(String) -> @model.Page raise
 
 // Errors
 
 // Types and methods
+type SourceValue derive(Eq, @debug.Debug)
 
 // Type aliases
 pub using @model {type Align}

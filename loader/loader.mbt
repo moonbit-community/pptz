@@ -58,7 +58,7 @@ using @model {
 }
 
 ///|
-using @parser {parse_deck_toml, parse_page_toml}
+using @parser {parse_deck_source, parse_page_source}
 
 ///|
 using @source_path {
@@ -114,7 +114,7 @@ pub fn load_deck(input_path : String) -> LoadedDeck raise {
     err =>
       raise LoadError::Fatal("cannot read deck file '\{input_path}': \{err}")
   }
-  let deck = parse_deck_toml(source) catch {
+  let deck = parse_deck_source(source, deck_path_text) catch {
     err =>
       raise LoadError::Fatal("cannot parse deck file '\{input_path}': \{err}")
   }
@@ -1120,7 +1120,7 @@ fn load_pages(
                     "cannot read page file '\{page_ref.path}': \{err}",
                   )
               }
-              let page = parse_page_toml(source) catch {
+              let page = parse_page_source(source, full_path_text) catch {
                 err =>
                   raise LoadError::Fatal(
                     "cannot parse page file '\{page_ref.path}': \{err}",

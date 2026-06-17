@@ -14,7 +14,7 @@
 
 ///|
 fn parse_layouts(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> Map[String, LayoutTemplate] raise {
   parse_optional_named_table_map(value, path, parse_layout)
@@ -22,7 +22,7 @@ fn parse_layouts(
 
 ///|
 fn parse_layout(
-  layout_table : Map[String, @toml.TomlValue],
+  layout_table : Map[String, SourceValue],
   layout_path : String,
 ) -> LayoutTemplate raise {
   reject_unknown_fields(layout_table, layout_path, [
@@ -48,7 +48,7 @@ fn parse_layout(
 
 ///|
 fn parse_layout_slots(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> Map[String, LayoutSlot] raise {
   parse_optional_named_table_map(value, path, parse_layout_slot)
@@ -56,7 +56,7 @@ fn parse_layout_slots(
 
 ///|
 fn parse_layout_slot(
-  slot_table : Map[String, @toml.TomlValue],
+  slot_table : Map[String, SourceValue],
   slot_path : String,
 ) -> LayoutSlot raise {
   reject_unknown_fields(slot_table, slot_path, ["bounds", "style", "align"])
@@ -72,7 +72,7 @@ fn parse_layout_slot(
 
 ///|
 fn parse_component_templates(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> Map[String, ComponentTemplate] raise {
   parse_optional_named_table_map(value, path, parse_component_template)
@@ -80,7 +80,7 @@ fn parse_component_templates(
 
 ///|
 fn parse_component_template(
-  component_table : Map[String, @toml.TomlValue],
+  component_table : Map[String, SourceValue],
   component_path : String,
 ) -> ComponentTemplate raise {
   reject_unknown_fields(component_table, component_path, ["bounds", "elements"])
@@ -102,7 +102,7 @@ fn parse_component_template(
 
 ///|
 fn parse_component_instances(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> Array[ComponentInstance] raise {
   match value {

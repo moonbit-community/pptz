@@ -13,11 +13,11 @@
 // limitations under the License.
 
 ///|
-test "parse minimal cover page toml" {
-  let source = @miniio.read_text_file("examples/minimal/pages/cover.page.toml") catch {
+test "parse minimal cover page yaml" {
+  let source = @miniio.read_text_file("examples/minimal/pages/cover.page.yaml") catch {
     err => abort("read page failed: \{err}")
   }
-  let page = parse_page_toml(source) catch {
+  let page = parse_page_yaml(source) catch {
     err => abort("parse page failed: \{err}")
   }
   match page.page_type {
@@ -62,10 +62,10 @@ test "parse minimal cover page toml" {
 
 ///|
 test "parse minimal agenda page multiline text" {
-  let source = @miniio.read_text_file("examples/minimal/pages/agenda.page.toml") catch {
+  let source = @miniio.read_text_file("examples/minimal/pages/agenda.page.yaml") catch {
     err => abort("read page failed: \{err}")
   }
-  let page = parse_page_toml(source) catch {
+  let page = parse_page_yaml(source) catch {
     err => abort("parse page failed: \{err}")
   }
   match page.page_type {
@@ -125,48 +125,38 @@ test "parse minimal agenda page multiline text" {
 
 ///|
 test "parse rich text paragraphs and body options" {
-  let page = parse_page_toml(
+  let page = parse_page_yaml(
     (
-      #|[[elements]]
-      #|id = "copy"
-      #|type = "text"
-      #|bounds = [80, 120, 640, 240]
-      #|
-      #|[elements.content]
-      #|style = "$body"
-      #|align = ["left", "top"]
-      #|wrap = true
-      #|
-      #|[elements.content.body]
-      #|auto_fit = "shape"
-      #|
-      #|[elements.content.body.inset]
-      #|left = 12
-      #|right = 12
-      #|top = 8
-      #|bottom = 8
-      #|
-      #|[[elements.content.paragraphs]]
-      #|text = "Overview"
-      #|style = "$title"
-      #|line_height = 1.15
-      #|space_after = 6
-      #|
-      #|[elements.content.paragraphs.bullet]
-      #|kind = "char"
-      #|char = "-"
-      #|
-      #|[[elements.content.paragraphs]]
-      #|space_before = 4
-      #|
-      #|[[elements.content.paragraphs.runs]]
-      #|text = "Read "
-      #|
-      #|[[elements.content.paragraphs.runs]]
-      #|text = "docs"
-      #|color = "$accent"
-      #|hyperlink = "https://example.com"
-      #|tooltip = "Documentation"
+      #|elements:
+      #|  - id: "copy"
+      #|    type: "text"
+      #|    bounds: [80, 120, 640, 240]
+      #|    content:
+      #|      style: "$body"
+      #|      align: ["left", "top"]
+      #|      wrap: true
+      #|      body:
+      #|        auto_fit: "shape"
+      #|        inset:
+      #|          left: 12
+      #|          right: 12
+      #|          top: 8
+      #|          bottom: 8
+      #|      paragraphs:
+      #|        - text: "Overview"
+      #|          style: "$title"
+      #|          line_height: 1.15
+      #|          space_after: 6
+      #|          bullet:
+      #|            kind: "char"
+      #|            char: "-"
+      #|        - space_before: 4
+      #|          runs:
+      #|            - text: "Read "
+      #|            - text: "docs"
+      #|              color: "$accent"
+      #|              hyperlink: "https://example.com"
+      #|              tooltip: "Documentation"
     ),
   ) catch {
     err => abort("parse rich text failed: \{err}")

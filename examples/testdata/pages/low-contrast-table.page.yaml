@@ -1,0 +1,15 @@
+background: { type: "solid", color: "$surface" }
+elements:
+  -
+    id: "summary"
+    type: "table"
+    bounds: [80, 120, 720, 220]
+    content:
+      style: "$bad"
+      col_widths: [240, 240, 240]
+      row_heights: [44, 44]
+      rows:
+        -
+          cells: ["Metric", "Value", "Note"]
+        -
+          cells: ["Readability", "Low", "Body text matches background"]

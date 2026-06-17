@@ -1,0 +1,69 @@
+title: "MoonBit PPTX Demo"
+size: [1280, 720]
+theme:
+  colors: { background: "#10131A", surface: "#1C2230", surface_alt: "#243044", text: "#F4F6FB", muted: "#A8B0C2", primary: "#3B82F6", accent: "#F59E0B" }
+  text_styles:
+    base: { font_family: "Aptos", color: "$text", line_height: 1.1 }
+    title: { extends: "$base", font_size: 56, bold: true }
+    body: { extends: "$base", font_size: 24, line_height: 1.15 }
+    caption: { extends: "$base", font_size: 16, color: "$muted" }
+    link: { extends: "$body", color: "$primary", bold: true }
+  table_styles:
+    table_base:
+      font_size: 14
+      font_family: "Aptos"
+      border: { style: "solid", width: 1, color: "$muted" }
+    compact: { extends: "$table_base", header_fill: "$surface_alt", header_text_color: "$text", body_text_color: "$text" }
+  chart_styles:
+    report_bar: { kind: "bar", legend: "bottom", style: 4, data_labels: "outside_end", data_table: false, rounded_corners: false }
+layouts:
+  content:
+    background: { type: "solid", color: "$background" }
+    slots:
+      eyebrow:
+        bounds: [80, 38, 500, 24]
+        style: "$caption"
+        align: ["left", "top"]
+      heading:
+        bounds: [80, 64, 900, 86]
+        style: "$title"
+        align: ["left", "top"]
+      footer:
+        bounds: [80, 672, 900, 24]
+        style: "$caption"
+        align: ["left", "top"]
+    elements:
+      -
+        id: "accent"
+        type: "shape"
+        bounds: [54, 42, 8, 96]
+        content:
+          shape: "rect"
+          fill: { type: "solid", color: "$primary" }
+components:
+  stat_card:
+    bounds: [0, 0, 180, 90]
+    elements:
+      -
+        id: "bg"
+        type: "shape"
+        bounds: [0, 0, 180, 90]
+        content:
+          shape: "round_rect"
+          fill: { type: "solid", color: "$surface" }
+          border: { style: "solid", width: 1, color: "$muted" }
+      -
+        id: "label"
+        type: "text"
+        bounds: [16, 14, 148, 24]
+        content: { style: "$caption", text: "$label" }
+      -
+        id: "value"
+        type: "text"
+        bounds: [16, 40, 148, 42]
+        content: { style: "$body", font_size: 24, bold: true, text: "$value" }
+pages:
+  - { path: "pages/cover.page.yaml" }
+  - { path: "pages/agenda.page.yaml" }
+  - { path: "pages/shapes.page.yaml" }
+  - { path: "pages/media.page.yaml" }

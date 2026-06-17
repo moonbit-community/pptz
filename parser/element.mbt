@@ -14,7 +14,7 @@
 
 ///|
 fn parse_elements(
-  values : Array[@toml.TomlValue],
+  values : Array[SourceValue],
   path : String,
 ) -> Array[Element] raise {
   let elements = []
@@ -29,7 +29,7 @@ fn parse_elements(
 
 ///|
 fn parse_element_table(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> Element raise {
   let kind = required_string(table, "\{path}.type", key="type")
@@ -51,7 +51,7 @@ fn parse_element_table(
 
 ///|
 fn reject_unknown_element_fields(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
   kind : String,
 ) -> Unit raise {
@@ -67,7 +67,7 @@ fn reject_unknown_element_fields(
 fn parse_element_content(
   kind : String,
   base : ElementBase,
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> Element raise {
   match kind {
@@ -83,7 +83,7 @@ fn parse_element_content(
 
 ///|
 fn parse_required_connector_spec(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> ConnectorSpec raise {
   parse_connector_spec(
@@ -94,7 +94,7 @@ fn parse_required_connector_spec(
 
 ///|
 fn parse_required_text_content(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> TextContent raise {
   parse_text_content(
@@ -105,7 +105,7 @@ fn parse_required_text_content(
 
 ///|
 fn parse_required_shape_spec(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> ShapeSpec raise {
   parse_shape_spec(
@@ -116,7 +116,7 @@ fn parse_required_shape_spec(
 
 ///|
 fn parse_required_image_spec(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> ImageSpec raise {
   parse_image_spec(
@@ -127,7 +127,7 @@ fn parse_required_image_spec(
 
 ///|
 fn parse_required_icon_spec(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> IconSpec raise {
   parse_icon_spec(
@@ -138,7 +138,7 @@ fn parse_required_icon_spec(
 
 ///|
 fn parse_required_table_spec(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> TableSpec raise {
   parse_table_spec(
@@ -149,7 +149,7 @@ fn parse_required_table_spec(
 
 ///|
 fn parse_required_chart_spec(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> ChartSpec raise {
   parse_chart_spec(

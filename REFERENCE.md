@@ -2,32 +2,32 @@
 
 ## CLI Contract
 
-The stable command shape for agents exposes one public operation: compile a TOML
-deck file into a PPTX file. `pptz` should not expose public `check` or
-`format` commands; validation is part of loading/compilation.
+The stable command shape for agents exposes one public operation: compile a YAML
+deck file into a PPTX file. `pptz` should not expose public `check` or `format`
+commands; validation is part of loading/compilation.
 
 ```bash
-moon runwasm Milky2018/pptz <deck.toml> [--out <output.pptx>]
+moon runwasm Milky2018/pptz <deck.pptz.yaml> [--out <output.pptx>]
 ```
 
 The CLI must be implemented with MoonBit's standard `moonbitlang/core/argparse`
 package, not a hand-written argument dispatcher.
-The CLI accepts exactly one input TOML deck file per invocation. Generate
-multiple decks with multiple invocations. The `.pptz.toml` extension is
-recommended but not required.
+The CLI accepts exactly one input YAML deck file per invocation.
+Generate multiple decks with multiple invocations. The `.pptz.yaml` extension is
+the documented deck source extension.
 The CLI must check that the input path exists and is a file before parsing it.
 It must not validate the input by extension.
 
 If `Milky2018/pptz` is not published yet, use the local top-level package:
 
 ```bash
-moon runwasm . examples/minimal/deck.pptz.toml --out examples/minimal/dist/demo.pptx
+moon runwasm . examples/minimal/deck.pptz.yaml --out examples/minimal/dist/demo.pptx
 ```
 
 This repository implements `Milky2018/pptz`. The compile output is the source of
 truth. Do not infer success from a created file alone.
 
-Relative paths inside the deck file are resolved from the input TOML deck file's
+Relative paths inside the deck file are resolved from the input deck file's
 directory. If `--out` is omitted, output defaults to `output.pptx`.
 Relative output paths are resolved from the current working directory.
 When the output path has a parent directory that does not exist, `pptz` should
@@ -57,8 +57,8 @@ CLI diagnostics are written to stderr with `miniio.stderr.write_text`, not
 Use `-` for missing `path`, `element_id`, or `field` values. Examples:
 
 ```text
-warning PZ100 pages/cover.page.toml title elements.bounds: bounds extend outside canvas
-error PZ020 pages/cover.page.toml title elements.id: duplicate element id
+warning PZ100 pages/cover.page.yaml title elements.bounds: bounds extend outside canvas
+error PZ020 pages/cover.page.yaml title elements.id: duplicate element id
 ```
 
 On success, stdout contains one line with the generated PPTX path:
@@ -91,25 +91,25 @@ text as failures during local development.
 
 ## Source Format
 
-The input TOML deck file contains optional document metadata, canvas size,
-optional theme values, and page order. Its filename is not fixed. Output
+The input YAML deck file contains optional document metadata, canvas
+size, optional theme values, and page order. Its filename is not fixed. Output
 settings do not belong in the deck file.
 Before 1.0, the source schema is strict: unknown fields are errors. Do not keep
 unknown fields for forward compatibility.
-TOML keys use snake_case. camelCase aliases are not accepted.
+Source keys use snake_case. camelCase aliases are not accepted.
 Do not introduce schema-version negotiation for `pptz v2`; compatibility across
 pre-1.0 schema revisions is outside the current planning scope.
-For `pptz v2`, design the overall AST and TOML schema architecture upfront so
+For `pptz v2`, design the overall AST and source schema architecture upfront so
 image, shape, connector, table, and chart features share consistent primitives.
 Implementation can still land incrementally by capability slice.
 Do not provide raw OpenXML, arbitrary XML extension, or backend-passthrough
-fields in the TOML schema. Capabilities must be expressed through `pptz`
+fields in the source schema. Capabilities must be expressed through `pptz`
 semantic fields that the loader can validate.
 Treat the v2 schema design as a design milestone, not a release by itself. A
 published `pptz` release should be bounded by capabilities that compile from
-TOML to PPTX.
-The minimum `0.2.0` release boundary was: the v2 AST/TOML schema architecture
-is documented, and the image capability slice compiles end-to-end from TOML to
+YAML to PPTX.
+The minimum `0.2.0` release boundary was: the v2 AST/source schema architecture
+is documented, and the image capability slice compiles end-to-end from source to
 PPTX. Later 0.2.x releases have added implemented shape, connector, table, and
 chart writer slices; this reference tracks the current accepted schema.
 
@@ -125,14 +125,14 @@ Parser responsibilities:
 - Unknown fields.
 - Constructing the semantic AST.
 
-Parser failures, including TOML syntax errors, field type errors, missing
+Parser failures, including YAML syntax errors, field type errors, missing
 required fields, and unknown fields, are parse failures. When they occur through
 `load_deck`, report them as `LoadError::Fatal(String)` in the first
 implementation rather than as aggregated loader diagnostics.
 
 Loader responsibilities:
 
-- Read the input TOML deck file.
+- Read the input YAML deck file.
 - Parse the deck definition.
 - Resolve page paths relative to the deck file directory.
 - Reject absolute page paths and page paths that normalize outside the deck file
@@ -181,8 +181,8 @@ for WASI-accessible file reads. It should not force the source path through a
 host absolute `Path::resolve()` call; portable `moon runwasm` executions may
 only have relative preopened paths available.
 
-`*.page.toml` files contain exactly one slide each. Pages should not redefine
-global theme tokens unless a slide intentionally deviates.
+`*.page.yaml` and `*.page.yaml` files contain exactly one slide each. Pages
+should not redefine global theme tokens unless a slide intentionally deviates.
 Page files may reference theme tokens declared by the deck file. Token checking
 therefore happens during deck bundle loading, not on isolated pages.
 Page files must not declare local theme tokens. Local visual deviations should
@@ -202,27 +202,25 @@ directory. Do not resolve symlinks or require filesystem
 canonicalization.
 Page paths and asset paths share the same deck-relative source path rules.
 They differ only in what the loader does after resolution: page paths are read
-and parsed as TOML, while asset paths are checked for existence and file kind
+and parsed as YAML, while asset paths are checked for existence and file kind
 without parsing asset contents.
 
 Image elements use a required deck-relative `path`, optional `fit`, and optional
 `crop` table:
 
-```toml
-[[elements]]
-id = "hero"
-type = "image"
-bounds = [80, 120, 640, 360]
-
-[elements.content]
-path = "images/hero.svg"
-fit = "cover"
-
-[elements.content.crop]
-left = 0.1
-top = 0
-right = 0.1
-bottom = 0
+```yaml
+elements:
+  - id: "hero"
+    type: "image"
+    bounds: [80, 120, 640, 360]
+    content:
+      path: "images/hero.svg"
+      fit: "cover"
+      crop:
+        left: 0.1
+        top: 0
+        right: 0.1
+        bottom: 0
 ```
 
 `fit` defaults to `stretch`. `cover` fills the element bounds and crops overflow
@@ -233,22 +231,21 @@ and `top + bottom` must each leave a non-empty source rectangle. Explicit crop
 is applied before `cover` or `contain` fit math.
 
 Raster image dimensions are read through `moon-pptx`. SVG dimensions are read
-from numeric `width`/`height` attributes or `viewBox`. SVG TOML does not expose
-a fallback image field; the writer provides the backend-required fallback
+from numeric `width`/`height` attributes or `viewBox`. SVG source does not
+expose a fallback image field; the writer provides the backend-required fallback
 internally.
 
-Keep the boundary clear: `pptz` defines the TOML-to-AST-to-PPTX conversion
-semantics. The portable Agent skill defines a recommended slide-making
-workflow. Workflow preferences, such as creating a common background image, must
-not become `pptz` loader requirements unless they are required for PPTX
-generation.
+Keep the boundary clear: `pptz` defines the YAML-to-AST-to-PPTX conversion
+semantics. The portable Agent skill defines a recommended slide-making workflow.
+Workflow preferences, such as creating a common background image, must not
+become `pptz` loader requirements unless they are required for PPTX generation.
 
 The MoonBit implementation depends on:
 
 ```moonbit
 import {
-  "bobzhang/toml@0.4.1",
   "moonbit-community/miniio@0.2.0",
+  "moonbit-community/yaml@0.0.5",
   "moonbitlang/x",
 }
 ```
@@ -257,7 +254,7 @@ Do not pin `moonbitlang/x` in the design contract. Add it as a direct
 dependency when importing `moonbitlang/x/path`, and let `moon` resolve the
 version.
 
-All relative paths are resolved from the input TOML deck file's directory.
+All relative paths are resolved from the input deck file's directory.
 Prefer these folders next to the deck file:
 
 ```text
@@ -272,9 +269,9 @@ Build `pptz` in this order:
 
 1. Define the semantic AST for decks, pages, backgrounds, elements, styles, and
    asset references. Current status: implemented in `ast.mbt`.
-2. Parse TOML sources into the AST without validation side effects. Current
-   status: `parse_deck_toml(String) -> Deck raise` and
-   `parse_page_toml(String) -> Page raise` are implemented in `parser.mbt`.
+2. Parse YAML sources into the AST without validation side effects.
+   Current status: `parse_deck_yaml(String) -> Deck raise`,
+   and `parse_page_yaml(String) -> Page raise` are implemented in `parser.mbt`.
 3. Add a loader that reads the input deck file, resolves pages, validates the
    resulting bundle, and reports diagnostics with file and element context.
    Current status: implemented in `loader.mbt`.
@@ -338,8 +335,8 @@ Compiler Reliability status:
   example.
 - Agent-facing documentation is synchronized with the current writer scope.
 
-Do not add a `format` command. Formatting TOML is outside `pptz`; `pptz`
-converts a TOML deck file into a PPTX.
+Do not add a `format` command. Formatting source files is outside `pptz`;
+`pptz` converts a YAML deck file into a PPTX.
 Do not add a public `check` command. Validation is part of loading/compilation.
 
 ## Loader Validation Scope
@@ -452,11 +449,11 @@ Theme token handling is deliberately simple:
   Page chart elements use `chart_style = "$name"` and can override any
   inherited option locally. Chart styles never carry chart data.
 - Deck-level `layouts` provide reusable slide chrome. A page may set
-  `layout = "$name"` and fill `[slots]` values; the loader expands layout
+  `layout: "$name"` and fill `slots` values; the loader expands layout
   elements and text slots into ordinary page elements before validation and
   writing.
 - Deck-level `components` provide reusable local element groups. Page
-  `[[components]]` instances set `use = "$name"`, `bounds`, and optional string
+  `components` instances set `use: "$name"`, `bounds`, and optional string
   `props`. The loader expands component instances into ordinary page elements
   with instance-prefixed ids before validation and writing.
 - `font_family` is a single PowerPoint typeface name. It is not a CSS fallback
@@ -465,9 +462,9 @@ Theme token handling is deliberately simple:
 - Text content is either a plain `text` string or explicit `paragraphs`; do not
   combine both in one text element. Do not parse HTML, XML, Markdown, or
   rich-text markup inside `text`, and do not scan `$name` inside text content.
-  Newline characters in `text`, including TOML multiline string newlines, map
-  to PPTX text line breaks. Bullets and hyperlinks must be declared through the
-  paragraph/run schema; do not infer them from Markdown-like text.
+  Newline characters in `text` map to PPTX text line breaks. Bullets and
+  hyperlinks must be declared through the paragraph/run schema; do not infer
+  them from Markdown-like text.
 - Embedded expressions such as `linear($a, $b)` are not interpreted as token
   references in the first slice.
 
@@ -489,14 +486,13 @@ references use the theme-token diagnostic.
 
 Gradient backgrounds use a minimal linear-gradient schema:
 
-```toml
-[background]
-type = "gradient"
-direction = 90
-stops = [
-  { at = 0.0, color = "$background" },
-  { at = 1.0, color = "$surface" },
-]
+```yaml
+background:
+  type: "gradient"
+  direction: 90
+  stops:
+    - { at: 0.0, color: "$background" }
+    - { at: 1.0, color: "$surface" }
 ```
 
 `direction` is a `Double` in degrees. Each stop has `at : Double` and `color`
@@ -506,17 +502,17 @@ the user-provided gradient data into PPTX as directly as its backend allows.
 Radial gradients, conic gradients, CSS gradient strings, and unit-bearing
 directions are not part of the first schema.
 Shape gradient fills use the same `direction` and `stops` fields under
-`[elements.content.fill]` when `type = "gradient"`. The current writer supports
+`elements.content.fill` when `type: "gradient"`. The current writer supports
 both page background gradients and shape gradient fills.
 
 Image backgrounds use the same deck-relative image path and `fit` values as
 image elements, without explicit crop:
 
-```toml
-[background]
-type = "image"
-path = "images/background.png"
-fit = "cover"
+```yaml
+background:
+  type: "image"
+  path: "images/background.png"
+  fit: "cover"
 ```
 
 The writer renders an image background as the first full-slide picture shape so
@@ -548,7 +544,7 @@ text. Messages may change; codes should not. Initial code ranges:
 
 Loader validation should collect all diagnostics it can collect before failing,
 so agents can fix multiple issues in one pass. Blocking input errors, such as
-the input deck file being unreadable or TOML parsing failing, may fail
+the input deck file being unreadable parsing failing, may fail
 immediately.
 Blocking validation diagnostics are reported through the loader error. Warning
 diagnostics are returned on `LoadedDeck.warnings` and do not block PPTX
@@ -582,7 +578,7 @@ deck, page, or asset path involved; use `element_id` only for element-scoped
 findings; use `field` for stable field paths such as `size.width`,
 `background.path`, or `elements.bounds`.
 Use `LoadError::Fatal` for failures that prevent further collection, such as an
-unreadable input file or TOML parse failure. Use `LoadError::Diagnostics` when
+unreadable input file parse failure. Use `LoadError::Diagnostics` when
 the loader has enough context to report one or more blocking validation
 diagnostics. Warnings are not raised; they are returned on
 `LoadedDeck.warnings`.
@@ -591,30 +587,28 @@ diagnostics. Warnings are not raised; they are returned on
 
 Use this shape unless the current `pptz` loader documents a newer schema:
 
-```toml
-title = "Example Deck"
-size = [1280, 720]
-
-[theme.colors]
-background = "#10131A"
-surface = "#1C2230"
-text = "#F4F6FB"
-muted = "#A8B0C2"
-primary = "#3B82F6"
-accent = "#F59E0B"
-
-[theme.text_styles.body]
-font_size = 22
-font_family = "Aptos"
-color = "$text"
-
-[theme.text_styles.title]
-extends = "$body"
-font_size = 56
-bold = true
-
-[[pages]]
-path = "pages/cover.page.toml"
+```yaml
+title: "Example Deck"
+size: [1280, 720]
+theme:
+  colors:
+    background: "#10131A"
+    surface: "#1C2230"
+    text: "#F4F6FB"
+    muted: "#A8B0C2"
+    primary: "#3B82F6"
+    accent: "#F59E0B"
+  text_styles:
+    body:
+      font_size: 22
+      font_family: "Aptos"
+      color: "$text"
+    title:
+      extends: "$body"
+      font_size: 56
+      bold: true
+pages:
+  - path: "pages/cover.page.yaml"
 ```
 
 The whole `theme` table is optional. A deck without theme values may still
@@ -624,9 +618,9 @@ The `title` field is optional metadata. `size` and non-empty `pages` are the
 core required deck fields.
 The `size` field is always explicit `[width, height]`; named presets such as
 `"wide"` are not part of `pptz`.
-Deck size and element bounds use `Double` logical pixel units. TOML integers and
-floats are accepted and normalized into the AST as `Double`. The PPTX writer
-maps those logical units to PPTX EMUs. Unit strings, percentages, and layout
+Deck size and element bounds use `Double` logical pixel units. YAML integers and
+floats are accepted and normalized into the AST as `Double`. The PPTX writer maps
+those logical units to PPTX EMUs. Unit strings, percentages, and layout
 expressions are not part of `pptz`.
 Use a fixed conversion of 1 logical pixel = 1 CSS pixel = 1/96 inch. Since one
 inch is 914400 EMUs, `emu = logical_px / 96 * 914400`.
@@ -639,17 +633,15 @@ units and maps to PPTX EMUs.
 
 Use tables for elements so every element is independently addressable:
 
-```toml
-page_type = "cover"
-
-[background]
-type = "solid"
-color = "$background"
-
-[[elements]]
-id = "title"
-type = "text"
-bounds = [80, 220, 1120, 100]
+```yaml
+page_type: "cover"
+background:
+  type: "solid"
+  color: "$background"
+elements:
+  - id: "title"
+    type: "text"
+    bounds: [80, 220, 1120, 100]
 
 [elements.content]
 style = "$title"
@@ -681,18 +673,14 @@ Line and connector presets are intentionally excluded from shape content:
 `bent_connector5`, and `curved_connector2` through `curved_connector5` remain
 outside the writer scope. They belong in the planned connector element family.
 
-```toml
-[[elements]]
-id = "panel"
-type = "shape"
-bounds = [80, 160, 420, 220]
-
-[elements.content]
-shape = "rect"
-
-[elements.content.fill]
-type = "solid"
-color = "$surface"
+```yaml
+elements:
+  - id: "panel"
+    type: "shape"
+    bounds: [80, 160, 420, 220]
+    content:
+      shape: "rect"
+      fill: { type: "solid", color: "$surface" }
 ```
 
 Planned v2 shape semantics expand shape subtypes toward the `moon-pptx`
@@ -751,7 +739,7 @@ bubble, and radar chart families, with chart title, legend, style,
 data-labels, data-table, rounded-corner options, and a category chart data
 shorthand. 3D charts, stock charts, surface charts, of-pie charts, and chartEx
 families are outside the current v2 chart slice. The current chart slice uses
-inline chart data in page TOML. External CSV, TOML, or spreadsheet-backed chart
+inline chart data in page YAML. External CSV or spreadsheet-backed chart
 data is outside the current v2 chart slice.
 Chart elements may reference `theme.chart_styles` through `chart_style`; the
 loader expands the style before validation and writing.
@@ -764,12 +752,13 @@ intrinsic image size for `cover` and `contain`, and supports SVG pictures.
 ratio automatically. Explicit crop rectangles use edge insets, not pixel
 rectangles:
 
-```toml
-[elements.content.crop]
-left = 0.1
-top = 0.0
-right = 0.1
-bottom = 0.0
+```yaml
+content:
+  crop:
+    left: 0.1
+    top: 0.0
+    right: 0.1
+    bottom: 0.0
 ```
 
 Each crop value is a `Double` in `0.0..1.0` and means "crop this fraction from
@@ -778,7 +767,7 @@ and works for both raster images and SVG pictures. Automatically computed
 `cover` crops should resolve to the same edge-inset model; explicit crop values
 are for user-controlled refinement.
 
-When `fit = "cover"` or `fit = "contain"` is combined with an explicit crop,
+When `fit: "cover"` or `fit: "contain"` is combined with an explicit crop,
 `pptz` first applies the explicit crop to choose the source region, then
 computes the aspect-ratio-preserving fit from that cropped region into the
 element bounds. Explicit crop values therefore narrow the source image before
@@ -790,15 +779,14 @@ backend-required fallback internally.
 
 Image element content uses a deck-relative image path:
 
-```toml
-[[elements]]
-id = "hero"
-type = "image"
-bounds = [640, 120, 520, 360]
-
-[elements.content]
-path = "images/hero.png"
-fit = "stretch"
+```yaml
+elements:
+  - id: "hero"
+    type: "image"
+    bounds: [640, 120, 520, 360]
+    content:
+      path: "images/hero.png"
+      fit: "stretch"
 ```
 
 MVP text alignment uses `align = [horizontal, vertical]` with values that map

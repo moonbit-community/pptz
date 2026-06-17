@@ -79,13 +79,13 @@ pub fn load_deck(input_path : String) -> LoadedDeck raise {
 }
 
 ///|
-pub fn parse_deck_toml(source : String) -> Deck raise {
-  @parser.parse_deck_toml(source)
+pub fn parse_deck_yaml(source : String) -> Deck raise {
+  @parser.parse_deck_yaml(source)
 }
 
 ///|
-pub fn parse_page_toml(source : String) -> Page raise {
-  @parser.parse_page_toml(source)
+pub fn parse_page_yaml(source : String) -> Page raise {
+  @parser.parse_page_yaml(source)
 }
 
 ///|

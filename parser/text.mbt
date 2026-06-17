@@ -14,7 +14,7 @@
 
 ///|
 fn parse_text_content(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> TextContent raise {
   reject_unknown_fields(table, path, [
@@ -52,7 +52,7 @@ fn parse_text_content(
 
 ///|
 fn parse_optional_text_body_options(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> TextBodyOptions? raise {
   match value {
@@ -70,7 +70,7 @@ fn parse_optional_text_body_options(
 
 ///|
 fn parse_optional_text_inset(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> TextInset? raise {
   match value {
@@ -90,12 +90,12 @@ fn parse_optional_text_inset(
 
 ///|
 fn parse_optional_text_paragraphs(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> Array[TextParagraphSpec]? raise {
   match value {
     None => None
-    Some(TomlArray(values)) => {
+    Some(SourceArray(values)) => {
       let paragraphs = []
       for index, value in values {
         paragraphs.push(parse_text_paragraph(value, "\{path}[\{index}]"))
@@ -108,7 +108,7 @@ fn parse_optional_text_paragraphs(
 
 ///|
 fn parse_text_paragraph(
-  value : @toml.TomlValue,
+  value : SourceValue,
   path : String,
 ) -> TextParagraphSpec raise {
   let table = expect_table(value, path)
@@ -152,12 +152,12 @@ fn parse_text_paragraph(
 
 ///|
 fn parse_optional_text_runs(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> Array[TextRunSpec]? raise {
   match value {
     None => None
-    Some(TomlArray(values)) => {
+    Some(SourceArray(values)) => {
       let runs = []
       for index, value in values {
         runs.push(parse_text_run(value, "\{path}[\{index}]"))
@@ -169,7 +169,7 @@ fn parse_optional_text_runs(
 }
 
 ///|
-fn parse_text_run(value : @toml.TomlValue, path : String) -> TextRunSpec raise {
+fn parse_text_run(value : SourceValue, path : String) -> TextRunSpec raise {
   let table = expect_table(value, path)
   reject_unknown_fields(table, path, [
     "text", "style", "font_size", "font_family", "color", "bold", "italic", "hyperlink",
@@ -193,7 +193,7 @@ fn parse_text_run(value : @toml.TomlValue, path : String) -> TextRunSpec raise {
 
 ///|
 fn parse_optional_bullet(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> BulletSpec? raise {
   match value {

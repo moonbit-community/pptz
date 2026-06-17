@@ -1,0 +1,47 @@
+page_type: "content"
+background: { type: "solid", color: "$background" }
+elements:
+  -
+    id: "heading"
+    type: "text"
+    bounds: [80, 70, 900, 70]
+    content: { style: "$title", font_size: 44, text: "Images" }
+  -
+    id: "stretch_raster"
+    type: "image"
+    bounds: [80, 155, 330, 195]
+    content: { path: "images/hero.png", fit: "stretch" }
+  -
+    id: "cover_raster"
+    type: "image"
+    bounds: [475, 155, 330, 195]
+    content:
+      path: "images/hero.png"
+      fit: "cover"
+      crop: { left: 0.08, top: 0, right: 0.08, bottom: 0 }
+  -
+    id: "contain_raster"
+    type: "image"
+    bounds: [870, 155, 330, 195]
+    content: { path: "images/diagram.png", fit: "contain" }
+  -
+    id: "svg_badge"
+    type: "image"
+    bounds: [360, 400, 560, 110]
+    content: { path: "images/badge.svg", fit: "cover" }
+  -
+    id: "note_panel"
+    type: "shape"
+    bounds: [180, 545, 920, 80]
+    content:
+      shape: "rect"
+      fill: { type: "solid", color: "$surface_alt" }
+      border: { style: "solid", width: 1, color: "$primary" }
+  -
+    id: "note"
+    type: "text"
+    bounds: [220, 565, 840, 40]
+    content:
+      style: "$caption"
+      align: ["center", "center"]
+      text: "Image elements support stretch, cover, contain, explicit crop, and SVG."

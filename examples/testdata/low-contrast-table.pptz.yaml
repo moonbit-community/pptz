@@ -1,0 +1,15 @@
+size: [1280, 720]
+pages:
+  - { path: "pages/low-contrast-table.page.yaml" }
+theme:
+  colors: { background: "#F7F8FA", surface: "#FFFFFF", text: "#111827", line: "#CBD5E1" }
+  text_styles:
+    body: { font_size: 16, font_family: "Aptos", color: "$text" }
+  table_styles:
+    bad:
+      font_size: 16
+      font_family: "Aptos"
+      header_fill: "$surface"
+      header_text_color: "$text"
+      body_text_color: "$surface"
+      border: { style: "solid", width: 1, color: "$line" }

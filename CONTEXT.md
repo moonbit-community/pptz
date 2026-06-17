@@ -13,7 +13,7 @@ PowerPoint Zero: the MoonBit-based presentation tool and document format used
 by this skill. Agents consume it through `moon runwasm Milky2018/pptz` after the
 package is published, or through the local top-level package during
 development.
-It converts an input TOML deck file into a PPTX file and should not encode
+It converts an input YAML deck file into a PPTX file and should not encode
 agent workflow policy.
 
 ## Compiler Reliability Slice
@@ -24,17 +24,17 @@ before expanding the presentation features it can render.
 ## pptz v2
 
 The next `pptz` product stage after the compiler reliability slice, focused on
-expanding TOML-to-PPTX capabilities rather than changing the Agent skill
+expanding YAML-to-PPTX capabilities rather than changing the Agent skill
 workflow.
 
 ## PPTX capability surface
 
-The set of presentation features that `pptz` exposes to TOML users because the
+The set of presentation features that `pptz` exposes to source authors because the
 underlying PPTX backend can generate them.
 
 ## Thin semantic layer
 
-A `pptz` schema design style that keeps user-facing TOML concepts close to
+A `pptz` schema design style that keeps user-facing YAML concepts close to
 `moon-pptx` capabilities while avoiding raw backend API serialization.
 
 ## Element-first expansion
@@ -44,18 +44,18 @@ building a full theme or style system.
 
 ## Schema architecture upfront
 
-A `pptz v2` planning approach that designs the full AST and TOML schema shape
+A `pptz v2` planning approach that designs the full AST and source schema shape
 before implementing each capability incrementally.
 
 ## v2 design milestone
 
-The planning checkpoint where the full `pptz v2` AST and TOML schema shape is
+The planning checkpoint where the full `pptz v2` AST and source schema shape is
 documented before deciding what ships in the next release.
 
 ## Capability release
 
-A `pptz` release boundary based on capabilities that compile from TOML to PPTX,
-not on design documents alone.
+A `pptz` release boundary based on capabilities that compile from YAML to
+PPTX, not on design documents alone.
 
 ## Shared presentation primitive
 
@@ -115,9 +115,9 @@ insets from the source image.
 
 ## Deck definition
 
-A TOML file, at any path, that declares presentation metadata, theme tokens,
-and page order. Theme tokens are optional. The `.pptz.toml` extension is
-recommended but not required.
+A YAML file, at any path, that declares presentation metadata, theme
+tokens, and page order. Theme tokens are optional. The `.pptz.yaml` extension is
+preferred for new decks; `.pptz.yaml` remains supported.
 
 ## Deck bundle
 
@@ -172,14 +172,14 @@ full showcase.
 
 ## Deck-relative source path
 
-A path declared inside deck or page TOML and resolved relative to the deck
+A path declared inside deck or page source and resolved relative to the deck
 definition's directory. Page and asset references share this path model.
 
 ## Page file
 
-A `.page.toml` file that describes one slide using positioned elements,
-backgrounds, text, shapes, images, icons, charts, or tables.
-The page background is optional.
+A `.page.yaml` or `.page.yaml` file that describes one slide using positioned
+elements, backgrounds, text, shapes, images, icons, charts, or tables. The page
+background is optional.
 
 ## Page identity
 

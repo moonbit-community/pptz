@@ -14,7 +14,7 @@
 
 ///|
 fn parse_image_spec(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> ImageSpec raise {
   reject_unknown_fields(table, path, ["path", "fit", "crop"])
@@ -30,7 +30,7 @@ fn parse_image_spec(
 
 ///|
 fn parse_optional_crop_rect(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> CropRect? raise {
   match value {

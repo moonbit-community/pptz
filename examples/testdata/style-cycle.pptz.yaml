@@ -1,0 +1,8 @@
+size: [1280, 720]
+pages:
+  - { path: "pages/warnings.page.yaml" }
+theme:
+  colors: { text: "#111827" }
+  text_styles:
+    a: { extends: "$b", color: "$text" }
+    b: { extends: "$a", font_size: 18 }

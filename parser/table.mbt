@@ -14,7 +14,7 @@
 
 ///|
 fn parse_table_spec(
-  table : Map[String, @toml.TomlValue],
+  table : Map[String, SourceValue],
   path : String,
 ) -> TableSpec raise {
   reject_unknown_fields(table, path, [
@@ -42,11 +42,11 @@ fn parse_table_spec(
 
 ///|
 fn parse_table_rows(
-  value : @toml.TomlValue,
+  value : SourceValue,
   path : String,
 ) -> Array[TableRowSpec] raise {
   match value {
-    TomlArray(items) => {
+    SourceArray(items) => {
       let rows = []
       for index, item in items {
         let row_path = "\{path}[\{index}]"
@@ -67,15 +67,15 @@ fn parse_table_rows(
 
 ///|
 fn parse_table_data(
-  value : @toml.TomlValue,
+  value : SourceValue,
   path : String,
 ) -> Array[TableRowSpec] raise {
   match value {
-    TomlArray(rows) => {
+    SourceArray(rows) => {
       let result = []
       for row_index, row_value in rows {
         match row_value {
-          TomlArray(cells) => {
+          SourceArray(cells) => {
             let parsed_cells = []
             for cell_index, cell_value in cells {
               parsed_cells.push(TableCellSpec::{
@@ -104,7 +104,7 @@ fn parse_table_data(
 
 ///|
 fn parse_table_cells(
-  values : Array[@toml.TomlValue],
+  values : Array[SourceValue],
   path : String,
 ) -> Array[TableCellSpec] raise {
   let cells = []
@@ -115,12 +115,9 @@ fn parse_table_cells(
 }
 
 ///|
-fn parse_table_cell(
-  value : @toml.TomlValue,
-  path : String,
-) -> TableCellSpec raise {
+fn parse_table_cell(value : SourceValue, path : String) -> TableCellSpec raise {
   match value {
-    TomlString(text) =>
+    SourceString(text) =>
       {
         text,
         fill: None,
@@ -130,7 +127,7 @@ fn parse_table_cell(
         align: None,
         margin: None,
       }
-    TomlTable(table) => {
+    SourceTable(table) => {
       reject_unknown_fields(table, path, [
         "text", "fill", "border", "col_span", "row_span", "align", "margin",
       ])
@@ -161,7 +158,7 @@ fn parse_table_cell(
 
 ///|
 fn parse_optional_table_cell_margin(
-  value : @toml.TomlValue?,
+  value : SourceValue?,
   path : String,
 ) -> TableCellMargin? raise {
   match value {

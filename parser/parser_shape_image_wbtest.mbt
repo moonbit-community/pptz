@@ -14,15 +14,14 @@
 
 ///|
 test "image fit defaults to stretch" {
-  let page = parse_page_toml(
+  let page = parse_page_yaml(
     (
-      #|[[elements]]
-      #|id = "hero"
-      #|type = "image"
-      #|bounds = [0, 0, 640, 360]
-      #|
-      #|[elements.content]
-      #|path = "images/hero.png"
+      #|elements:
+      #|  - id: "hero"
+      #|    type: "image"
+      #|    bounds: [0, 0, 640, 360]
+      #|    content:
+      #|      path: "images/hero.png"
     ),
   ) catch {
     err => abort("parse page failed: \{err}")
@@ -43,22 +42,20 @@ test "image fit defaults to stretch" {
 
 ///|
 test "parse image crop" {
-  let page = parse_page_toml(
+  let page = parse_page_yaml(
     (
-      #|[[elements]]
-      #|id = "hero"
-      #|type = "image"
-      #|bounds = [0, 0, 640, 360]
-      #|
-      #|[elements.content]
-      #|path = "images/hero.png"
-      #|fit = "cover"
-      #|
-      #|[elements.content.crop]
-      #|left = 0.1
-      #|top = 0.2
-      #|right = 0.3
-      #|bottom = 0.4
+      #|elements:
+      #|  - id: "hero"
+      #|    type: "image"
+      #|    bounds: [0, 0, 640, 360]
+      #|    content:
+      #|      path: "images/hero.png"
+      #|      fit: "cover"
+      #|      crop:
+      #|        left: 0.1
+      #|        top: 0.2
+      #|        right: 0.3
+      #|        bottom: 0.4
     ),
   ) catch {
     err => abort("parse page failed: \{err}")
@@ -85,10 +82,10 @@ test "parse image crop" {
 
 ///|
 test "parse minimal shapes page" {
-  let source = @miniio.read_text_file("examples/minimal/pages/shapes.page.toml") catch {
+  let source = @miniio.read_text_file("examples/minimal/pages/shapes.page.yaml") catch {
     err => abort("read page failed: \{err}")
   }
-  let page = parse_page_toml(source) catch {
+  let page = parse_page_yaml(source) catch {
     err => abort("parse page failed: \{err}")
   }
   assert_eq(page.elements.length(), 9)
@@ -150,16 +147,15 @@ test "parse minimal shapes page" {
 
 ///|
 test "parse connector endpoint anchor" {
-  let page = parse_page_toml(
+  let page = parse_page_yaml(
     (
-      #|[[elements]]
-      #|id = "flow"
-      #|type = "connector"
-      #|
-      #|[elements.content]
-      #|kind = "straight"
-      #|start = { element = "source", anchor = "bottom" }
-      #|end = { element = "target" }
+      #|elements:
+      #|  - id: "flow"
+      #|    type: "connector"
+      #|    content:
+      #|      kind: "straight"
+      #|      start: { element: "source", anchor: "bottom" }
+      #|      end: { element: "target" }
     ),
   ) catch {
     err => abort("parse page failed: \{err}")

@@ -1,7 +1,0 @@
-[[elements]]
-id = "icon"
-type = "icon"
-bounds = [80, 80, 120, 120]
-
-[elements.content]
-name = "fas:dragon"
